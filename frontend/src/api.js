@@ -1,0 +1,27 @@
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+async function request(path, options = {}) {
+    const token = localStorage.getItem('adminToken');
+    const res = await fetch(`${API_URL}${path}`, {
+        headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        ...options,
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'কিছু একটা সমস্যা হয়েছে');
+    return data;
+}
+
+export const api = {
+    getProducts: (category) => request(category ? `/products?category=${encodeURIComponent(category)}` : '/products'),
+    getProduct: (id) => request(`/products/${id}`),
+    createOrder: (payload) => request('/orders', { method: 'POST', body: JSON.stringify(payload) }),
+    trackOrder: (query) => request(`/orders/track/${encodeURIComponent(query)}`),
+
+    // admin
+    login: (username, password) => request('/auth/login', { method: 'POST', body: JSON.stringify({ username, password }) }),
+    getAllOrders: () => request('/orders'),
+    updateOrderStatus: (id, status) => request(`/orders/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }),
+};
