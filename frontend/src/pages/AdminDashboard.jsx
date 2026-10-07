@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
+import AdminProducts from './AdminProducts';
 
 const STATUS_OPTIONS = ['pending', 'confirmed', 'delivered', 'cancelled'];
 const STATUS_LABEL = { pending: 'Pending', confirmed: 'Confirmed', delivered: 'Delivered', cancelled: 'Cancelled' };
@@ -9,6 +10,7 @@ export default function AdminDashboard() {
     const [orders, setOrders] = useState([]);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(true);
+    const [tab, setTab] = useState('orders');
     const { username, logout } = useAuth();
 
     function loadOrders() {
@@ -39,12 +41,23 @@ export default function AdminDashboard() {
                 </button>
             </div>
 
-            {error && <p className="status-msg error">{error}</p>}
-            {loading && <p className="status-msg">লোড হচ্ছে...</p>}
+            <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+                <button className="btn-primary" style={{ width: 'auto', padding: '8px 16px', background: tab === 'orders' ? 'var(--honey-dark)' : 'var(--walnut-soft)' }} onClick={() => setTab('orders')}>
+                    অর্ডার
+                </button>
+                <button className="btn-primary" style={{ width: 'auto', padding: '8px 16px', background: tab === 'products' ? 'var(--honey-dark)' : 'var(--walnut-soft)' }} onClick={() => setTab('products')}>
+                    প্রোডাক্ট
+                </button>
+            </div>
 
-            {!loading && orders.length === 0 && <p className="status-msg">এখনো কোনো অর্ডার নেই।</p>}
+            {tab === 'products' && <AdminProducts />}
 
-            {orders.map((o) => (
+            {tab === 'orders' && error && <p className="status-msg error">{error}</p>}
+            {tab === 'orders' && loading && <p className="status-msg">লোড হচ্ছে...</p>}
+
+            {tab === 'orders' && !loading && orders.length === 0 && <p className="status-msg">এখনো কোনো অর্ডার নেই।</p>}
+
+            {tab === 'orders' && orders.map((o) => (
                 <div className="order-card" key={o._id}>
                     <div className="order-line">
                         <strong>{o.customerName} — {o.phone}</strong>

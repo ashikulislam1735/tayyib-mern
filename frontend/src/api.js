@@ -23,5 +23,8 @@ export const api = {
     // admin
     login: (username, password) => request('/auth/login', { method: 'POST', body: JSON.stringify({ username, password }) }),
     getAllOrders: () => request('/orders'),
+    createProduct: (data) => request('/products', { method: 'POST', body: JSON.stringify(data) }),
+    updateProduct: (id, data) => request(`/products/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    deleteProduct: (id) => request(`/products/${id}`, { method: 'DELETE' }),
     updateOrderStatus: (id, status) => request(`/orders/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }),
 };
