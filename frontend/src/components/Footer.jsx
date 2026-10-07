@@ -29,6 +29,7 @@ export default function Footer() {
                     <h4>দরকারি লিংক</h4>
                     <ul className="footer-list">
                         <li><Link to="/">শপ</Link></li>
+                        <li><Link to="/offers">অফার</Link></li>
                         <li><Link to="/about">আমাদের সম্পর্কে</Link></li>
                         <li><Link to="/track">অর্ডার ট্র্যাক</Link></li>
                     </ul>

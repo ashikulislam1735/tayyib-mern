@@ -1,13 +1,16 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { api } from '../api';
-import { useCart } from '../context/CartContext';
+import ProductGrid from '../components/ProductGrid';
 
 export default function Shop() {
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
-    const [selectedVariant, setSelectedVariant] = useState({}); // productId -> variant index
-    const { addToCart } = useCart();
+    const [params, setParams] = useSearchParams();
+
+    const q = (params.get('q') || '').trim();
+    const category = params.get('category') || '';
 
     useEffect(() => {
         api.getProducts()
@@ -16,55 +19,47 @@ export default function Shop() {
             .finally(() => setLoading(false));
     }, []);
 
+    const categories = useMemo(() => [...new Set(products.map((p) => p.category))], [products]);
+
+    const filtered = useMemo(() => {
+        const term = q.toLowerCase();
+        return products.filter((p) => {
+            if (category && p.category !== category) return false;
+            if (!term) return true;
+            return [p.title, p.category, p.description].join(' ').toLowerCase().includes(term);
+        });
+    }, [products, q, category]);
+
+    function setCategory(value) {
+        const next = new URLSearchParams(params);
+        if (value) next.set('category', value);
+        else next.delete('category');
+        setParams(next);
+    }
+
     if (loading) return <p className="status-msg">লোড হচ্ছে...</p>;
     if (error) return <p className="status-msg error">{error} — ব্যাকএন্ড সার্ভার চালু আছে কিনা এবং MongoDB কানেক্টেড কিনা চেক করুন।</p>;
     if (products.length === 0) return <p className="status-msg">কোনো প্রোডাক্ট নেই। প্রথমে ব্যাকএন্ডে <code>npm run seed</code> চালান।</p>;
 
     return (
-        <div className="grid">
-            {products.map((p) => {
-                const vIdx = selectedVariant[p._id] ?? 0;
-                const variant = p.variants[vIdx];
-                const hasDiscount = variant.originalPrice && variant.originalPrice > variant.price;
+        <>
+            <div className="chip-row" id="categories">
+                <button className={`cat-chip ${!category ? 'active' : ''}`} onClick={() => setCategory('')}>সব</button>
+                {categories.map((c) => (
+                    <button key={c} className={`cat-chip ${category === c ? 'active' : ''}`} onClick={() => setCategory(c)}>{c}</button>
+                ))}
+            </div>
 
-                return (
-                    <div className="card" key={p._id}>
-                        <div className="card-media">{p.icon}</div>
-                        <div className="card-body">
-                            <span className="card-cat">{p.category}</span>
-                            <span className="card-name">{p.title}</span>
-                            <div className="variant-row">
-                                {p.variants.map((v, i) => (
-                                    <button
-                                        key={v._id}
-                                        className={`variant-chip ${i === vIdx ? 'active' : ''}`}
-                                        onClick={() => setSelectedVariant((s) => ({ ...s, [p._id]: i }))}
-                                    >
-                                        {v.label}
-                                    </button>
-                                ))}
-                            </div>
-                            {variant.stock <= 5 && variant.stock > 0 && (
-                                <span className="stock-low">মাত্র {variant.stock}টি বাকি</span>
-                            )}
-                            {variant.stock <= 0 && <span className="stock-low">স্টকে নেই</span>}
-                            <div className="card-foot">
-                                <div className="price-wrap">
-                                    <span className="price">৳{variant.price}</span>
-                                    {hasDiscount && <span className="price-orig">৳{variant.originalPrice}</span>}
-                                </div>
-                                <button
-                                    className="add-btn"
-                                    disabled={variant.stock <= 0}
-                                    onClick={() => addToCart(p, variant)}
-                                >
-                                    কার্টে যোগ করুন
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                );
-            })}
-        </div>
+            {(q || category) && (
+                <p className="result-note">
+                    {q ? `“${q}” এর ফলাফল: ` : ''}{filtered.length}টি প্রোডাক্ট{' '}
+                    <button className="link-btn" onClick={() => setParams({})}>সব দেখুন</button>
+                </p>
+            )}
+
+            {filtered.length === 0
+                ? <p className="status-msg">কোনো প্রোডাক্ট পাওয়া যায়নি। অন্য কিছু লিখে খুঁজে দেখুন।</p>
+                : <ProductGrid products={filtered} />}
+        </>
     );
 }

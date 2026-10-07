@@ -75,14 +75,49 @@ input, textarea, select { width: 100%; border: 1px solid var(--line); border-rad
 .order-card { border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; margin-top: 16px; }
 .badge { background: var(--cream-2); color: var(--honey-dark); padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; }
 
-nav a { color: var(--walnut-soft); padding-bottom: 2px; border-bottom: 2px solid transparent; }
-nav a:hover { color: var(--walnut); }
-nav a.active { color: var(--walnut); font-weight: 600; border-bottom-color: var(--honey); }
-a:focus-visible, button:focus-visible { outline: 2px solid var(--honey-dark); outline-offset: 2px; }
+a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--honey-dark); outline-offset: 2px; }
 
+/* ---------- হেডার ---------- */
+.bar { max-width: 1000px; gap: 14px; padding: 12px 20px; }
+.brand { white-space: nowrap; }
+.brand span { font-size: 0.75rem; }
+.search-form { flex: 1; min-width: 160px; display: flex; }
+.search-form input { border-radius: 8px 0 0 8px; border-right: none; background: var(--white); }
+.search-btn { background: var(--honey-dark); color: var(--white); border: 1px solid var(--honey-dark); border-radius: 0 8px 8px 0; padding: 0 16px; font-weight: 600; }
+.header-actions { display: flex; align-items: center; gap: 8px; }
+.hdr-btn { border: 1px solid var(--line); background: var(--white); border-radius: 8px; padding: 7px 12px; font-size: 0.85rem; font-weight: 600; display: inline-flex; gap: 6px; align-items: center; white-space: nowrap; }
+.hdr-btn:hover { border-color: var(--honey-dark); }
+.cart-btn { white-space: nowrap; }
+
+.main-nav { border-top: 1px solid var(--cream-2); }
+.main-nav-inner { max-width: 1000px; margin: 0 auto; padding: 0 20px; display: flex; gap: 22px; overflow-x: auto; }
+.main-nav a { color: var(--walnut-soft); padding: 9px 0; border-bottom: 2px solid transparent; white-space: nowrap; font-size: 0.95rem; }
+.main-nav a:hover { color: var(--walnut); }
+.main-nav a.active { color: var(--walnut); font-weight: 600; border-bottom-color: var(--honey); }
+
+/* ---------- লেআউট ---------- */
 .app-layout { min-height: 100vh; display: flex; flex-direction: column; }
 .app-layout > main { flex: 1; width: 100%; }
+.page-title { font-size: 1.7rem; margin: 4px 0 4px; }
+.page-sub { margin: 0 0 18px; color: var(--walnut-soft); }
 
+/* ---------- শপ: ক্যাটাগরি ও ফলাফল ---------- */
+.chip-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
+.cat-chip { border: 1px solid var(--line); background: var(--white); border-radius: 18px; padding: 6px 16px; font-size: 0.85rem; }
+.cat-chip:hover { border-color: var(--honey-dark); }
+.cat-chip.active { background: var(--walnut); color: var(--cream); border-color: var(--walnut); }
+.result-note { margin: 0 0 16px; color: var(--walnut-soft); font-size: 0.9rem; }
+.link-btn { background: none; border: none; padding: 0; color: var(--honey-dark); text-decoration: underline; font-size: inherit; }
+
+/* ---------- প্রোডাক্ট কার্ড ---------- */
+.card-media { position: relative; }
+.discount-badge { position: absolute; top: 10px; left: 10px; background: var(--danger); color: var(--white); font-size: 0.75rem; font-weight: 700; padding: 3px 9px; border-radius: 12px; }
+
+/* ---------- ভাসমান WhatsApp ---------- */
+.wa-float { position: fixed; right: 16px; bottom: 16px; z-index: 20; background: #1f9d55; color: #fff; border-radius: 26px; padding: 11px 18px; font-weight: 700; font-size: 0.9rem; display: inline-flex; gap: 6px; align-items: center; box-shadow: 0 4px 14px rgba(0,0,0,0.25); }
+.wa-float:hover { background: #17824a; }
+
+/* ---------- About ---------- */
 .about-page { max-width: 720px; margin: 0 auto; }
 .about-title { font-size: 1.9rem; margin: 8px 0 16px; }
 .about-body p { line-height: 1.85; margin: 0 0 14px; color: var(--walnut-soft); }
@@ -91,6 +126,7 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--honey-dark); ou
 .about-card p { margin: 0; font-size: 0.9rem; line-height: 1.7; color: var(--walnut-soft); }
 .about-cta { display: inline-block; background: var(--honey-dark); color: var(--white); border-radius: 6px; padding: 11px 22px; font-weight: 700; }
 
+/* ---------- ফুটার ---------- */
 .site-footer { background: var(--walnut); color: var(--cream-2); margin-top: 40px; }
 .footer-grid { max-width: 1000px; margin: 0 auto; padding: 36px 20px 24px; display: grid; grid-template-columns: 1.3fr 1fr 1.2fr; gap: 28px; }
 .footer-brand { font-size: 1.3rem; font-weight: 700; color: var(--white); margin-bottom: 8px; }
@@ -105,11 +141,19 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--honey-dark); ou
 .footer-bottom { max-width: 1000px; margin: 0 auto; padding: 14px 20px 22px; border-top: 1px solid var(--walnut-soft); display: flex; justify-content: space-between; gap: 12px; font-size: 0.8rem; opacity: 0.85; }
 .footer-admin { opacity: 0.6; }
 
+@media (max-width: 900px) {
+  .brand span { display: none; }
+}
 @media (max-width: 700px) {
   .bar { flex-wrap: wrap; gap: 10px; }
-  .brand span { display: none; }
-  nav { order: 3; width: 100%; gap: 16px; overflow-x: auto; }
+  .brand { order: 1; flex: 1; }
+  .header-actions { order: 2; }
+  .search-form { order: 3; flex-basis: 100%; }
+  .hdr-btn span { display: none; }
+  .hdr-btn { padding: 7px 10px; }
   .footer-grid { grid-template-columns: 1fr; gap: 22px; }
+  .wa-float span { display: none; }
+  .wa-float { padding: 12px 14px; font-size: 1.1rem; }
 }
 
 @media (max-width: 700px) {

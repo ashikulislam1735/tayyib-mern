@@ -1,12 +1,14 @@
 import { useState } from 'react';
-import { Routes, Route, Link, NavLink } from 'react-router-dom';
+import { Routes, Route, Link, NavLink, useNavigate } from 'react-router-dom';
 import { CartProvider, useCart } from './context/CartContext';
 import { AuthProvider } from './context/AuthContext';
 import { siteConfig } from './siteConfig';
 import CartDrawer from './components/CartDrawer';
 import Footer from './components/Footer';
+import FloatingWhatsApp from './components/FloatingWhatsApp';
 import ProtectedRoute from './components/ProtectedRoute';
 import Shop from './pages/Shop';
+import Offers from './pages/Offers';
 import About from './pages/About';
 import Checkout from './pages/Checkout';
 import OrderConfirmed from './pages/OrderConfirmed';
@@ -17,20 +19,49 @@ import AdminDashboard from './pages/AdminDashboard';
 function Header({ onCartClick }) {
     const { items } = useCart();
     const count = items.reduce((s, i) => s + i.quantity, 0);
+    const [search, setSearch] = useState('');
+    const navigate = useNavigate();
+
+    function handleSearch(e) {
+        e.preventDefault();
+        const term = search.trim();
+        navigate(term ? `/?q=${encodeURIComponent(term)}` : '/');
+    }
 
     return (
         <header className="site-header">
             <div className="bar">
                 <Link to="/" className="brand">{siteConfig.name} <span>{siteConfig.tagline}</span></Link>
-                <nav>
-                    <NavLink to="/" end>শপ</NavLink>
-                    <NavLink to="/about">আমাদের সম্পর্কে</NavLink>
-                    <NavLink to="/track">অর্ডার ট্র্যাক</NavLink>
-                </nav>
-                <button className="cart-btn" onClick={onCartClick}>
-                    🧺 কার্ট <span className="cart-badge">{count}</span>
-                </button>
+
+                <form className="search-form" onSubmit={handleSearch} role="search">
+                    <input
+                        type="search"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        placeholder="মধু, ঘি, খেজুর খুঁজুন..."
+                        aria-label="প্রোডাক্ট খুঁজুন"
+                    />
+                    <button type="submit" className="search-btn">খুঁজুন</button>
+                </form>
+
+                <div className="header-actions">
+                    {siteConfig.phone && (
+                        <a className="hdr-btn" href={`tel:${siteConfig.phone}`}>📞 <span>কল</span></a>
+                    )}
+                    <Link className="hdr-btn" to="/track">📦 <span>ট্র্যাক</span></Link>
+                    <button className="cart-btn" onClick={onCartClick}>
+                        🧺 কার্ট <span className="cart-badge">{count}</span>
+                    </button>
+                </div>
             </div>
+
+            <nav className="main-nav">
+                <div className="main-nav-inner">
+                    <NavLink to="/" end>হোম</NavLink>
+                    <NavLink to="/offers">অফার</NavLink>
+                    <NavLink to="/about">আমাদের সম্পর্কে</NavLink>
+                </div>
+            </nav>
         </header>
     );
 }
@@ -44,6 +75,7 @@ function AppShell() {
             <main>
                 <Routes>
                     <Route path="/" element={<Shop />} />
+                    <Route path="/offers" element={<Offers />} />
                     <Route path="/about" element={<About />} />
                     <Route path="/checkout" element={<Checkout />} />
                     <Route path="/order-confirmed/:id" element={<OrderConfirmed />} />
@@ -53,6 +85,7 @@ function AppShell() {
                 </Routes>
             </main>
             <Footer />
+            <FloatingWhatsApp />
             <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />
         </div>
     );
