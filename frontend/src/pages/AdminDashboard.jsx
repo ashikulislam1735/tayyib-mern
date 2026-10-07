@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import AdminProducts from './AdminProducts';
+import AdminPassword from './AdminPassword';
 
 const STATUS_OPTIONS = ['pending', 'confirmed', 'delivered', 'cancelled'];
 const STATUS_LABEL = { pending: 'Pending', confirmed: 'Confirmed', delivered: 'Delivered', cancelled: 'Cancelled' };
@@ -48,9 +49,13 @@ export default function AdminDashboard() {
                 <button className="btn-primary" style={{ width: 'auto', padding: '8px 16px', background: tab === 'products' ? 'var(--honey-dark)' : 'var(--walnut-soft)' }} onClick={() => setTab('products')}>
                     প্রোডাক্ট
                 </button>
+                <button className="btn-primary" style={{ width: 'auto', padding: '8px 16px', background: tab === 'password' ? 'var(--honey-dark)' : 'var(--walnut-soft)' }} onClick={() => setTab('password')}>
+                    পাসওয়ার্ড
+                </button>
             </div>
 
             {tab === 'products' && <AdminProducts />}
+            {tab === 'password' && <AdminPassword />}
 
             {tab === 'orders' && error && <p className="status-msg error">{error}</p>}
             {tab === 'orders' && loading && <p className="status-msg">লোড হচ্ছে...</p>}
