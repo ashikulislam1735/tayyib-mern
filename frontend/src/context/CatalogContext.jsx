@@ -15,8 +15,9 @@ export function CatalogProvider({ children }) {
         const map = new Map();
         products.forEach((p) => {
             if (!map.has(p.category)) {
-                map.set(p.category, { name: p.category, icon: p.icon, subs: new Set() });
+                map.set(p.category, { name: p.category, icon: p.icon, subs: new Set(), count: 0 });
             }
+            map.get(p.category).count += 1;
             if (p.subCategory) map.get(p.category).subs.add(p.subCategory);
         });
         return [...map.values()].map((c) => ({ ...c, subs: [...c.subs] }));

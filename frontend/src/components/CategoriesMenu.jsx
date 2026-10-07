@@ -12,9 +12,9 @@ export default function CategoriesMenu() {
             onMouseEnter={() => setOpen(true)}
             onMouseLeave={() => setOpen(false)}
         >
-            <button className="nav-dd-btn" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
+            <Link className="nav-dd-btn" to="/categories" onClick={() => setOpen(false)}>
                 ক্যাটাগরি ▾
-            </button>
+            </Link>
             {open && (
                 <div className="dd-panel">
                     {categories.length === 0 && <span className="dd-empty">কোনো ক্যাটাগরি নেই</span>}

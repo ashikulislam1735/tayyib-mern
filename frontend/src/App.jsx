@@ -5,6 +5,7 @@ import { AuthProvider } from './context/AuthContext';
 import { CatalogProvider } from './context/CatalogContext';
 import CategoriesMenu from './components/CategoriesMenu';
 import CategoryStrip from './components/CategoryStrip';
+import Categories from './pages/Categories';
 import { siteConfig } from './siteConfig';
 import CartDrawer from './components/CartDrawer';
 import Footer from './components/Footer';
@@ -82,6 +83,7 @@ function AppShell() {
                 <Routes>
                     <Route path="/" element={<Shop />} />
                     <Route path="/products" element={<Shop />} />
+                    <Route path="/categories" element={<Categories />} />
                     <Route path="/offers" element={<Offers />} />
                     <Route path="/about" element={<About />} />
                     <Route path="/checkout" element={<Checkout />} />
