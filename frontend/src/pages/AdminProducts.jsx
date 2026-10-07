@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../api';
 
 const EMPTY_VARIANT = { label: '', price: '', originalPrice: '', stock: '' };
-const EMPTY_FORM = { title: '', category: '', icon: '🛍️', description: '', variants: [{ ...EMPTY_VARIANT }] };
+const EMPTY_FORM = { title: '', category: '', subCategory: '', icon: '🛍️', description: '', variants: [{ ...EMPTY_VARIANT }] };
 
 export default function AdminProducts() {
     const [products, setProducts] = useState([]);
@@ -31,6 +31,7 @@ export default function AdminProducts() {
         setForm({
             title: p.title,
             category: p.category,
+            subCategory: p.subCategory || '',
             icon: p.icon || '',
             description: p.description || '',
             variants: p.variants.map((v) => ({
@@ -73,6 +74,7 @@ export default function AdminProducts() {
         const payload = {
             title: form.title.trim(),
             category: form.category.trim(),
+            subCategory: form.subCategory.trim(),
             icon: form.icon.trim() || '🛍️',
             description: form.description,
             variants: form.variants.map((v) => ({
@@ -151,7 +153,15 @@ export default function AdminProducts() {
                     <label>নাম</label>
                     <input value={form.title} onChange={(e) => setField('title', e.target.value)} />
                     <label>ক্যাটাগরি (যেমন: মধু / খেজুর / ঘি)</label>
-                    <input value={form.category} onChange={(e) => setField('category', e.target.value)} />
+                    <input list="cat-list" value={form.category} onChange={(e) => setField('category', e.target.value)} />
+                    <datalist id="cat-list">
+                        {[...new Set(products.map((p) => p.category))].map((c) => <option key={c} value={c} />)}
+                    </datalist>
+                    <label>সাব-ক্যাটাগরি (ঐচ্ছিক, যেমন: কাজুবাদাম)</label>
+                    <input list="sub-list" value={form.subCategory} onChange={(e) => setField('subCategory', e.target.value)} />
+                    <datalist id="sub-list">
+                        {[...new Set(products.filter((p) => p.category === form.category && p.subCategory).map((p) => p.subCategory))].map((s) => <option key={s} value={s} />)}
+                    </datalist>
                     <label>আইকন (একটা ইমোজি)</label>
                     <input value={form.icon} onChange={(e) => setField('icon', e.target.value)} />
                     <label>বিবরণ</label>

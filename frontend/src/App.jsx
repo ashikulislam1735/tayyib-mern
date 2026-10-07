@@ -2,6 +2,9 @@ import { useState } from 'react';
 import { Routes, Route, Link, NavLink, useNavigate } from 'react-router-dom';
 import { CartProvider, useCart } from './context/CartContext';
 import { AuthProvider } from './context/AuthContext';
+import { CatalogProvider } from './context/CatalogContext';
+import CategoriesMenu from './components/CategoriesMenu';
+import CategoryStrip from './components/CategoryStrip';
 import { siteConfig } from './siteConfig';
 import CartDrawer from './components/CartDrawer';
 import Footer from './components/Footer';
@@ -58,10 +61,13 @@ function Header({ onCartClick }) {
             <nav className="main-nav">
                 <div className="main-nav-inner">
                     <NavLink to="/" end>হোম</NavLink>
+                    <NavLink to="/products">প্রোডাক্ট</NavLink>
+                    <CategoriesMenu />
                     <NavLink to="/offers">অফার</NavLink>
                     <NavLink to="/about">আমাদের সম্পর্কে</NavLink>
                 </div>
             </nav>
+            <CategoryStrip />
         </header>
     );
 }
@@ -75,6 +81,7 @@ function AppShell() {
             <main>
                 <Routes>
                     <Route path="/" element={<Shop />} />
+                    <Route path="/products" element={<Shop />} />
                     <Route path="/offers" element={<Offers />} />
                     <Route path="/about" element={<About />} />
                     <Route path="/checkout" element={<Checkout />} />
@@ -94,9 +101,11 @@ function AppShell() {
 export default function App() {
     return (
         <AuthProvider>
-            <CartProvider>
-                <AppShell />
-            </CartProvider>
+            <CatalogProvider>
+                <CartProvider>
+                    <AppShell />
+                </CartProvider>
+            </CatalogProvider>
         </AuthProvider>
     );
 }

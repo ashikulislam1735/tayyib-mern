@@ -11,6 +11,7 @@ export default function Shop() {
 
     const q = (params.get('q') || '').trim();
     const category = params.get('category') || '';
+    const sub = params.get('sub') || '';
 
     useEffect(() => {
         api.getProducts()
@@ -19,21 +20,25 @@ export default function Shop() {
             .finally(() => setLoading(false));
     }, []);
 
-    const categories = useMemo(() => [...new Set(products.map((p) => p.category))], [products]);
+    const subs = useMemo(
+        () => [...new Set(products.filter((p) => p.category === category && p.subCategory).map((p) => p.subCategory))],
+        [products, category]
+    );
 
     const filtered = useMemo(() => {
         const term = q.toLowerCase();
         return products.filter((p) => {
             if (category && p.category !== category) return false;
+            if (sub && p.subCategory !== sub) return false;
             if (!term) return true;
             return [p.title, p.category, p.description].join(' ').toLowerCase().includes(term);
         });
-    }, [products, q, category]);
+    }, [products, q, category, sub]);
 
-    function setCategory(value) {
+    function setSub(value) {
         const next = new URLSearchParams(params);
-        if (value) next.set('category', value);
-        else next.delete('category');
+        if (value) next.set('sub', value);
+        else next.delete('sub');
         setParams(next);
     }
 
@@ -43,14 +48,16 @@ export default function Shop() {
 
     return (
         <>
-            <div className="chip-row" id="categories">
-                <button className={`cat-chip ${!category ? 'active' : ''}`} onClick={() => setCategory('')}>সব</button>
-                {categories.map((c) => (
-                    <button key={c} className={`cat-chip ${category === c ? 'active' : ''}`} onClick={() => setCategory(c)}>{c}</button>
-                ))}
-            </div>
+            {category && subs.length > 0 && (
+                <div className="chip-row" id="categories">
+                    <button className={`cat-chip ${!sub ? 'active' : ''}`} onClick={() => setSub('')}>সব {category}</button>
+                    {subs.map((s) => (
+                        <button key={s} className={`cat-chip ${sub === s ? 'active' : ''}`} onClick={() => setSub(s)}>{s}</button>
+                    ))}
+                </div>
+            )}
 
-            {(q || category) && (
+            {(q || category || sub) && (
                 <p className="result-note">
                     {q ? `“${q}” এর ফলাফল: ` : ''}{filtered.length}টি প্রোডাক্ট{' '}
                     <button className="link-btn" onClick={() => setParams({})}>সব দেখুন</button>

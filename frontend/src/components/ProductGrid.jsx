@@ -31,7 +31,7 @@ export default function ProductGrid({ products, preferOffer = false }) {
                             {hasDiscount && <span className="discount-badge">-{percent}%</span>}
                         </div>
                         <div className="card-body">
-                            <span className="card-cat">{p.category}</span>
+                            <span className="card-cat">{p.category}{p.subCategory ? ` › ${p.subCategory}` : ''}</span>
                             <span className="card-name">{p.title}</span>
                             <div className="variant-row">
                                 {p.variants.map((v, i) => (
