@@ -6,38 +6,21 @@ export default function Categories() {
 
     return (
         <div>
-            <div className="crumbs">
-                <Link to="/">হোম</Link> / <strong>ক্যাটাগরি</strong>
-            </div>
-            <div className="eyebrow">ক্যাটালগ</div>
+            <p className="crumbs"><Link to="/">হোম</Link> / <strong>ক্যাটাগরি</strong></p>
             <h1 className="page-title">ক্যাটাগরি অনুযায়ী কিনুন</h1>
-            <p className="page-sub">যেকোনো ক্যাটাগরিতে ক্লিক করে সেই ধরনের সব প্রোডাক্ট দেখুন।</p>
+            <p className="page-sub">যেকোনো ক্যাটাগরিতে ক্লিক করলে সেই ক্যাটাগরির সব প্রোডাক্ট দেখতে পাবেন।</p>
 
             {categories.length === 0 && <p className="status-msg">লোড হচ্ছে...</p>}
 
             <div className="cat-grid">
                 {categories.map((c) => (
-                    <div className="cat-tile" key={c.name}>
-                        <div className="cat-tile-icon">{c.icon}</div>
-                        <h3 className="cat-tile-name">{c.name}</h3>
-                        <div className="cat-tile-count">{c.count}টি প্রোডাক্ট</div>
-                        {c.subs.length > 0 && (
-                            <div className="cat-tile-subs">
-                                {c.subs.map((s) => (
-                                    <Link
-                                        key={s}
-                                        className="cat-tile-sub"
-                                        to={`/products?category=${encodeURIComponent(c.name)}&sub=${encodeURIComponent(s)}`}
-                                    >
-                                        {s}
-                                    </Link>
-                                ))}
-                            </div>
-                        )}
-                        <Link className="cat-tile-link" to={`/products?category=${encodeURIComponent(c.name)}`}>
-                            ক্যাটাগরি দেখুন →
-                        </Link>
-                    </div>
+                    <Link key={c.name} className="cat-tile" to={`/category/${encodeURIComponent(c.name)}`}>
+                        <span className="cat-tile-icon">{c.icon}</span>
+                        <span className="cat-tile-name">{c.name}</span>
+                        <span className="cat-tile-count">{c.count}টি প্রোডাক্ট</span>
+                        {c.subs.length > 0 && <span className="cat-tile-subs">{c.subs.join(' · ')}</span>}
+                        <span className="cat-tile-link">প্রোডাক্ট দেখুন →</span>
+                    </Link>
                 ))}
             </div>
         </div>
