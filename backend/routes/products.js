@@ -36,4 +36,29 @@ router.post('/', requireAdmin, async (req, res) => {
     }
 });
 
+// PUT /api/products/:id — প্রোডাক্ট এডিট (শুধু অ্যাডমিন)
+router.put('/:id', requireAdmin, async (req, res) => {
+    try {
+        const product = await Product.findByIdAndUpdate(req.params.id, req.body, {
+            new: true,
+            runValidators: true,
+        });
+        if (!product) return res.status(404).json({ error: 'প্রোডাক্ট পাওয়া যায়নি' });
+        res.json(product);
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+});
+
+// DELETE /api/products/:id — প্রোডাক্ট ডিলিট (শুধু অ্যাডমিন)
+router.delete('/:id', requireAdmin, async (req, res) => {
+    try {
+        const product = await Product.findByIdAndDelete(req.params.id);
+        if (!product) return res.status(404).json({ error: 'প্রোডাক্ট পাওয়া যায়নি' });
+        res.json({ message: 'প্রোডাক্ট ডিলিট হয়েছে' });
+    } catch (err) {
+        res.status(400).json({ error: 'অবৈধ প্রোডাক্ট ID' });
+    }
+});
+
 export default router;
