@@ -11,6 +11,7 @@ const variantSchema = new mongoose.Schema({
 const productSchema = new mongoose.Schema({
     title: { type: String, required: true },
     category: { type: String, required: true },     // মধু / খেজুর / ঘি
+    subCategory: { type: String, default: '' },     // সাব-ক্যাটাগরি (ঐচ্ছিক), যেমন: কাজুবাদাম
     icon: { type: String, default: '🛍️' },
     description: { type: String, default: '' },
     variants: { type: [variantSchema], required: true },
