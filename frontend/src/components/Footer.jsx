@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { siteConfig } from '../siteConfig';
+import { useSite } from '../context/SiteContext';
 
 const SOCIAL_LABELS = {
     facebook: 'Facebook',
@@ -13,7 +13,8 @@ function socialHref(key, value) {
 }
 
 export default function Footer() {
-    const { name, tagline, phone, email, address, openHours, social } = siteConfig;
+    const { site } = useSite();
+    const { name, tagline, phone, email, address, openHours, social } = site;
     const socialLinks = Object.entries(social).filter(([, value]) => value);
     const hasContact = phone || email || address || openHours;
 

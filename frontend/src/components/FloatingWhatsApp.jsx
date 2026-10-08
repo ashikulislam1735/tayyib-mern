@@ -1,9 +1,10 @@
-import { siteConfig } from '../siteConfig';
+import { useSite } from '../context/SiteContext';
 
 // পেজের নিচের ডান কোণে ভাসমান WhatsApp বাটন।
-// siteConfig.js-এ whatsapp নম্বর না থাকলে এটা দেখানো হয় না।
+// সাইট সেটিংসে whatsapp নম্বর না থাকলে এটা দেখানো হয় না।
 export default function FloatingWhatsApp() {
-    const number = siteConfig.social.whatsapp;
+    const { site } = useSite();
+    const number = site.social.whatsapp;
     if (!number) return null;
 
     return (

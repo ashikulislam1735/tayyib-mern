@@ -42,6 +42,8 @@ export const api = {
     // admin
     login: (username, password) => request('/auth/login', { method: 'POST', body: JSON.stringify({ username, password }) }),
     changePassword: (currentPassword, newPassword) => request('/auth/change-password', { method: 'POST', body: JSON.stringify({ currentPassword, newPassword }) }),
+    getSettings: () => request('/settings'),
+    updateSettings: (data) => request('/settings', { method: 'PUT', body: JSON.stringify(data) }),
     getBanners: () => request('/banners'),
     getAllBanners: () => request('/banners/all'),
     createBanner: (data) => request('/banners', { method: 'POST', body: JSON.stringify(data) }),

@@ -7,6 +7,7 @@ import orderRoutes from './routes/orders.js';
 import authRoutes from './routes/auth.js';
 import uploadRoutes from './routes/upload.js';
 import bannerRoutes from './routes/banners.js';
+import settingsRoutes from './routes/settings.js';
 
 const app = express();
 
@@ -18,6 +19,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/banners', bannerRoutes);
+app.use('/api/settings', settingsRoutes);
 
 app.get('/', (req, res) => {
     res.send('Tayyib MERN ব্যাকএন্ড চালু আছে ✅');

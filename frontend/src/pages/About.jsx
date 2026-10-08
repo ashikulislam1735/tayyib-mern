@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom';
-import { siteConfig } from '../siteConfig';
+import { useSite } from '../context/SiteContext';
 
 export default function About() {
-    const { title, paragraphs, highlights } = siteConfig.about;
+    const { site } = useSite();
+    const { title, paragraphs, highlights } = site.about;
 
     return (
         <div className="about-page">

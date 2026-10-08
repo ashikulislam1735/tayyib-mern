@@ -3,12 +3,13 @@ import { Routes, Route, Link, NavLink, useNavigate, useLocation } from 'react-ro
 import { CartProvider, useCart } from './context/CartContext';
 import { AuthProvider } from './context/AuthContext';
 import { CatalogProvider } from './context/CatalogContext';
+import { SiteProvider } from './context/SiteContext';
 import CategoriesMenu from './components/CategoriesMenu';
 import CategoryStrip from './components/CategoryStrip';
 import Categories from './pages/Categories';
 import CategoryPage from './pages/CategoryPage';
 import ProductDetail from './pages/ProductDetail';
-import { siteConfig } from './siteConfig';
+import { useSite } from './context/SiteContext';
 import CartDrawer from './components/CartDrawer';
 import Footer from './components/Footer';
 import FloatingWhatsApp from './components/FloatingWhatsApp';
@@ -26,12 +27,14 @@ import AdminOrders from './pages/AdminOrders';
 import AdminProducts from './pages/AdminProducts';
 import AdminPassword from './pages/AdminPassword';
 import AdminBanners from './pages/AdminBanners';
+import AdminSettings from './pages/AdminSettings';
 
 function Header({ onCartClick }) {
     const { items } = useCart();
     const count = items.reduce((s, i) => s + i.quantity, 0);
     const [search, setSearch] = useState('');
     const navigate = useNavigate();
+    const { site: siteConfig } = useSite();
 
     function handleSearch(e) {
         e.preventDefault();
@@ -89,6 +92,7 @@ function AdminApp() {
                 <Route path="/admin/orders" element={<AdminOrders />} />
                 <Route path="/admin/products" element={<AdminProducts />} />
                 <Route path="/admin/banners" element={<AdminBanners />} />
+                <Route path="/admin/settings" element={<AdminSettings />} />
                 <Route path="/admin/password" element={<AdminPassword />} />
             </Route>
         </Routes>
@@ -131,11 +135,13 @@ function AppShell() {
 export default function App() {
     return (
         <AuthProvider>
-            <CatalogProvider>
-                <CartProvider>
-                    <AppShell />
-                </CartProvider>
-            </CatalogProvider>
+            <SiteProvider>
+                <CatalogProvider>
+                    <CartProvider>
+                        <AppShell />
+                    </CartProvider>
+                </CatalogProvider>
+            </SiteProvider>
         </AuthProvider>
     );
 }
