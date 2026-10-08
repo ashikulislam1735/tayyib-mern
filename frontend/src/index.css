@@ -257,3 +257,24 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid 
 .status-badge.confirmed { background: #dbeafe; color: #1e4fa3; }
 .status-badge.delivered { background: #d9f2e1; color: #1b6b3a; }
 .status-badge.cancelled { background: #f6d9d4; color: var(--danger); }
+
+/* ---------- হোম ব্যানার ---------- */
+.home-banners { display: grid; grid-template-columns: 1fr; gap: 14px; margin-bottom: 22px; }
+.home-banners.two { grid-template-columns: 2.4fr 1fr; }
+.hb-slider { position: relative; overflow: hidden; border-radius: 12px; aspect-ratio: 12 / 5; background: var(--cream-2); border: 1px solid var(--line); }
+.hb-track { display: flex; height: 100%; transition: transform 0.45s ease; }
+.hb-slide { flex: 0 0 100%; height: 100%; display: block; }
+.hb-slide img, .hb-side img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.hb-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; border-radius: 50%; border: none; background: rgba(255,255,255,0.88); color: var(--walnut); font-size: 1.5rem; line-height: 1; padding: 0 0 3px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+.hb-arrow.prev { left: 10px; }
+.hb-arrow.next { right: 10px; }
+.hb-dots { position: absolute; bottom: 10px; left: 0; right: 0; display: flex; justify-content: center; gap: 6px; }
+.hb-dots button { width: 9px; height: 9px; border-radius: 50%; border: none; padding: 0; background: rgba(255,255,255,0.65); }
+.hb-dots button.active { background: var(--honey-dark); width: 22px; border-radius: 5px; }
+.hb-side { display: block; border-radius: 12px; overflow: hidden; border: 1px solid var(--line); background: var(--cream-2); }
+.home-banners.two .hb-side { aspect-ratio: auto; }
+@media (max-width: 700px) {
+  .home-banners.two { grid-template-columns: 1fr; }
+  .hb-side { aspect-ratio: 16 / 9; }
+  .hb-arrow { width: 30px; height: 30px; font-size: 1.2rem; }
+}

@@ -25,6 +25,7 @@ import AdminLayout from './pages/AdminLayout';
 import AdminOrders from './pages/AdminOrders';
 import AdminProducts from './pages/AdminProducts';
 import AdminPassword from './pages/AdminPassword';
+import AdminBanners from './pages/AdminBanners';
 
 function Header({ onCartClick }) {
     const { items } = useCart();
@@ -87,6 +88,7 @@ function AdminApp() {
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/admin/orders" element={<AdminOrders />} />
                 <Route path="/admin/products" element={<AdminProducts />} />
+                <Route path="/admin/banners" element={<AdminBanners />} />
                 <Route path="/admin/password" element={<AdminPassword />} />
             </Route>
         </Routes>

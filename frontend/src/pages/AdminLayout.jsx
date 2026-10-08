@@ -6,6 +6,7 @@ const MENU = [
     { to: '/admin', label: 'ড্যাশবোর্ড', icon: '🏠', end: true },
     { to: '/admin/orders', label: 'অর্ডার', icon: '📦' },
     { to: '/admin/products', label: 'প্রোডাক্ট', icon: '🛍️' },
+    { to: '/admin/banners', label: 'ব্যানার', icon: '🖼️' },
     { to: '/admin/password', label: 'পাসওয়ার্ড', icon: '🔑' },
 ];
 

@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import { api } from '../api';
 import ProductGrid from '../components/ProductGrid';
+import HomeBanners from '../components/HomeBanners';
 
 export default function Shop() {
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [params, setParams] = useSearchParams();
+    const { pathname } = useLocation();
 
     const q = (params.get('q') || '').trim();
     const category = params.get('category') || '';
@@ -48,6 +50,7 @@ export default function Shop() {
 
     return (
         <>
+            {pathname === '/' && !q && !category && !sub && <HomeBanners />}
             {category && subs.length > 0 && (
                 <div className="chip-row" id="categories">
                     <button className={`cat-chip ${!sub ? 'active' : ''}`} onClick={() => setSub('')}>সব {category}</button>
