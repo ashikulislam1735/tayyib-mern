@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 
 function isDiscounted(v) {
@@ -26,13 +27,14 @@ export default function ProductGrid({ products, preferOffer = false }) {
 
                 return (
                     <div className="card" key={p._id}>
-                        <div className="card-media">
-                            {p.icon}
+                        <Link to={`/product/${p._id}`} className="card-media">
+                            {p.images && p.images[0] ? <img src={p.images[0]} alt={p.title} /> : p.icon}
                             {hasDiscount && <span className="discount-badge">-{percent}%</span>}
-                        </div>
+                        </Link>
                         <div className="card-body">
                             <span className="card-cat">{p.category}{p.subCategory ? ` › ${p.subCategory}` : ''}</span>
-                            <span className="card-name">{p.title}</span>
+                            <Link to={`/product/${p._id}`} className="card-name card-link">{p.title}</Link>
+                            {p.shortDescription && <span style={{ fontSize: 12, color: 'var(--walnut-soft)' }}>{p.shortDescription}</span>}
                             <div className="variant-row">
                                 {p.variants.map((v, i) => (
                                     <button

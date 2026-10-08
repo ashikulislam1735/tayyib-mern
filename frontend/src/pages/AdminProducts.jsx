@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../api';
 
 const EMPTY_VARIANT = { label: '', price: '', originalPrice: '', stock: '' };
-const EMPTY_FORM = { title: '', category: '', subCategory: '', icon: '🛍️', description: '', variants: [{ ...EMPTY_VARIANT }] };
+const EMPTY_FORM = { title: '', category: '', subCategory: '', icon: '🛍️', shortDescription: '', videoUrl: '', images: [], description: '', variants: [{ ...EMPTY_VARIANT }] };
 
 export default function AdminProducts() {
     const [products, setProducts] = useState([]);
@@ -11,6 +11,7 @@ export default function AdminProducts() {
     const [form, setForm] = useState(null); // null = ফর্ম বন্ধ
     const [editId, setEditId] = useState(null); // null = নতুন প্রোডাক্ট
     const [saving, setSaving] = useState(false);
+    const [uploading, setUploading] = useState(false);
 
     function load() {
         setLoading(true);
@@ -33,6 +34,9 @@ export default function AdminProducts() {
             category: p.category,
             subCategory: p.subCategory || '',
             icon: p.icon || '',
+            shortDescription: p.shortDescription || '',
+            videoUrl: p.videoUrl || '',
+            images: p.images || [],
             description: p.description || '',
             variants: p.variants.map((v) => ({
                 label: v.label,
@@ -52,6 +56,27 @@ export default function AdminProducts() {
             ...f,
             variants: f.variants.map((v, idx) => (idx === i ? { ...v, [name]: value } : v)),
         }));
+    }
+
+    async function handleImages(e) {
+        const files = Array.from(e.target.files || []);
+        e.target.value = '';
+        if (files.length === 0) return;
+        setUploading(true);
+        try {
+            for (const file of files) {
+                const { url } = await api.uploadFile(file);
+                setForm((f) => ({ ...f, images: [...f.images, url] }));
+            }
+        } catch (err) {
+            alert(err.message);
+        } finally {
+            setUploading(false);
+        }
+    }
+
+    function removeImage(i) {
+        setForm((f) => ({ ...f, images: f.images.filter((_, idx) => idx !== i) }));
     }
 
     function addVariant() {
@@ -76,6 +101,9 @@ export default function AdminProducts() {
             category: form.category.trim(),
             subCategory: form.subCategory.trim(),
             icon: form.icon.trim() || '🛍️',
+            shortDescription: form.shortDescription.trim(),
+            videoUrl: form.videoUrl.trim(),
+            images: form.images,
             description: form.description,
             variants: form.variants.map((v) => ({
                 label: v.label.trim(),
@@ -121,8 +149,13 @@ export default function AdminProducts() {
                     {!loading && products.length === 0 && <p className="status-msg">কোনো প্রোডাক্ট নেই।</p>}
                     {products.map((p) => (
                         <div className="order-card" key={p._id}>
-                            <div className="order-line" style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <strong>{p.icon} {p.title}</strong>
+                            <div className="order-line" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+                                <strong style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                    {p.images && p.images[0]
+                                        ? <img src={p.images[0]} alt="" style={{ width: 40, height: 40, borderRadius: 6, objectFit: 'cover' }} />
+                                        : p.icon}
+                                    {p.title}
+                                </strong>
                                 <span className="badge">{p.category}</span>
                             </div>
                             {p.variants.map((v) => (
@@ -164,7 +197,24 @@ export default function AdminProducts() {
                     </datalist>
                     <label>আইকন (একটা ইমোজি)</label>
                     <input value={form.icon} onChange={(e) => setField('icon', e.target.value)} />
-                    <label>বিবরণ</label>
+                    <label>সংক্ষিপ্ত বিবরণ (কার্ডে এক লাইন)</label>
+                    <input value={form.shortDescription} onChange={(e) => setField('shortDescription', e.target.value)} />
+                    <label>ছবি (একাধিক বাছাই করা যাবে, প্রতিটা ১৫ MB-এর কম)</label>
+                    <input type="file" accept="image/*" multiple onChange={handleImages} disabled={uploading} />
+                    {uploading && <p style={{ fontSize: 13 }}>আপলোড হচ্ছে... একটু অপেক্ষা করুন</p>}
+                    {form.images.length > 0 && (
+                        <div className="image-gallery-preview">
+                            {form.images.map((url, i) => (
+                                <div className="gallery-thumb" key={url}>
+                                    <img src={url} alt="" />
+                                    <button type="button" onClick={() => removeImage(i)}>✕</button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                    <label>ভিডিও লিংক (YouTube, ঐচ্ছিক)</label>
+                    <input value={form.videoUrl} onChange={(e) => setField('videoUrl', e.target.value)} placeholder="https://www.youtube.com/watch?v=..." />
+                    <label>বিস্তারিত বিবরণ</label>
                     <textarea rows={3} value={form.description} onChange={(e) => setField('description', e.target.value)} />
 
                     <h4 style={{ marginBottom: 0 }}>সাইজ ও দাম</h4>
@@ -194,7 +244,7 @@ export default function AdminProducts() {
                     </button>
 
                     <div style={{ marginTop: 18, display: 'flex', gap: 8 }}>
-                        <button className="btn-primary" style={{ width: 'auto', padding: '8px 18px' }} disabled={saving} onClick={handleSave}>
+                        <button className="btn-primary" style={{ width: 'auto', padding: '8px 18px' }} disabled={saving || uploading} onClick={handleSave}>
                             {saving ? 'সেভ হচ্ছে...' : 'সেভ করুন'}
                         </button>
                         <button

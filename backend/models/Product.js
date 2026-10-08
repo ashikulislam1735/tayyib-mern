@@ -12,6 +12,9 @@ const productSchema = new mongoose.Schema({
     title: { type: String, required: true },
     category: { type: String, required: true },     // মধু / খেজুর / ঘি
     subCategory: { type: String, default: '' },     // সাব-ক্যাটাগরি (ঐচ্ছিক), যেমন: কাজুবাদাম
+    images: { type: [String], default: [] },          // Cloudinary ছবির URL-এর তালিকা (গ্যালারি)
+    videoUrl: { type: String, default: '' },          // YouTube লিংক অথবা Cloudinary ভিডিও URL
+    shortDescription: { type: String, default: '' },  // কার্ডে দেখানোর এক লাইন
     icon: { type: String, default: '🛍️' },
     description: { type: String, default: '' },
     variants: { type: [variantSchema], required: true },

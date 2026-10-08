@@ -7,6 +7,7 @@ import CategoriesMenu from './components/CategoriesMenu';
 import CategoryStrip from './components/CategoryStrip';
 import Categories from './pages/Categories';
 import CategoryPage from './pages/CategoryPage';
+import ProductDetail from './pages/ProductDetail';
 import { siteConfig } from './siteConfig';
 import CartDrawer from './components/CartDrawer';
 import Footer from './components/Footer';
@@ -84,6 +85,7 @@ function AppShell() {
                 <Routes>
                     <Route path="/" element={<Shop />} />
                     <Route path="/products" element={<Shop />} />
+                    <Route path="/product/:id" element={<ProductDetail />} />
                     <Route path="/categories" element={<Categories />} />
                     <Route path="/category/:name" element={<CategoryPage />} />
                     <Route path="/offers" element={<Offers />} />

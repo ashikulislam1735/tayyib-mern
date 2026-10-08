@@ -14,7 +14,26 @@ async function request(path, options = {}) {
     return data;
 }
 
+// ফাইল আপলোডের জন্য আলাদা ফাংশন — এখানে Content-Type হেডার বসানো যাবে না,
+// ব্রাউজার নিজেই multipart/form-data-র সঠিক boundary সেট করবে
+async function uploadFile(file) {
+    const token = localStorage.getItem('adminToken');
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const res = await fetch(`${API_URL}/upload`, {
+        method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: formData,
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'আপলোড ব্যর্থ হয়েছে');
+    return data; // { url, type }
+}
+
 export const api = {
+    getProduct: (id) => request(`/products/${id}`),
+    uploadFile,
     getProducts: (category) => request(category ? `/products?category=${encodeURIComponent(category)}` : '/products'),
     getProduct: (id) => request(`/products/${id}`),
     createOrder: (payload) => request('/orders', { method: 'POST', body: JSON.stringify(payload) }),
