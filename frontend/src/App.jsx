@@ -28,6 +28,8 @@ import AdminProducts from './pages/AdminProducts';
 import AdminPassword from './pages/AdminPassword';
 import AdminBanners from './pages/AdminBanners';
 import AdminSettings from './pages/AdminSettings';
+import AdminCategories from './pages/AdminCategories';
+import AdminImport from './pages/AdminImport';
 
 function Header({ onCartClick }) {
     const { items } = useCart();
@@ -91,6 +93,8 @@ function AdminApp() {
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/admin/orders" element={<AdminOrders />} />
                 <Route path="/admin/products" element={<AdminProducts />} />
+                <Route path="/admin/categories" element={<AdminCategories />} />
+                <Route path="/admin/import" element={<AdminImport />} />
                 <Route path="/admin/banners" element={<AdminBanners />} />
                 <Route path="/admin/settings" element={<AdminSettings />} />
                 <Route path="/admin/password" element={<AdminPassword />} />

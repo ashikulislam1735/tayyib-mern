@@ -1,5 +1,6 @@
 import { Link, useMatch } from 'react-router-dom';
 import { useCatalog } from '../context/CatalogContext';
+import { thumb } from '../utils/cloudinary';
 
 export default function CategoryStrip() {
     const { categories } = useCatalog();
@@ -21,7 +22,7 @@ export default function CategoryStrip() {
                         to={`/category/${encodeURIComponent(c.name)}`}
                         className={`cat-item ${active === c.name ? 'active' : ''}`}
                     >
-                        <span className="cat-circle">{c.icon}</span>
+                        <span className="cat-circle">{c.image ? <img src={thumb(c.image)} alt="" loading="lazy" /> : c.icon}</span>
                         <span className="cat-label">{c.name}</span>
                     </Link>
                 ))}

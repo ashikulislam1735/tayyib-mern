@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useCatalog } from '../context/CatalogContext';
+import { thumb } from '../utils/cloudinary';
 
 export default function Categories() {
     const { categories } = useCatalog();
@@ -15,7 +16,7 @@ export default function Categories() {
             <div className="cat-grid">
                 {categories.map((c) => (
                     <Link key={c.name} className="cat-tile" to={`/category/${encodeURIComponent(c.name)}`}>
-                        <span className="cat-tile-icon">{c.icon}</span>
+                        <span className="cat-tile-icon">{c.image ? <img src={thumb(c.image, 200)} alt="" loading="lazy" /> : c.icon}</span>
                         <span className="cat-tile-name">{c.name}</span>
                         <span className="cat-tile-count">{c.count}টি প্রোডাক্ট</span>
                         {c.subs.length > 0 && <span className="cat-tile-subs">{c.subs.join(' · ')}</span>}
