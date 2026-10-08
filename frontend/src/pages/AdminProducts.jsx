@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { api } from '../api';
 
 const EMPTY_VARIANT = { label: '', price: '', originalPrice: '', stock: '' };
@@ -12,6 +13,9 @@ export default function AdminProducts() {
     const [editId, setEditId] = useState(null); // null = নতুন প্রোডাক্ট
     const [saving, setSaving] = useState(false);
     const [uploading, setUploading] = useState(false);
+    const [params, setParams] = useSearchParams();
+    const formParam = params.get('form') || '';
+    const openedRef = useRef('');
 
     function load() {
         setLoading(true);
@@ -22,12 +26,12 @@ export default function AdminProducts() {
     }
     useEffect(load, []);
 
-    function startNew() {
+    function openNew() {
         setEditId(null);
         setForm({ ...EMPTY_FORM, variants: [{ ...EMPTY_VARIANT }] });
     }
 
-    function startEdit(p) {
+    function openEdit(p) {
         setEditId(p._id);
         setForm({
             title: p.title,
@@ -45,6 +49,35 @@ export default function AdminProducts() {
                 stock: v.stock,
             })),
         });
+    }
+
+    // ফর্ম খোলা/বন্ধ ঠিকানা (?form=new বা ?form=ID) থেকে নিয়ন্ত্রিত হয়, তাই ব্রাউজারের ব্যাক বোতাম কাজ করে
+    useEffect(() => {
+        if (!formParam) {
+            openedRef.current = '';
+            setForm(null);
+            setEditId(null);
+            return;
+        }
+        if (openedRef.current === formParam) return;
+        if (formParam === 'new') {
+            openedRef.current = 'new';
+            openNew();
+            return;
+        }
+        const p = products.find((x) => x._id === formParam);
+        if (p) {
+            openedRef.current = formParam;
+            openEdit(p);
+        }
+    }, [formParam, products]);
+
+    function startNew() {
+        setParams({ form: 'new' });
+    }
+
+    function startEdit(p) {
+        setParams({ form: p._id });
     }
 
     function setField(name, value) {
@@ -116,8 +149,7 @@ export default function AdminProducts() {
         try {
             if (editId) await api.updateProduct(editId, payload);
             else await api.createProduct(payload);
-            setForm(null);
-            setEditId(null);
+            setParams({});
             load();
         } catch (err) {
             alert(err.message);
@@ -182,6 +214,7 @@ export default function AdminProducts() {
 
             {form && (
                 <div className="panel" style={{ marginTop: 8 }}>
+                    <button className="link-btn" style={{ marginBottom: 10 }} onClick={() => setParams({})}>← তালিকায় ফিরে যান</button>
                     <h3 style={{ marginTop: 0 }}>{editId ? 'প্রোডাক্ট এডিট' : 'নতুন প্রোডাক্ট'}</h3>
                     <label>নাম</label>
                     <input value={form.title} onChange={(e) => setField('title', e.target.value)} />
@@ -250,7 +283,7 @@ export default function AdminProducts() {
                         <button
                             className="btn-primary"
                             style={{ width: 'auto', padding: '8px 18px', background: 'var(--walnut-soft)' }}
-                            onClick={() => { setForm(null); setEditId(null); }}
+                            onClick={() => setParams({})}
                         >
                             বাতিল
                         </button>

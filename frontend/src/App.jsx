@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Routes, Route, Link, NavLink, useNavigate } from 'react-router-dom';
+import { Routes, Route, Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { CartProvider, useCart } from './context/CartContext';
 import { AuthProvider } from './context/AuthContext';
 import { CatalogProvider } from './context/CatalogContext';
@@ -21,6 +21,10 @@ import OrderConfirmed from './pages/OrderConfirmed';
 import Track from './pages/Track';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
+import AdminLayout from './pages/AdminLayout';
+import AdminOrders from './pages/AdminOrders';
+import AdminProducts from './pages/AdminProducts';
+import AdminPassword from './pages/AdminPassword';
 
 function Header({ onCartClick }) {
     const { items } = useCart();
@@ -75,8 +79,27 @@ function Header({ onCartClick }) {
     );
 }
 
+// অ্যাডমিনের নিজস্ব লেআউট — দোকানের হেডার/ফুটার এখানে দেখানো হয় না
+function AdminApp() {
+    return (
+        <Routes>
+            <Route element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
+                <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/admin/orders" element={<AdminOrders />} />
+                <Route path="/admin/products" element={<AdminProducts />} />
+                <Route path="/admin/password" element={<AdminPassword />} />
+            </Route>
+        </Routes>
+    );
+}
+
 function AppShell() {
     const [cartOpen, setCartOpen] = useState(false);
+    const { pathname } = useLocation();
+
+    if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
+        return <AdminApp />;
+    }
 
     return (
         <div className="app-layout">
@@ -94,7 +117,6 @@ function AppShell() {
                     <Route path="/order-confirmed/:id" element={<OrderConfirmed />} />
                     <Route path="/track" element={<Track />} />
                     <Route path="/admin/login" element={<AdminLogin />} />
-                    <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
                 </Routes>
             </main>
             <Footer />
