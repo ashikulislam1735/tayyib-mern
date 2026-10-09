@@ -5,6 +5,8 @@
 export const siteConfig = {
     name: 'Tayyib',
     tagline: 'খাঁটি খাবারের অনলাইন শপ',
+    logo: '',               // অ্যাডমিন সেটিংস থেকে আপলোড করা লোগোর লিংক
+    deliveryCharge: 60,     // টাকা — অ্যাডমিন সেটিংস থেকে বদলানো যায়
 
     phone: '01307224080',   // হেডারের "কল" বাটন ও ফুটারে দেখাবে
     email: '',              // যেমন: 'hello@example.com'

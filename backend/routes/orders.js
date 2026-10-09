@@ -2,6 +2,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import Order from '../models/Order.js';
 import Product from '../models/Product.js';
+import Setting from '../models/Setting.js';
 import { requireAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -43,7 +44,10 @@ router.post('/', async (req, res) => {
             await product.save();
         }
 
-        const deliveryCharge = 60;
+        // ডেলিভারি চার্জ অ্যাডমিন সেটিংস থেকে আসে (সেভ না থাকলে ডিফল্ট ৬০)
+        const settingDoc = await Setting.findOne({ key: 'site' });
+        const saved = settingDoc && settingDoc.data && Number(settingDoc.data.deliveryCharge);
+        const deliveryCharge = Number.isFinite(saved) && saved >= 0 ? saved : 60;
         total += deliveryCharge;
 
         const order = await Order.create({

@@ -47,7 +47,10 @@ function Header({ onCartClick }) {
     return (
         <header className="site-header">
             <div className="bar">
-                <Link to="/" className="brand">{siteConfig.name} <span>{siteConfig.tagline}</span></Link>
+                <Link to="/" className="brand">
+                    {siteConfig.logo && <img src={siteConfig.logo} alt={siteConfig.name} className="brand-logo" />}
+                    {siteConfig.name} <span>{siteConfig.tagline}</span>
+                </Link>
 
                 <form className="search-form" onSubmit={handleSearch} role="search">
                     <input

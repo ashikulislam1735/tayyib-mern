@@ -3,26 +3,30 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import Admin from '../models/Admin.js';
 import { requireAdmin } from '../middleware/auth.js';
+import { loginLimiter, recordLoginFailure, recordLoginSuccess } from '../middleware/loginLimiter.js';
 
 const router = express.Router();
 
 // POST /api/auth/login — username + password দিয়ে লগইন, সফল হলে JWT টোকেন ফেরত দেয়
-router.post('/login', async (req, res) => {
+router.post('/login', loginLimiter, async (req, res) => {
     const { username, password } = req.body;
 
-    if (!username || !password) {
+    if (!username || !password || typeof username !== 'string' || typeof password !== 'string') {
         return res.status(400).json({ error: 'ইউজারনেম ও পাসওয়ার্ড দিন' });
     }
 
     const admin = await Admin.findOne({ username });
     if (!admin) {
+        recordLoginFailure(req);
         return res.status(401).json({ error: 'ভুল ইউজারনেম বা পাসওয়ার্ড' });
     }
 
     const match = await bcrypt.compare(password, admin.passwordHash);
     if (!match) {
+        recordLoginFailure(req);
         return res.status(401).json({ error: 'ভুল ইউজারনেম বা পাসওয়ার্ড' });
     }
+    recordLoginSuccess(req);
 
     const token = jwt.sign(
         { id: admin._id, username: admin.username },

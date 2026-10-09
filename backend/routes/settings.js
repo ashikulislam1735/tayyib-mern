@@ -24,11 +24,24 @@ function clean(body = {}) {
         throw new Error('সোশ্যাল লিংক https:// দিয়ে শুরু হতে হবে');
     }
 
+    // ডেলিভারি চার্জ: ০ থেকে ১০,০০০ টাকার মধ্যে পূর্ণ সংখ্যা
+    const dcRaw = Number(body.deliveryCharge);
+    if (body.deliveryCharge !== undefined && (!Number.isFinite(dcRaw) || dcRaw < 0 || dcRaw > 10000)) {
+        throw new Error('ডেলিভারি চার্জ ০ থেকে ১০০০০ টাকার মধ্যে হতে হবে');
+    }
+    const deliveryCharge = body.deliveryCharge === undefined ? 60 : Math.round(dcRaw);
+
+    // লোগো: Cloudinary (বা যেকোনো https) ছবির লিংক, খালি থাকলে শুধু নাম দেখাবে
+    const logo = url(body.logo);
+    if (logo === null) throw new Error('লোগোর লিংক https:// দিয়ে শুরু হতে হবে');
+
     const phone = str(body.phone, 20).replace(/[^\d+]/g, '');
 
     return {
         name: str(body.name, 40) || 'Tayyib',
         tagline: str(body.tagline, 100),
+        logo,
+        deliveryCharge,
         phone,
         email: str(body.email, 100),
         address: str(body.address, 200),

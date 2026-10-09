@@ -6,6 +6,8 @@ function toForm(site) {
     return {
         name: site.name || '',
         tagline: site.tagline || '',
+        logo: site.logo || '',
+        deliveryCharge: String(site.deliveryCharge ?? 60),
         phone: site.phone || '',
         email: site.email || '',
         address: site.address || '',
@@ -25,6 +27,7 @@ export default function AdminSettings() {
     const { site, setSite } = useSite();
     const [form, setForm] = useState(() => toForm(site));
     const [saving, setSaving] = useState(false);
+    const [uploading, setUploading] = useState(false);
     const [msg, setMsg] = useState('');
     const [isError, setIsError] = useState(false);
 
@@ -36,6 +39,23 @@ export default function AdminSettings() {
     const addHighlight = () => setForm((f) => ({ ...f, highlights: [...f.highlights, { title: '', text: '' }] }));
     const removeHighlight = (i) => setForm((f) => ({ ...f, highlights: f.highlights.filter((_, idx) => idx !== i) }));
 
+    async function handleLogoUpload(e) {
+        const file = e.target.files && e.target.files[0];
+        e.target.value = '';
+        if (!file) return;
+        if (!file.type.startsWith('image/')) { setIsError(true); setMsg('লোগো হিসেবে শুধু ছবি দেওয়া যাবে'); return; }
+        setUploading(true);
+        try {
+            const { url } = await api.uploadFile(file);
+            set('logo', url);
+        } catch (err) {
+            setIsError(true);
+            setMsg(err.message);
+        } finally {
+            setUploading(false);
+        }
+    }
+
     async function handleSave() {
         if (!form.name.trim()) {
             setIsError(true);
@@ -45,6 +65,8 @@ export default function AdminSettings() {
         const payload = {
             name: form.name,
             tagline: form.tagline,
+            logo: form.logo,
+            deliveryCharge: form.deliveryCharge === '' ? 60 : Number(form.deliveryCharge),
             phone: form.phone,
             email: form.email,
             address: form.address,
@@ -77,6 +99,21 @@ export default function AdminSettings() {
             <input value={form.name} onChange={(e) => set('name', e.target.value)} maxLength={40} />
             <label>ট্যাগলাইন (নামের পাশে ছোট লেখা)</label>
             <input value={form.tagline} onChange={(e) => set('tagline', e.target.value)} maxLength={100} />
+
+            <label>লোগো (খালি রাখলে হেডারে শুধু নাম দেখাবে)</label>
+            {form.logo && (
+                <div style={{ margin: '8px 0' }}>
+                    <img src={form.logo} alt="লোগো" style={{ maxHeight: 60, maxWidth: 200, display: 'block', border: '1px solid var(--line)', borderRadius: 8, padding: 6 }} />
+                    <button className="link-btn" style={{ marginTop: 6, color: 'var(--danger)' }} onClick={() => set('logo', '')}>লোগো সরান</button>
+                </div>
+            )}
+            <input type="file" accept="image/*" onChange={handleLogoUpload} disabled={uploading} />
+            {uploading && <p style={{ fontSize: 13, margin: '4px 0 0' }}>আপলোড হচ্ছে...</p>}
+            <p style={{ fontSize: 12, color: 'var(--walnut-soft)', margin: '4px 0 0' }}>আপলোডের পর নিচের "সেভ করুন" চাপতে ভুলবেন না।</p>
+
+            <h3>ডেলিভারি</h3>
+            <label>ডেলিভারি চার্জ (৳) — চেকআউট ও অর্ডার দুই জায়গাতেই এটা ব্যবহার হবে</label>
+            <input type="number" min="0" max="10000" step="1" value={form.deliveryCharge} onChange={(e) => set('deliveryCharge', e.target.value)} />
 
             <h3>যোগাযোগ</h3>
             <p style={{ fontSize: 13, color: 'var(--walnut-soft)', margin: '0 0 4px' }}>যে ঘর খালি থাকবে, সেটা সাইটে দেখানো হবে না।</p>

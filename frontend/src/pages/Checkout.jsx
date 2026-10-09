@@ -2,10 +2,13 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { api } from '../api';
+import { useSite } from '../context/SiteContext';
 
 export default function Checkout() {
     const { items, subtotal, clearCart } = useCart();
     const navigate = useNavigate();
+    const { site } = useSite();
+    const deliveryCharge = Number.isFinite(Number(site.deliveryCharge)) ? Number(site.deliveryCharge) : 60;
 
     const [form, setForm] = useState({ customerName: '', phone: '', address: '', paymentMethod: 'cod' });
     const [error, setError] = useState('');
@@ -77,8 +80,8 @@ export default function Checkout() {
                         <span>৳{i.price * i.quantity}</span>
                     </div>
                 ))}
-                <div className="order-line"><span>ডেলিভারি চার্জ</span><span>৳60</span></div>
-                <div className="order-total"><span>সর্বমোট</span><span>৳{subtotal + 60}</span></div>
+                <div className="order-line"><span>ডেলিভারি চার্জ</span><span>৳{deliveryCharge}</span></div>
+                <div className="order-total"><span>সর্বমোট</span><span>৳{subtotal + deliveryCharge}</span></div>
             </div>
         </div>
     );

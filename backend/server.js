@@ -19,7 +19,27 @@ if (secret.length < 32) {
 
 const app = express();
 
-app.use(cors());
+// Render/Vercel-এর মতো প্রক্সির পেছনে থাকলে আসল ক্লায়েন্ট IP পেতে (লগইন লিমিটারের জন্য জরুরি)
+app.set('trust proxy', 1);
+
+// CORS: CORS_ORIGINS-এ কমা দিয়ে অনুমোদিত ওয়েবসাইট দিন, যেমন:
+//   CORS_ORIGINS=https://tayyib.vercel.app,https://www.tayyib.com
+// না দিলে (শেখার/ডেভেলপমেন্ট মোডে) যেকোনো সাইট থেকে ডাকা যাবে — সার্ভার চালুর সময় সতর্কবার্তা দেখাবে।
+const allowedOrigins = (process.env.CORS_ORIGINS || '')
+    .split(',').map((o) => o.trim().replace(/\/$/, '')).filter(Boolean);
+
+if (allowedOrigins.length === 0) {
+    console.warn('⚠️ CORS_ORIGINS সেট করা নেই — ব্যাকএন্ড এখন যেকোনো ওয়েবসাইট থেকে ডাকা যাবে। আসল ব্যবসায় গেলে সীমাবদ্ধ করুন।');
+    app.use(cors());
+} else {
+    app.use(cors({
+        origin(origin, cb) {
+            // origin না থাকলে (Postman, সার্ভার-টু-সার্ভার, UptimeRobot) ব্রাউজারের ঝুঁকি নেই, তাই চলবে
+            if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+            return cb(null, false);
+        },
+    }));
+}
 app.use(express.json({ limit: '1mb' })); // প্রোডাক্ট বাল্ক ইমপোর্টের জন্য একটু বড় সীমা
 
 // হালকা health-check — ডাটাবেজ ছোঁয় না, UptimeRobot-এর জন্য
