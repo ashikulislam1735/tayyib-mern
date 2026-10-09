@@ -8,11 +8,15 @@ export default function Checkout() {
     const { items, subtotal, clearCart } = useCart();
     const navigate = useNavigate();
     const { site } = useSite();
-    const deliveryCharge = Number.isFinite(Number(site.deliveryCharge)) ? Number(site.deliveryCharge) : 60;
 
-    const [form, setForm] = useState({ customerName: '', phone: '', address: '', paymentMethod: 'cod' });
+    const [form, setForm] = useState({ customerName: '', phone: '', address: '', paymentMethod: 'cod', deliveryArea: 'inside' });
     const [error, setError] = useState('');
     const [submitting, setSubmitting] = useState(false);
+
+    const chargeOf = (v, d) => (Number.isFinite(Number(v)) ? Number(v) : d);
+    const deliveryCharge = form.deliveryArea === 'outside'
+        ? chargeOf(site.deliveryOutside, 120)
+        : chargeOf(site.deliveryInside, 60);
 
     if (items.length === 0) {
         return <p className="status-msg">আপনার কার্ট খালি। <a href="/">শপে ফিরে যান</a></p>;
@@ -57,6 +61,12 @@ export default function Checkout() {
                     <label>মোবাইল নম্বর</label>
                     <input name="phone" value={form.phone} onChange={handleChange} pattern="01[0-9]{9}" required />
 
+                    <label>ডেলিভারি এলাকা</label>
+                    <select name="deliveryArea" value={form.deliveryArea} onChange={handleChange}>
+                        <option value="inside">ঢাকার ভেতরে (৳{chargeOf(site.deliveryInside, 60)})</option>
+                        <option value="outside">ঢাকার বাইরে (৳{chargeOf(site.deliveryOutside, 120)})</option>
+                    </select>
+
                     <label>ডেলিভারি ঠিকানা</label>
                     <textarea name="address" value={form.address} onChange={handleChange} required />
 
@@ -80,7 +90,7 @@ export default function Checkout() {
                         <span>৳{i.price * i.quantity}</span>
                     </div>
                 ))}
-                <div className="order-line"><span>ডেলিভারি চার্জ</span><span>৳{deliveryCharge}</span></div>
+                <div className="order-line"><span>ডেলিভারি চার্জ ({form.deliveryArea === 'outside' ? 'ঢাকার বাইরে' : 'ঢাকার ভেতরে'})</span><span>৳{deliveryCharge}</span></div>
                 <div className="order-total"><span>সর্বমোট</span><span>৳{subtotal + deliveryCharge}</span></div>
             </div>
         </div>

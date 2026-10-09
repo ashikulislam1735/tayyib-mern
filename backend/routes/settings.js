@@ -24,12 +24,16 @@ function clean(body = {}) {
         throw new Error('সোশ্যাল লিংক https:// দিয়ে শুরু হতে হবে');
     }
 
-    // ডেলিভারি চার্জ: ০ থেকে ১০,০০০ টাকার মধ্যে পূর্ণ সংখ্যা
-    const dcRaw = Number(body.deliveryCharge);
-    if (body.deliveryCharge !== undefined && (!Number.isFinite(dcRaw) || dcRaw < 0 || dcRaw > 10000)) {
-        throw new Error('ডেলিভারি চার্জ ০ থেকে ১০০০০ টাকার মধ্যে হতে হবে');
-    }
-    const deliveryCharge = body.deliveryCharge === undefined ? 60 : Math.round(dcRaw);
+    // ডেলিভারি চার্জ (ঢাকার ভেতরে / ঢাকার বাইরে): ০ থেকে ১০,০০০ টাকার মধ্যে পূর্ণ সংখ্যা
+    // পুরনো সেভ করা একক deliveryCharge থাকলে সেটা "ঢাকার ভেতরে"-র ডিফল্ট হিসেবে ধরা হয়
+    const charge = (v, fallback, label) => {
+        if (v === undefined || v === '') return fallback;
+        const n = Number(v);
+        if (!Number.isFinite(n) || n < 0 || n > 10000) throw new Error(`${label} ডেলিভারি চার্জ ০ থেকে ১০০০০ টাকার মধ্যে হতে হবে`);
+        return Math.round(n);
+    };
+    const deliveryInside = charge(body.deliveryInside, charge(body.deliveryCharge, 60, 'ঢাকার ভেতরের'), 'ঢাকার ভেতরের');
+    const deliveryOutside = charge(body.deliveryOutside, 120, 'ঢাকার বাইরের');
 
     // লোগো: Cloudinary (বা যেকোনো https) ছবির লিংক, খালি থাকলে শুধু নাম দেখাবে
     const logo = url(body.logo);
@@ -41,7 +45,8 @@ function clean(body = {}) {
         name: str(body.name, 40) || 'Tayyib',
         tagline: str(body.tagline, 100),
         logo,
-        deliveryCharge,
+        deliveryInside,
+        deliveryOutside,
         phone,
         email: str(body.email, 100),
         address: str(body.address, 200),

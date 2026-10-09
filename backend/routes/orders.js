@@ -11,6 +11,7 @@ const router = express.Router();
 // নিরাপত্তার জন্য দাম ক্লায়েন্ট থেকে নেওয়া হয় না — ডাটাবেজ থেকে আসল দাম ধরে সার্ভারেই মোট হিসাব করা হয়
 router.post('/', async (req, res) => {
     const { customerName, phone, address, paymentMethod, items } = req.body;
+    const deliveryArea = req.body.deliveryArea === 'outside' ? 'outside' : 'inside';
 
     if (!customerName || !phone || !address || !Array.isArray(items) || items.length === 0) {
         return res.status(400).json({ error: 'নাম, ফোন, ঠিকানা ও কার্ট আইটেম দরকার' });
@@ -44,16 +45,20 @@ router.post('/', async (req, res) => {
             await product.save();
         }
 
-        // ডেলিভারি চার্জ অ্যাডমিন সেটিংস থেকে আসে (সেভ না থাকলে ডিফল্ট ৬০)
+        // ডেলিভারি চার্জ অ্যাডমিন সেটিংস থেকে আসে — ঢাকার ভেতরে ডিফল্ট ৬০, বাইরে ডিফল্ট ১২০
         const settingDoc = await Setting.findOne({ key: 'site' });
-        const saved = settingDoc && settingDoc.data && Number(settingDoc.data.deliveryCharge);
-        const deliveryCharge = Number.isFinite(saved) && saved >= 0 ? saved : 60;
+        const sd = (settingDoc && settingDoc.data) || {};
+        const pick = (v, fallback) => (v !== undefined && v !== null && v !== '' && Number.isFinite(Number(v)) && Number(v) >= 0 ? Number(v) : fallback);
+        const inside = pick(sd.deliveryInside, pick(sd.deliveryCharge, 60));
+        const outside = pick(sd.deliveryOutside, 120);
+        const deliveryCharge = deliveryArea === 'outside' ? outside : inside;
         total += deliveryCharge;
 
         const order = await Order.create({
             customerName, phone, address,
             paymentMethod: paymentMethod || 'cod',
             items: orderItems,
+            deliveryArea,
             deliveryCharge,
             total,
         });

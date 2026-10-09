@@ -102,6 +102,9 @@ export default function AdminOrders() {
                     {o.items.map((it, idx) => (
                         <div key={idx} style={{ fontSize: 14 }}>{it.title} ({it.variantLabel}) × {it.quantity} — ৳{it.price * it.quantity}</div>
                     ))}
+                    <div style={{ fontSize: 13, color: 'var(--walnut-soft)', margin: '4px 0' }}>
+                        ডেলিভারি: {o.deliveryArea === 'outside' ? 'ঢাকার বাইরে' : 'ঢাকার ভেতরে'} · ৳{o.deliveryCharge}
+                    </div>
                     <div className="order-total"><span>সর্বমোট (ডেলিভারিসহ)</span><span>৳{o.total}</span></div>
                     <div style={{ marginTop: 8 }}>
                         <label style={{ margin: '0 8px 0 0', display: 'inline' }}>স্ট্যাটাস বদলান:</label>

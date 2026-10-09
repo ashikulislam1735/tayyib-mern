@@ -7,7 +7,8 @@ function toForm(site) {
         name: site.name || '',
         tagline: site.tagline || '',
         logo: site.logo || '',
-        deliveryCharge: String(site.deliveryCharge ?? 60),
+        deliveryInside: String(site.deliveryInside ?? 60),
+        deliveryOutside: String(site.deliveryOutside ?? 120),
         phone: site.phone || '',
         email: site.email || '',
         address: site.address || '',
@@ -66,7 +67,8 @@ export default function AdminSettings() {
             name: form.name,
             tagline: form.tagline,
             logo: form.logo,
-            deliveryCharge: form.deliveryCharge === '' ? 60 : Number(form.deliveryCharge),
+            deliveryInside: form.deliveryInside === '' ? 60 : Number(form.deliveryInside),
+            deliveryOutside: form.deliveryOutside === '' ? 120 : Number(form.deliveryOutside),
             phone: form.phone,
             email: form.email,
             address: form.address,
@@ -112,8 +114,11 @@ export default function AdminSettings() {
             <p style={{ fontSize: 12, color: 'var(--walnut-soft)', margin: '4px 0 0' }}>আপলোডের পর নিচের "সেভ করুন" চাপতে ভুলবেন না।</p>
 
             <h3>ডেলিভারি</h3>
-            <label>ডেলিভারি চার্জ (৳) — চেকআউট ও অর্ডার দুই জায়গাতেই এটা ব্যবহার হবে</label>
-            <input type="number" min="0" max="10000" step="1" value={form.deliveryCharge} onChange={(e) => set('deliveryCharge', e.target.value)} />
+            <p style={{ fontSize: 13, color: 'var(--walnut-soft)', margin: '0 0 4px' }}>কাস্টমার চেকআউটে এলাকা বেছে নেবে; সেই অনুযায়ী চার্জ যোগ হবে।</p>
+            <label>ঢাকার ভেতরে ডেলিভারি চার্জ (৳)</label>
+            <input type="number" min="0" max="10000" step="1" value={form.deliveryInside} onChange={(e) => set('deliveryInside', e.target.value)} />
+            <label>ঢাকার বাইরে ডেলিভারি চার্জ (৳)</label>
+            <input type="number" min="0" max="10000" step="1" value={form.deliveryOutside} onChange={(e) => set('deliveryOutside', e.target.value)} />
 
             <h3>যোগাযোগ</h3>
             <p style={{ fontSize: 13, color: 'var(--walnut-soft)', margin: '0 0 4px' }}>যে ঘর খালি থাকবে, সেটা সাইটে দেখানো হবে না।</p>

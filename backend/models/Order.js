@@ -14,6 +14,7 @@ const orderSchema = new mongoose.Schema({
     address: { type: String, required: true },
     paymentMethod: { type: String, enum: ['cod', 'bkash', 'nagad'], default: 'cod' },
     items: { type: [orderItemSchema], required: true },
+    deliveryArea: { type: String, enum: ['inside', 'outside'], default: 'inside' }, // ঢাকার ভেতরে / বাইরে
     deliveryCharge: { type: Number, default: 60 },
     total: { type: Number, required: true },
     status: { type: String, enum: ['pending', 'confirmed', 'delivered', 'cancelled'], default: 'pending' },
