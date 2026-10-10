@@ -376,3 +376,29 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid 
 .wa-float { background: var(--green-brand); }
 .wa-float:hover { background: #006e36; }
 .admin-topbar, .admin-drawer-head { background: var(--walnut); }
+
+/* ---------- নতুন ফুটার ডিজাইন ---------- */
+.site-footer { margin-top: 40px; }
+.footer-cta { background: var(--green-deep); border-bottom: 1px solid rgba(255,255,255,0.1); }
+.footer-cta-inner { max-width: 1000px; margin: 0 auto; padding: 18px 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.footer-cta strong { font-size: 1.15rem; color: #fff; }
+.footer-cta p { margin: 4px 0 0; font-size: 0.9rem; opacity: 0.85; }
+.footer-cta-btns { display: flex; gap: 12px; flex-wrap: wrap; }
+.fcta-solid, .fcta-line { display: inline-flex; align-items: center; gap: 8px; border-radius: 8px; padding: 10px 18px; font-weight: 700; border: 2px solid var(--gold-btn); }
+.fcta-solid { background: var(--gold-btn); color: #1b2a21; }
+.fcta-line { color: var(--gold-btn); }
+.fcta-solid:hover { background: #dba93f; }
+.fcta-line:hover { background: rgba(201,147,46,0.15); }
+.footer-grid { grid-template-columns: 1.5fr 1fr 1fr 1fr 1.5fr; gap: 24px; padding: 34px 20px 26px; }
+.footer-logo { max-height: 56px; max-width: 200px; width: auto; object-fit: contain; display: block; margin-bottom: 8px; }
+.footer-brand { font-size: 1.6rem; letter-spacing: 0.5px; }
+.site-footer h4 { font-size: 1.05rem; margin-bottom: 14px; }
+.footer-list { gap: 12px; }
+.footer-list a { opacity: 0.85; }
+.footer-contact li { display: flex; gap: 10px; align-items: flex-start; line-height: 1.6; }
+.footer-contact svg { color: var(--gold-btn); flex-shrink: 0; margin-top: 3px; }
+.social-row { gap: 10px; margin-top: 16px; }
+.social-icon { width: 38px; height: 38px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.3); display: inline-flex; align-items: center; justify-content: center; color: #fff; }
+.social-icon:hover { background: var(--gold-btn); border-color: var(--gold-btn); color: #1b2a21; }
+@media (max-width: 900px) { .footer-grid { grid-template-columns: 1fr 1fr; } .footer-about { grid-column: 1 / -1; } }
+@media (max-width: 560px) { .footer-grid { grid-template-columns: 1fr 1fr; gap: 20px; } .footer-cta-btns { width: 100%; } .fcta-solid, .fcta-line { flex: 1; justify-content: center; } }
