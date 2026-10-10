@@ -1,13 +1,17 @@
 :root {
-  --honey: #c4841a;
-  --honey-dark: #8a5a0f;
-  --cream: #faf5e8;
-  --cream-2: #f2e9d4;
-  --walnut: #2c2013;
-  --walnut-soft: #4a3826;
-  --line: #e0d3ac;
-  --white: #fffdf8;
-  --danger: #a33d2f;
+  /* থিম: গাঢ় সবুজ + সোনালি (naturobd.com-এর রঙ অনুযায়ী) */
+  --honey: #c9932e;        /* সোনালি অ্যাকসেন্ট */
+  --honey-dark: #1b4332;   /* প্রধান বাটন/লিংক: গাঢ় সবুজ */
+  --cream: #fbf7ef;
+  --cream-2: #f5f2ea;
+  --walnut: #1b4332;       /* গাঢ় সবুজ (টেক্সট/ব্যাকগ্রাউন্ড) */
+  --walnut-soft: #3f5d4f;
+  --line: #e4dccb;
+  --white: #fffefb;
+  --danger: #b3392b;
+  --green-deep: #153a2a;   /* নেভ/ফুটারের আরও গাঢ় সবুজ */
+  --green-brand: #008a44;
+  --gold-btn: #c9932e;
 }
 * { box-sizing: border-box; }
 body {
@@ -343,3 +347,32 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid 
 .review-admin { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
 .review-actions { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; flex-shrink: 0; }
 @media (max-width: 560px) { .review-admin { flex-direction: column; } .review-actions { flex-direction: row; align-items: center; } }
+
+/* ---------- সবুজ-সোনালি থিম (হেডার, নেভ, ফুটার) ---------- */
+.site-header { background: var(--walnut); border-bottom: none; }
+.site-header .brand { color: #fff; }
+.site-header .brand span { color: #e8c776; }
+.site-header .hdr-btn { background: transparent; color: #fff; border-color: rgba(255,255,255,0.35); }
+.site-header .hdr-btn:hover { border-color: var(--honey); color: #f0cf84; }
+.site-header .cart-btn { background: var(--honey); color: #fff; font-weight: 700; }
+.site-header .cart-badge { background: #fff; color: var(--walnut); padding: 0 4px; }
+.search-form input { border: 1px solid transparent; background: #fff; }
+.search-btn { background: var(--gold-btn); border-color: var(--gold-btn); color: #1b2a21; }
+.main-nav { background: var(--green-deep); border-top: none; }
+.main-nav-inner > a, .main-nav .nav-dd-btn { color: #f2efe4; }
+.main-nav-inner > a:hover, .main-nav .nav-dd-btn:hover { color: #f0cf84; }
+.main-nav-inner > a.active { color: #fff; border-bottom-color: var(--honey); }
+.cat-strip { background: var(--cream); border-top: none; border-bottom: 1px solid var(--line); }
+.btn-primary { background: var(--walnut); }
+.btn-primary:hover:not(:disabled) { background: var(--green-deep); }
+.add-btn { background: var(--walnut); color: #fff; }
+.add-btn:hover:not(:disabled) { background: var(--green-deep); }
+.variant-chip.active { background: var(--walnut); border-color: var(--walnut); color: #fff; }
+.discount-badge { background: var(--honey); color: #fff; }
+.price { color: var(--walnut); }
+.site-footer { background: var(--walnut); color: #e9e6d9; }
+.site-footer .footer-bottom { border-top-color: rgba(255,255,255,0.15); }
+.footer-list a:hover { color: #f0cf84; }
+.wa-float { background: var(--green-brand); }
+.wa-float:hover { background: #006e36; }
+.admin-topbar, .admin-drawer-head { background: var(--walnut); }
