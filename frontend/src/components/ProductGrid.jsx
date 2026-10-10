@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import Stars from './Stars';
 
 function isDiscounted(v) {
     return Boolean(v.originalPrice && v.originalPrice > v.price);
@@ -34,6 +35,7 @@ export default function ProductGrid({ products, preferOffer = false }) {
                         <div className="card-body">
                             <span className="card-cat">{p.category}{p.subCategory ? ` › ${p.subCategory}` : ''}</span>
                             <Link to={`/product/${p._id}`} className="card-name card-link">{p.title}</Link>
+                            {p.ratingCount > 0 && <span className="card-rating"><Stars value={p.ratingAvg} size={14} /> <small>({p.ratingCount})</small></span>}
                             {p.shortDescription && <span style={{ fontSize: 12, color: 'var(--walnut-soft)' }}>{p.shortDescription}</span>}
                             <div className="variant-row">
                                 {p.variants.map((v, i) => (

@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api } from '../api';
 import { useCart } from '../context/CartContext';
+import Stars from '../components/Stars';
+import Reviews from '../components/Reviews';
 
 // YouTube লিংক (watch?v= / youtu.be / embed) থেকে এমবেডযোগ্য URL বানানো
 function getEmbedUrl(url) {
@@ -65,6 +67,9 @@ export default function ProductDetail() {
                 <div>
                     <span className="card-cat">{product.category}{product.subCategory ? ` › ${product.subCategory}` : ''}</span>
                     <h1 className="detail-title">{product.title}</h1>
+                    {product.ratingCount > 0 && (
+                        <p className="reviews-summary"><Stars value={product.ratingAvg} /> {product.ratingAvg} ({product.ratingCount}টি রিভিউ)</p>
+                    )}
                     {product.shortDescription && <p className="detail-short">{product.shortDescription}</p>}
 
                     <div className="variant-row" style={{ marginBottom: 12 }}>
@@ -95,6 +100,7 @@ export default function ProductDetail() {
                     )}
                 </div>
             </div>
+            <Reviews productId={product._id} />
         </div>
     );
 }

@@ -322,3 +322,24 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid 
 
 /* কুরিয়ার শিপমেন্ট */
 .ship-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 8px 0; font-size: 14px; }
+
+/* ---------- রিভিউ ও রেটিং ---------- */
+.stars { position: relative; display: inline-block; line-height: 1; letter-spacing: 1px; vertical-align: middle; }
+.stars-bg { color: var(--line); }
+.stars-fg { position: absolute; left: 0; top: 0; overflow: hidden; white-space: nowrap; color: var(--honey); }
+.card-rating { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--walnut-soft); }
+.reviews { max-width: 1000px; margin: 28px auto 0; padding: 0 4px; }
+.reviews h3 { margin: 0 0 10px; }
+.reviews-summary { display: flex; align-items: center; gap: 6px; margin: 0 0 10px; }
+.review-item { background: var(--white); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; }
+.review-item p { margin: 6px 0; white-space: pre-wrap; word-break: break-word; }
+.review-item small { color: var(--walnut-soft); }
+.review-form { display: flex; flex-direction: column; gap: 10px; background: var(--white); border: 1px solid var(--line); border-radius: 10px; padding: 14px; margin-top: 16px; }
+.review-form h4 { margin: 0; }
+.review-form input, .review-form textarea { font-family: inherit; font-size: 1rem; padding: 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--cream); }
+.star-pick { display: flex; gap: 4px; }
+.star-pick button { background: none; border: none; font-size: 2rem; line-height: 1; color: var(--line); padding: 0 2px; }
+.star-pick button.on { color: var(--honey); }
+.review-admin { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
+.review-actions { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; flex-shrink: 0; }
+@media (max-width: 560px) { .review-admin { flex-direction: column; } .review-actions { flex-direction: row; align-items: center; } }

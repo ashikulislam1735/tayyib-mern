@@ -57,6 +57,12 @@ export const api = {
     createCoupon: (data) => request('/coupons', { method: 'POST', body: JSON.stringify(data) }),
     setCouponActive: (id, active) => request(`/coupons/${id}`, { method: 'PATCH', body: JSON.stringify({ active }) }),
     deleteCoupon: (id) => request(`/coupons/${id}`, { method: 'DELETE' }),
+    // রিভিউ
+    getProductReviews: (id) => request(`/reviews/product/${id}`),
+    submitReview: (data) => request('/reviews', { method: 'POST', body: JSON.stringify(data) }),
+    getAdminReviews: (status) => request(`/reviews?status=${status}`),
+    approveReview: (id) => request(`/reviews/${id}/approve`, { method: 'PATCH' }),
+    deleteReview: (id) => request(`/reviews/${id}`, { method: 'DELETE' }),
     // CRM
     getCustomers: (q) => request(`/customers${q ? `?q=${encodeURIComponent(q)}` : ''}`),
     getCustomerOrders: (phone) => request(`/customers/${encodeURIComponent(phone)}`),

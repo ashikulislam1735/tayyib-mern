@@ -7,6 +7,7 @@ const MENU = [
     { to: '/admin/orders', label: 'অর্ডার', icon: '📦' },
     { to: '/admin/abandoned', label: 'অসম্পূর্ণ অর্ডার', icon: '🛒' },
     { to: '/admin/customers', label: 'কাস্টমার', icon: '👥' },
+    { to: '/admin/reviews', label: 'রিভিউ', icon: '⭐' },
     { to: '/admin/coupons', label: 'কুপন', icon: '🎟️' },
     { to: '/admin/products', label: 'প্রোডাক্ট', icon: '🛍️' },
     { to: '/admin/expenses', label: 'খরচ', icon: '💸', owner: true },

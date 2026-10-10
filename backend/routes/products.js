@@ -1,5 +1,6 @@
 import express from 'express';
 import Product from '../models/Product.js';
+import Review from '../models/Review.js';
 import { requireAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -147,6 +148,7 @@ router.get('/:id', async (req, res) => {
 router.post('/', requireAdmin, async (req, res) => {
     try {
         const body = { ...req.body };
+        delete body.ratingAvg; delete body.ratingCount; // রেটিং শুধু রিভিউ থেকে আসে
         if (req.admin.role !== 'owner' && Array.isArray(body.variants)) {
             body.variants = body.variants.map((v) => ({ ...v, costPrice: 0 })); // স্টাফ ক্রয়মূল্য বসাতে পারে না
         }
@@ -161,6 +163,7 @@ router.post('/', requireAdmin, async (req, res) => {
 router.put('/:id', requireAdmin, async (req, res) => {
     try {
         const body = { ...req.body };
+        delete body.ratingAvg; delete body.ratingCount; // রেটিং শুধু রিভিউ থেকে আসে
         if (req.admin.role !== 'owner' && Array.isArray(body.variants)) {
             // স্টাফ এডিট করলে আগের ক্রয়মূল্য (সাইজের নাম মিলিয়ে) অক্ষত থাকে
             const existing = await Product.findById(req.params.id).lean();
@@ -183,6 +186,7 @@ router.delete('/:id', requireAdmin, async (req, res) => {
     try {
         const product = await Product.findByIdAndDelete(req.params.id);
         if (!product) return res.status(404).json({ error: 'প্রোডাক্ট পাওয়া যায়নি' });
+        await Review.deleteMany({ product: product._id });
         res.json({ message: 'প্রোডাক্ট ডিলিট হয়েছে' });
     } catch (err) {
         res.status(400).json({ error: 'অবৈধ প্রোডাক্ট ID' });
