@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { api } from '../api';
 
-const EMPTY_VARIANT = { label: '', price: '', originalPrice: '', stock: '' };
+const EMPTY_VARIANT = { label: '', price: '', originalPrice: '', costPrice: '', stock: '' };
 const EMPTY_FORM = { title: '', category: '', subCategory: '', icon: '🛍️', shortDescription: '', videoUrl: '', images: [], description: '', variants: [{ ...EMPTY_VARIANT }] };
 
 export default function AdminProducts() {
@@ -19,7 +19,7 @@ export default function AdminProducts() {
 
     function load() {
         setLoading(true);
-        api.getProducts()
+        api.getAdminProducts()
             .then(setProducts)
             .catch((e) => setError(e.message))
             .finally(() => setLoading(false));
@@ -46,6 +46,7 @@ export default function AdminProducts() {
                 label: v.label,
                 price: v.price,
                 originalPrice: v.originalPrice ?? '',
+                costPrice: v.costPrice ?? '',
                 stock: v.stock,
             })),
         });
@@ -142,6 +143,7 @@ export default function AdminProducts() {
                 label: v.label.trim(),
                 price: Number(v.price),
                 originalPrice: v.originalPrice === '' ? undefined : Number(v.originalPrice),
+                costPrice: v.costPrice === '' ? 0 : Number(v.costPrice),
                 stock: Number(v.stock),
             })),
         };
@@ -259,6 +261,8 @@ export default function AdminProducts() {
                             <input type="number" value={v.price} onChange={(e) => setVariant(i, 'price', e.target.value)} />
                             <label>ছাড়ের আগের দাম (ঐচ্ছিক)</label>
                             <input type="number" value={v.originalPrice} onChange={(e) => setVariant(i, 'originalPrice', e.target.value)} />
+                            <label>ক্রয়মূল্য (৳) — শুধু আপনি দেখবেন, কাস্টমার দেখবে না</label>
+                            <input type="number" value={v.costPrice} onChange={(e) => setVariant(i, 'costPrice', e.target.value)} />
                             <label>স্টক</label>
                             <input type="number" value={v.stock} onChange={(e) => setVariant(i, 'stock', e.target.value)} />
                             {form.variants.length > 1 && (

@@ -257,6 +257,7 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid 
 .status-badge.confirmed { background: #dbeafe; color: #1e4fa3; }
 .status-badge.delivered { background: #d9f2e1; color: #1b6b3a; }
 .status-badge.cancelled { background: #f6d9d4; color: var(--danger); }
+.status-badge.returned { background: #eadcf5; color: #6b3a99; }
 
 /* ---------- হোম ব্যানার ---------- */
 .home-banners { display: grid; grid-template-columns: 1fr; gap: 14px; margin-bottom: 22px; }

@@ -84,4 +84,37 @@ router.put('/', requireAdmin, async (req, res) => {
     }
 });
 
+// ---------- কুরিয়ার ও প্যাকেজিং খরচ (শুধু অ্যাডমিন; আলাদা ডকুমেন্টে, তাই সাইটের পাবলিক সেটিংসে যায় না) ----------
+const cost = (v, label) => {
+    if (v === undefined || v === null || v === '') return 0;
+    const n = Number(v);
+    if (!Number.isFinite(n) || n < 0 || n > 10000) throw new Error(`${label} ০ থেকে ১০০০০ টাকার মধ্যে হতে হবে`);
+    return Math.round(n);
+};
+
+router.get('/costs', requireAdmin, async (req, res) => {
+    try {
+        const doc = await Setting.findOne({ key: 'costs' });
+        const d = (doc && doc.data) || {};
+        res.json({ courierInside: d.courierInside || 0, courierOutside: d.courierOutside || 0, packaging: d.packaging || 0 });
+    } catch (err) {
+        res.status(500).json({ error: 'খরচের সেটিংস লোড করতে সমস্যা হয়েছে' });
+    }
+});
+
+router.put('/costs', requireAdmin, async (req, res) => {
+    try {
+        const b = req.body || {};
+        const data = {
+            courierInside: cost(b.courierInside, 'ঢাকার ভেতরের কুরিয়ার খরচ'),
+            courierOutside: cost(b.courierOutside, 'ঢাকার বাইরের কুরিয়ার খরচ'),
+            packaging: cost(b.packaging, 'প্যাকেজিং খরচ'),
+        };
+        await Setting.findOneAndUpdate({ key: 'costs' }, { key: 'costs', data }, { upsert: true, new: true });
+        res.json(data);
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+});
+
 export default router;

@@ -8,7 +8,7 @@ const router = express.Router();
 router.get('/', async (req, res) => {
     try {
         const filter = req.query.category ? { category: req.query.category } : {};
-        const products = await Product.find(filter).sort({ createdAt: -1 });
+        const products = await Product.find(filter).select('-variants.costPrice').sort({ createdAt: -1 });
         res.json(products);
     } catch (err) {
         res.status(500).json({ error: 'প্রোডাক্ট লোড করতে সমস্যা হয়েছে' });
@@ -60,6 +60,8 @@ router.post('/bulk', requireAdmin, async (req, res) => {
             if (original !== null && (!Number.isFinite(original) || original < price)) {
                 return err('originalPrice, price-এর চেয়ে কম হতে পারে না');
             }
+            const cost = num(r.costPrice);
+            if (cost !== null && (!Number.isFinite(cost) || cost < 0)) return err('costPrice সঠিক সংখ্যা নয়');
             if (stock === null) stock = 0;
             if (!Number.isInteger(stock) || stock < 0) return err('stock পূর্ণ সংখ্যা হতে হবে');
 
@@ -88,7 +90,7 @@ router.post('/bulk', requireAdmin, async (req, res) => {
             if (g.variants.some((v) => v.label === label)) {
                 return err(`"${title}"-এ "${label}" ভ্যারিয়েন্ট আগেই আছে`);
             }
-            g.variants.push({ label, price, ...(original !== null ? { originalPrice: original } : {}), stock });
+            g.variants.push({ label, price, ...(original !== null ? { originalPrice: original } : {}), ...(cost !== null ? { costPrice: cost } : {}), stock });
         });
 
         if (errors.length > 0) {
@@ -119,10 +121,19 @@ router.post('/bulk', requireAdmin, async (req, res) => {
     }
 });
 
+// GET /api/products/admin/list — ক্রয়মূল্যসহ সব প্রোডাক্ট (শুধু অ্যাডমিন)
+router.get('/admin/list', requireAdmin, async (req, res) => {
+    try {
+        res.json(await Product.find().sort({ createdAt: -1 }));
+    } catch (err) {
+        res.status(500).json({ error: 'প্রোডাক্ট লোড করতে সমস্যা হয়েছে' });
+    }
+});
+
 // GET /api/products/:id — একটা নির্দিষ্ট প্রোডাক্টের বিস্তারিত
 router.get('/:id', async (req, res) => {
     try {
-        const product = await Product.findById(req.params.id);
+        const product = await Product.findById(req.params.id).select('-variants.costPrice');
         if (!product) return res.status(404).json({ error: 'প্রোডাক্ট পাওয়া যায়নি' });
         res.json(product);
     } catch (err) {

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { api } from '../api';
 
-const STATUS_LABEL = { pending: 'অর্ডার সম্পন্ন হয়েছে', confirmed: 'কনফার্ম হয়েছে', delivered: 'ডেলিভারি সম্পন্ন', cancelled: 'বাতিল' };
+const STATUS_LABEL = { pending: 'অর্ডার সম্পন্ন হয়েছে', confirmed: 'কনফার্ম হয়েছে', delivered: 'ডেলিভারি সম্পন্ন', cancelled: 'বাতিল', returned: 'ফেরত এসেছে' };
 
 export default function Track() {
     const [query, setQuery] = useState('');

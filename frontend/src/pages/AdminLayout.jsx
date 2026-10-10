@@ -10,6 +10,7 @@ const MENU = [
     { to: '/admin/coupons', label: 'কুপন', icon: '🎟️' },
     { to: '/admin/products', label: 'প্রোডাক্ট', icon: '🛍️' },
     { to: '/admin/expenses', label: 'খরচ', icon: '💸' },
+    { to: '/admin/costs', label: 'কুরিয়ার ও প্যাকেজিং খরচ', icon: '🚚' },
     { to: '/admin/categories', label: 'ক্যাটাগরির ছবি', icon: '🗂️' },
     { to: '/admin/import', label: 'প্রোডাক্ট ইমপোর্ট', icon: '📥' },
     { to: '/admin/banners', label: 'ব্যানার', icon: '🖼️' },

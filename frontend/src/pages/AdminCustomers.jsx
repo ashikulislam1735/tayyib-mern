@@ -3,7 +3,7 @@ import { api } from '../api';
 
 const money = (v) => `৳${Number(v || 0).toLocaleString('en-BD', { maximumFractionDigits: 2 })}`;
 const fmtDate = (d) => new Date(d).toLocaleDateString('bn-BD', { timeZone: 'Asia/Dhaka', year: 'numeric', month: 'short', day: 'numeric' });
-const STATUS_LABEL = { pending: 'Pending', confirmed: 'Confirmed', delivered: 'Delivered', cancelled: 'Cancelled' };
+const STATUS_LABEL = { pending: 'Pending', confirmed: 'Confirmed', delivered: 'Delivered', cancelled: 'Cancelled', returned: 'ফেরত' };
 const RISK = { high: ['⚠️ High Risk', 'high'], medium: ['⚠️ Medium Risk', 'medium'], low: ['✅ নিরাপদ', 'low'], new: ['🆕 নতুন/অল্প ইতিহাস', 'new'] };
 
 export default function AdminCustomers() {

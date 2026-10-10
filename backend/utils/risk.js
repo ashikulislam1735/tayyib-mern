@@ -30,7 +30,7 @@ export function attachRisk(orders) {
         const key = phoneOf(o);
         const rec = byPhone.get(key) || { delivered: 0, cancelled: 0, pending: 0 };
         if (o.status === 'delivered') rec.delivered += 1;
-        else if (o.status === 'cancelled') rec.cancelled += 1;
+        else if (isBad(o)) rec.cancelled += 1;
         else rec.pending += 1;
         byPhone.set(key, rec);
     }
@@ -41,12 +41,17 @@ export function attachRisk(orders) {
         let delivered = rec.delivered;
         let cancelled = rec.cancelled;
         if (o.status === 'delivered') delivered -= 1;
-        else if (o.status === 'cancelled') cancelled -= 1;
-        const others = delivered + cancelled + rec.pending - (o.status === 'delivered' || o.status === 'cancelled' ? 0 : 1);
+        else if (isBad(o)) cancelled -= 1;
+        const others = delivered + cancelled + rec.pending - (o.status === 'delivered' || isBad(o) ? 0 : 1);
 
         return {
             ...o,
             risk: { level: riskLevel(delivered, cancelled), delivered, cancelled, otherOrders: others },
         };
     });
+}
+
+// বাতিল বা ফেরত — দুটোই "খারাপ" ফল হিসেবে ধরা হয়
+function isBad(o) {
+    return o.status === 'cancelled' || o.status === 'returned';
 }

@@ -4,7 +4,7 @@ import { api } from '../api';
 
 const LOW_STOCK = 5;
 const money = (v) => `৳${Number(v || 0).toLocaleString('en-BD', { maximumFractionDigits: 2 })}`;
-const STATUS_LABEL = { pending: 'Pending', confirmed: 'Confirmed', delivered: 'Delivered', cancelled: 'Cancelled' };
+const STATUS_LABEL = { pending: 'Pending', confirmed: 'Confirmed', delivered: 'Delivered', cancelled: 'Cancelled', returned: 'ফেরত' };
 const PERIODS = [['today', 'আজ'], ['last7Days', 'শেষ ৭ দিন'], ['last30Days', 'শেষ ৩০ দিন']];
 
 export default function AdminDashboard() {
@@ -36,7 +36,7 @@ export default function AdminDashboard() {
         const today = new Date().toDateString();
         const todayOrders = orders.filter((o) => new Date(o.createdAt).toDateString() === today);
         const todaySales = todayOrders
-            .filter((o) => o.status !== 'cancelled')
+            .filter((o) => o.status !== 'cancelled' && o.status !== 'returned')
             .reduce((sum, o) => sum + (o.total || 0), 0);
         const pending = orders.filter((o) => o.status === 'pending').length;
 
@@ -70,13 +70,16 @@ export default function AdminDashboard() {
                                         <strong>{label}</strong>
                                         <div className="order-line"><span>অর্ডার (বাতিল বাদে)</span><span>{r.orders}</span></div>
                                         <div className="order-line"><span>বিক্রি</span><span>{money(r.sales)}</span></div>
+                                        <div className="order-line"><span>পণ্যের ক্রয়মূল্য</span><span>{money(r.cogs)}</span></div>
+                                        <div className="order-line"><span>কুরিয়ার ও প্যাকেজিং</span><span>{money(r.fees)}</span></div>
                                         <div className="order-line"><span>খরচ</span><span>{money(r.expenses)}</span></div>
-                                        <div className="order-line"><strong>নিট (বিক্রি − খরচ)</strong><strong style={{ color: r.net < 0 ? 'var(--danger)' : 'inherit' }}>{money(r.net)}</strong></div>
+                                        <div className="order-line"><span>নিট (বিক্রি − খরচ)</span><span>{money(r.net)}</span></div>
+                                        <div className="order-line"><strong>আসল লাভ</strong><strong style={{ color: r.profit < 0 ? 'var(--danger)' : 'inherit' }}>{money(r.profit)}</strong></div>
                                     </div>
                                 );
                             })}
                         </div>
-                        <p className="report-muted">মোট বিক্রি বলতে ডেলিভারি চার্জসহ, বাতিল বাদে সব অর্ডার। এটা পণ্যের কেনা দাম বাদ দেওয়া আসল লাভ নয়। শেষ ৩০ দিনে ডেলিভারড অর্ডারের বিক্রি: {money(report.deliveredSales30Days)}</p>
+                        <p className="report-muted">মোট বিক্রি বলতে ডেলিভারি চার্জসহ, বাতিল বাদে সব অর্ডার। আসল লাভ = বিক্রি − পণ্যের ক্রয়মূল্য − কুরিয়ার ও প্যাকেজিং − খরচ। বাতিল ও ফেরত অর্ডারের বিক্রি ধরা হয় না, তবে ফেরত অর্ডারের কুরিয়ার ও প্যাকেজিং খরচ লোকসান হিসেবে বাদ যায়। যেসব অর্ডারে বা প্রোডাক্টে ক্রয়মূল্য দেওয়া নেই (পুরোনো অর্ডারসহ), সেগুলোর ক্রয়মূল্য ০ ধরা হয়, তাই লাভ বেশি দেখাতে পারে। শেষ ৩০ দিনে ডেলিভারড অর্ডারের বিক্রি: {money(report.deliveredSales30Days)}</p>
 
                         <h4 style={{ margin: '14px 0 6px' }}>শেষ ৩০ দিনের দৈনিক বিক্রি</h4>
                         <div className="report-chart">

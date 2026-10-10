@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../api';
 
-const STATUS_OPTIONS = ['pending', 'confirmed', 'delivered', 'cancelled'];
-const STATUS_LABEL = { pending: 'Pending', confirmed: 'Confirmed', delivered: 'Delivered', cancelled: 'Cancelled' };
+const STATUS_OPTIONS = ['pending', 'confirmed', 'delivered', 'cancelled', 'returned'];
+const STATUS_LABEL = { pending: 'Pending', confirmed: 'Confirmed', delivered: 'Delivered', cancelled: 'Cancelled', returned: 'ফেরত' };
 const RISK_LABEL = { high: '⚠️ High Risk', medium: '⚠️ Medium Risk', low: '✅ নিরাপদ', new: '🆕 নতুন/অল্প ইতিহাস' };
 
 function riskNote(r) {

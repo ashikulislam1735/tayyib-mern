@@ -82,6 +82,7 @@ router.post('/', async (req, res) => {
                 title: product.title,
                 variantLabel: variant.label,
                 price: variant.price,
+                costPrice: Number(variant.costPrice) || 0,
                 quantity: qty,
             });
             total += variant.price * qty;
@@ -106,6 +107,12 @@ router.post('/', async (req, res) => {
         const outside = pick(sd.deliveryOutside, 120);
         const deliveryCharge = deliveryArea === 'outside' ? outside : inside;
         total = subtotal - discount + deliveryCharge;
+
+        // কুরিয়ার ও প্যাকেজিং খরচ (শুধু অ্যাডমিনের হিসাবের জন্য, কাস্টমারকে দেখানো হয় না)
+        const costsDoc = await Setting.findOne({ key: 'costs' });
+        const cd = (costsDoc && costsDoc.data) || {};
+        const courierCost = pick(deliveryArea === 'outside' ? cd.courierOutside : cd.courierInside, 0);
+        const packagingCost = pick(cd.packaging, 0);
 
         // কুপনের ব্যবহার নিরাপদে ১ বাড়ানো — সীমা পেরিয়ে গেলে অর্ডার আটকাবে
         if (couponCode) {
@@ -135,6 +142,8 @@ router.post('/', async (req, res) => {
             items: orderItems,
             deliveryArea,
             deliveryCharge,
+            courierCost,
+            packagingCost,
             couponCode,
             discount,
             total,
@@ -151,7 +160,12 @@ router.post('/', async (req, res) => {
             console.error('অসম্পূর্ণ কার্ট আপডেট করা যায়নি:', e.message);
         }
 
-        res.status(201).json(order);
+        // ক্রয়মূল্য কাস্টমারকে পাঠানো হয় না
+        const publicOrder = order.toObject();
+        delete publicOrder.courierCost;
+        delete publicOrder.packagingCost;
+        publicOrder.items = publicOrder.items.map(({ costPrice, ...item }) => item);
+        res.status(201).json(publicOrder);
     } catch (err) {
         if (!orderCreated) await rollbackStock();
         res.status(500).json({ error: 'অর্ডার তৈরি করতে সমস্যা হয়েছে: ' + err.message });
@@ -171,7 +185,7 @@ router.get('/', requireAdmin, async (req, res) => {
 // PATCH /api/orders/:id/status — অর্ডারের স্ট্যাটাস বদলানো (শুধু অ্যাডমিন)
 router.patch('/:id/status', requireAdmin, async (req, res) => {
     const { status } = req.body;
-    const allowed = ['pending', 'confirmed', 'delivered', 'cancelled'];
+    const allowed = ['pending', 'confirmed', 'delivered', 'cancelled', 'returned'];
     if (!allowed.includes(status)) {
         return res.status(400).json({ error: 'অবৈধ স্ট্যাটাস' });
     }
@@ -188,7 +202,7 @@ router.get('/track/:query', async (req, res) => {
         ? { _id: query }
         : { phone: query };
 
-    const orders = await Order.find(filter).sort({ createdAt: -1 });
+    const orders = await Order.find(filter).select('-items.costPrice -courierCost -packagingCost').sort({ createdAt: -1 });
     if (orders.length === 0) return res.status(404).json({ error: 'কোনো অর্ডার পাওয়া যায়নি' });
     res.json(orders);
 });

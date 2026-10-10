@@ -17,9 +17,9 @@ export function buildCustomers(orders) {
         }
         c.totalOrders += 1;
         if (o.status === 'delivered') c.delivered += 1;
-        else if (o.status === 'cancelled') c.cancelled += 1;
+        else if (isBad(o)) c.cancelled += 1;
         else c.active += 1;
-        if (o.status !== 'cancelled') c.totalSpent += Number(o.total) || 0; // বাতিল বাদে
+        if (!isBad(o)) c.totalSpent += Number(o.total) || 0; // বাতিল বাদে
         if (at < c.firstOrderAt) c.firstOrderAt = at;
         if (at >= c.lastOrderAt) c.lastOrderAt = at;
         if (at >= c._nameAt && o.customerName) { c.name = o.customerName; c._nameAt = at; } // সবচেয়ে নতুন নাম
@@ -32,4 +32,9 @@ export function buildCustomers(orders) {
             risk: riskLevel(c.delivered, c.cancelled),
         }))
         .sort((a, b) => (a.lastOrderAt < b.lastOrderAt ? 1 : -1));
+}
+
+// বাতিল বা ফেরত — দুটোই "খারাপ" ফল হিসেবে ধরা হয়
+function isBad(o) {
+    return o.status === 'cancelled' || o.status === 'returned';
 }

@@ -6,6 +6,7 @@ const variantSchema = new mongoose.Schema({
     price: { type: Number, required: true },
     originalPrice: { type: Number },                // ছাড়ের আগের দাম (ঐচ্ছিক)
     stock: { type: Number, required: true, default: 0 },
+    costPrice: { type: Number, min: 0, default: 0 },  // ক্রয়মূল্য (শুধু অ্যাডমিন দেখে, কাস্টমারকে পাঠানো হয় না)
 }, { _id: true });
 
 const productSchema = new mongoose.Schema({

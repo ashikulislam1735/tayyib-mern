@@ -34,6 +34,9 @@ async function uploadFile(file) {
 export const api = {
     getProduct: (id) => request(`/products/${id}`),
     uploadFile,
+    getCosts: () => request('/settings/costs'),
+    updateCosts: (data) => request('/settings/costs', { method: 'PUT', body: JSON.stringify(data) }),
+    getAdminProducts: () => request('/products/admin/list'),
     getProducts: (category) => request(category ? `/products?category=${encodeURIComponent(category)}` : '/products'),
     getProduct: (id) => request(`/products/${id}`),
     createOrder: (payload) => request('/orders', { method: 'POST', body: JSON.stringify(payload) }),

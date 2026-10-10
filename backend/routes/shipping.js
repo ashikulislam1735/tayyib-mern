@@ -29,8 +29,8 @@ router.post('/steadfast/:orderId', async (req, res) => {
     try {
         const order = await Order.findById(orderId).lean();
         if (!order) return res.status(404).json({ error: 'অর্ডার পাওয়া যায়নি' });
-        if (order.status === 'cancelled' || order.status === 'delivered') {
-            return res.status(400).json({ error: 'বাতিল বা ডেলিভারড অর্ডার কুরিয়ারে পাঠানো যাবে না' });
+        if (order.status === 'cancelled' || order.status === 'delivered' || order.status === 'returned') {
+            return res.status(400).json({ error: 'বাতিল, ফেরত বা ডেলিভারড অর্ডার কুরিয়ারে পাঠানো যাবে না' });
         }
         const phone = String(order.phone || '').replace(/\s+/g, '');
         if (!PHONE_RE.test(phone)) {
