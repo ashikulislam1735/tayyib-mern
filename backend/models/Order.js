@@ -9,9 +9,9 @@ const orderItemSchema = new mongoose.Schema({
     quantity: { type: Number, required: true },
 }, { _id: false });
 
-// কুরিয়ার শিপমেন্টের তথ্য (Steadfast)
+// কুরিয়ার শিপমেন্টের তথ্য (Steadfast / Pathao)
 const shipmentSchema = new mongoose.Schema({
-    courier: { type: String, enum: ['steadfast'] },
+    courier: { type: String, enum: ['steadfast', 'pathao'] },
     consignmentId: { type: String },
     trackingCode: { type: String, default: '' },
     status: { type: String, default: '' }, // sending / in_review / pending / delivered / cancelled / hold ...

@@ -65,9 +65,20 @@ export default function AdminOrders() {
         }
     }
 
+    async function handleSendToPathao(o) {
+        const cod = o.paymentMethod === 'cod' ? o.total : 0;
+        const ok = window.confirm(`Pathao-তে পাঠাবেন?\n\n${o.customerName} — ${o.phone}\n${o.address}\nকুরিয়ার যে টাকা তুলবে (COD): ৳${cod}`);
+        if (!ok) return;
+        try {
+            replaceOrder(await api.sendToPathao(o._id));
+        } catch (err) {
+            alert(err.message);
+        }
+    }
+
     async function handleRefreshShipment(o) {
         try {
-            replaceOrder(await api.refreshSteadfastStatus(o._id));
+            replaceOrder(await (o.shipment.courier === 'pathao' ? api.refreshPathaoStatus(o._id) : api.refreshSteadfastStatus(o._id)));
         } catch (err) {
             alert(err.message);
         }
@@ -155,7 +166,7 @@ export default function AdminOrders() {
                     <div className="order-total"><span>সর্বমোট (ডেলিভারিসহ)</span><span>৳{o.total}</span></div>
                     {o.shipment && o.shipment.courier ? (
                         <div className="ship-row">
-                            <span>🚚 Steadfast{o.shipment.trackingCode ? ` · ট্র্যাকিং: ${o.shipment.trackingCode}` : ''}</span>
+                            <span>🚚 {o.shipment.courier === 'pathao' ? 'Pathao' : 'Steadfast'}{o.shipment.trackingCode ? ` · ট্র্যাকিং: ${o.shipment.trackingCode}` : ''}</span>
                             <strong>{SHIP_LABEL[o.shipment.status] || o.shipment.status}</strong>
                             {o.shipment.consignmentId && (
                                 <button className="link-btn" onClick={() => handleRefreshShipment(o)}>স্ট্যাটাস আপডেট</button>
@@ -165,6 +176,7 @@ export default function AdminOrders() {
                         (o.status === 'pending' || o.status === 'confirmed') && (
                             <div className="ship-row">
                                 <button className="btn-primary" onClick={() => handleSendToSteadfast(o)}>Steadfast-এ পাঠান</button>
+                                <button className="btn-primary" onClick={() => handleSendToPathao(o)}>Pathao-তে পাঠান</button>
                             </div>
                         )
                     )}

@@ -15,6 +15,7 @@ const MENU = [
     { to: '/admin/categories', label: 'ক্যাটাগরির ছবি', icon: '🗂️' },
     { to: '/admin/import', label: 'প্রোডাক্ট ইমপোর্ট', icon: '📥' },
     { to: '/admin/banners', label: 'ব্যানার', icon: '🖼️' },
+    { to: '/admin/pathao', label: 'Pathao স্টোর', icon: '🛵', owner: true },
     { to: '/admin/settings', label: 'সাইট সেটিংস', icon: '⚙️', owner: true },
     { to: '/admin/admins', label: 'অ্যাডমিন ব্যবহারকারী', icon: '👤', owner: true },
     { to: '/admin/password', label: 'পাসওয়ার্ড', icon: '🔑' },

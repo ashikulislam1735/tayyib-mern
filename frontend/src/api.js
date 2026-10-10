@@ -51,6 +51,10 @@ export const api = {
     deleteAbandonedCart: (id) => request(`/abandoned/${id}`, { method: 'DELETE' }),
     sendToSteadfast: (orderId) => request(`/shipping/steadfast/${orderId}`, { method: 'POST' }),
     refreshSteadfastStatus: (orderId) => request(`/shipping/steadfast/${orderId}/status`),
+    sendToPathao: (orderId) => request(`/shipping/pathao/${orderId}`, { method: 'POST' }),
+    refreshPathaoStatus: (orderId) => request(`/shipping/pathao/${orderId}/status`),
+    getPathaoStores: () => request('/shipping/pathao-stores'),
+    createPathaoTestStore: () => request('/shipping/pathao-stores/test', { method: 'POST' }),
     // কুপন
     validateCoupon: (payload) => request('/coupons/validate', { method: 'POST', body: JSON.stringify(payload) }),
     getCoupons: () => request('/coupons'),
