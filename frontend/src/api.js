@@ -42,6 +42,17 @@ export const api = {
     getAbandonedCarts: (minutes) => request(`/abandoned?minutes=${encodeURIComponent(minutes)}`),
     markAbandonedContacted: (id) => request(`/abandoned/${id}/contacted`, { method: 'PATCH' }),
     deleteAbandonedCart: (id) => request(`/abandoned/${id}`, { method: 'DELETE' }),
+    sendToSteadfast: (orderId) => request(`/shipping/steadfast/${orderId}`, { method: 'POST' }),
+    refreshSteadfastStatus: (orderId) => request(`/shipping/steadfast/${orderId}/status`),
+    // কুপন
+    validateCoupon: (payload) => request('/coupons/validate', { method: 'POST', body: JSON.stringify(payload) }),
+    getCoupons: () => request('/coupons'),
+    createCoupon: (data) => request('/coupons', { method: 'POST', body: JSON.stringify(data) }),
+    setCouponActive: (id, active) => request(`/coupons/${id}`, { method: 'PATCH', body: JSON.stringify({ active }) }),
+    deleteCoupon: (id) => request(`/coupons/${id}`, { method: 'DELETE' }),
+    // CRM
+    getCustomers: (q) => request(`/customers${q ? `?q=${encodeURIComponent(q)}` : ''}`),
+    getCustomerOrders: (phone) => request(`/customers/${encodeURIComponent(phone)}`),
     trackOrder: (query) => request(`/orders/track/${encodeURIComponent(query)}`),
 
     // admin

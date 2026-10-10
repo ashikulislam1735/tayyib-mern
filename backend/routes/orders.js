@@ -5,6 +5,7 @@ import Product from '../models/Product.js';
 import Setting from '../models/Setting.js';
 import AbandonedCart from '../models/AbandonedCart.js';
 import { attachRisk } from '../utils/risk.js';
+import { checkCoupon, claimCoupon, releaseCoupon } from '../utils/coupon.js';
 import { requireAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -26,6 +27,8 @@ router.post('/', async (req, res) => {
 
     const reserved = []; // যেসব আইটেমের স্টক ইতোমধ্যে কমানো হয়েছে
     let orderCreated = false;
+    let couponCode = '';
+    let couponClaimed = false;
 
     // কমানো স্টক ফেরত দেওয়া
     const rollbackStock = async () => {
@@ -40,6 +43,11 @@ router.post('/', async (req, res) => {
             }
         }
         reserved.length = 0;
+        // কুপনের ব্যবহারও ফেরত
+        if (couponClaimed) {
+            try { await releaseCoupon(couponCode); } catch (e) { console.error('কুপন ফেরত দেওয়া যায়নি:', couponCode, e.message); }
+            couponClaimed = false;
+        }
     };
 
     try {
@@ -80,6 +88,16 @@ router.post('/', async (req, res) => {
             wanted.push({ productId: product._id, variantId: variant._id, qty, title: product.title, label: variant.label });
         }
 
+        // কুপন: সার্ভার নিজে যাচাই করে ছাড় হিসাব করে (ক্লায়েন্টের পাঠানো ছাড়ের সংখ্যা ধরা হয় না)
+        const subtotal = total;
+        let discount = 0;
+        if (req.body.couponCode) {
+            const check = await checkCoupon(req.body.couponCode, subtotal);
+            if (!check.ok) return res.status(400).json({ error: check.error });
+            discount = check.discount;
+            couponCode = check.coupon.code;
+        }
+
         // ডেলিভারি চার্জ অ্যাডমিন সেটিংস থেকে আসে — ঢাকার ভেতরে ডিফল্ট ৬০, বাইরে ডিফল্ট ১২০
         const settingDoc = await Setting.findOne({ key: 'site' });
         const sd = (settingDoc && settingDoc.data) || {};
@@ -87,7 +105,15 @@ router.post('/', async (req, res) => {
         const inside = pick(sd.deliveryInside, pick(sd.deliveryCharge, 60));
         const outside = pick(sd.deliveryOutside, 120);
         const deliveryCharge = deliveryArea === 'outside' ? outside : inside;
-        total += deliveryCharge;
+        total = subtotal - discount + deliveryCharge;
+
+        // কুপনের ব্যবহার নিরাপদে ১ বাড়ানো — সীমা পেরিয়ে গেলে অর্ডার আটকাবে
+        if (couponCode) {
+            if (!(await claimCoupon(couponCode))) {
+                return res.status(400).json({ error: 'কুপনটি আর ব্যবহার করা যাচ্ছে না' });
+            }
+            couponClaimed = true;
+        }
 
         // ধাপ ২: স্টক কমানো — শর্তসহ একক অপারেশন (একই সময়ে অন্য অর্ডার এলেও স্টক মাইনাসে যাবে না)
         for (const w of wanted) {
@@ -109,6 +135,8 @@ router.post('/', async (req, res) => {
             items: orderItems,
             deliveryArea,
             deliveryCharge,
+            couponCode,
+            discount,
             total,
         });
         orderCreated = true;

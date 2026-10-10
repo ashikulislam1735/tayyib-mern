@@ -6,6 +6,8 @@ const MENU = [
     { to: '/admin', label: 'ড্যাশবোর্ড', icon: '🏠', end: true },
     { to: '/admin/orders', label: 'অর্ডার', icon: '📦' },
     { to: '/admin/abandoned', label: 'অসম্পূর্ণ অর্ডার', icon: '🛒' },
+    { to: '/admin/customers', label: 'কাস্টমার', icon: '👥' },
+    { to: '/admin/coupons', label: 'কুপন', icon: '🎟️' },
     { to: '/admin/products', label: 'প্রোডাক্ট', icon: '🛍️' },
     { to: '/admin/expenses', label: 'খরচ', icon: '💸' },
     { to: '/admin/categories', label: 'ক্যাটাগরির ছবি', icon: '🗂️' },

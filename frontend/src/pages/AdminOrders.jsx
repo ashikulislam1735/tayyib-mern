@@ -10,6 +10,13 @@ function riskNote(r) {
     return `আগে শেষ হয়েছে ${r.delivered + r.cancelled}টি অর্ডার — ডেলিভারড ${r.delivered}, বাতিল ${r.cancelled}`;
 }
 
+const SHIP_LABEL = {
+    sending: 'পাঠানো হচ্ছে...', in_review: 'রিভিউতে আছে', pending: 'কুরিয়ারে পেন্ডিং',
+    delivered_approval_pending: 'ডেলিভারড (অনুমোদনের অপেক্ষায়)', partial_delivered_approval_pending: 'আংশিক ডেলিভারড (অনুমোদনের অপেক্ষায়)',
+    cancelled_approval_pending: 'বাতিল (অনুমোদনের অপেক্ষায়)', unknown_approval_pending: 'অজানা (অনুমোদনের অপেক্ষায়)',
+    delivered: 'ডেলিভারড', partial_delivered: 'আংশিক ডেলিভারড', cancelled: 'বাতিল', hold: 'হোল্ড', unknown: 'অজানা',
+};
+
 const PAYMENT_LABEL = { cod: 'ক্যাশ অন ডেলিভারি', bkash: 'bKash', nagad: 'Nagad' };
 
 // বাংলা অঙ্ককে ইংরেজি অঙ্কে বদলে নেয়, যাতে ফোন নম্বর দুভাবেই খোঁজা যায়
@@ -37,6 +44,30 @@ export default function AdminOrders() {
         try {
             await api.updateOrderStatus(id, newStatus);
             setOrders((prev) => prev.map((o) => (o._id === id ? { ...o, status: newStatus } : o)));
+        } catch (err) {
+            alert(err.message);
+        }
+    }
+
+    function replaceOrder(updated) {
+        // নতুন ডেটায় risk থাকে না, তাই পুরনো risk ধরে রাখা
+        setOrders((prev) => prev.map((o) => (o._id === updated._id ? { ...updated, risk: o.risk } : o)));
+    }
+
+    async function handleSendToSteadfast(o) {
+        const cod = o.paymentMethod === 'cod' ? o.total : 0;
+        const ok = window.confirm(`Steadfast-এ পাঠাবেন?\n\n${o.customerName} — ${o.phone}\n${o.address}\nকুরিয়ার যে টাকা তুলবে (COD): ৳${cod}`);
+        if (!ok) return;
+        try {
+            replaceOrder(await api.sendToSteadfast(o._id));
+        } catch (err) {
+            alert(err.message);
+        }
+    }
+
+    async function handleRefreshShipment(o) {
+        try {
+            replaceOrder(await api.refreshSteadfastStatus(o._id));
         } catch (err) {
             alert(err.message);
         }
@@ -118,7 +149,25 @@ export default function AdminOrders() {
                     <div style={{ fontSize: 13, color: 'var(--walnut-soft)', margin: '4px 0' }}>
                         ডেলিভারি: {o.deliveryArea === 'outside' ? 'ঢাকার বাইরে' : 'ঢাকার ভেতরে'} · ৳{o.deliveryCharge}
                     </div>
+                    {o.discount > 0 && (
+                        <div style={{ fontSize: 13, color: 'var(--walnut-soft)', margin: '4px 0' }}>কুপন {o.couponCode}: − ৳{o.discount}</div>
+                    )}
                     <div className="order-total"><span>সর্বমোট (ডেলিভারিসহ)</span><span>৳{o.total}</span></div>
+                    {o.shipment && o.shipment.courier ? (
+                        <div className="ship-row">
+                            <span>🚚 Steadfast{o.shipment.trackingCode ? ` · ট্র্যাকিং: ${o.shipment.trackingCode}` : ''}</span>
+                            <strong>{SHIP_LABEL[o.shipment.status] || o.shipment.status}</strong>
+                            {o.shipment.consignmentId && (
+                                <button className="link-btn" onClick={() => handleRefreshShipment(o)}>স্ট্যাটাস আপডেট</button>
+                            )}
+                        </div>
+                    ) : (
+                        (o.status === 'pending' || o.status === 'confirmed') && (
+                            <div className="ship-row">
+                                <button className="btn-primary" onClick={() => handleSendToSteadfast(o)}>Steadfast-এ পাঠান</button>
+                            </div>
+                        )
+                    )}
                     <div style={{ marginTop: 8 }}>
                         <label style={{ margin: '0 8px 0 0', display: 'inline' }}>স্ট্যাটাস বদলান:</label>
                         <select

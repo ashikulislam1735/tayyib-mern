@@ -33,6 +33,8 @@ import AdminCategories from './pages/AdminCategories';
 import AdminImport from './pages/AdminImport';
 import AdminExpenses from './pages/AdminExpenses';
 import AdminAbandoned from './pages/AdminAbandoned';
+import AdminCoupons from './pages/AdminCoupons';
+import AdminCustomers from './pages/AdminCustomers';
 
 function Header({ onCartClick }) {
     const { items } = useCart();
@@ -101,6 +103,8 @@ function AdminApp() {
                 <Route path="/admin/products" element={<AdminProducts />} />
                 <Route path="/admin/expenses" element={<AdminExpenses />} />
                 <Route path="/admin/abandoned" element={<AdminAbandoned />} />
+                <Route path="/admin/coupons" element={<AdminCoupons />} />
+                <Route path="/admin/customers" element={<AdminCustomers />} />
                 <Route path="/admin/categories" element={<AdminCategories />} />
                 <Route path="/admin/import" element={<AdminImport />} />
                 <Route path="/admin/banners" element={<AdminBanners />} />

@@ -318,3 +318,6 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid 
 .risk-badge.low { background: #dcf2e0; color: #1f7a3a; }
 .risk-badge.new { background: #e8e8e8; color: #555; }
 .risk-note { font-size: 12px; color: var(--walnut-soft); }
+
+/* কুরিয়ার শিপমেন্ট */
+.ship-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 8px 0; font-size: 14px; }

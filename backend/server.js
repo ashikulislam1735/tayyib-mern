@@ -12,6 +12,9 @@ import categoryRoutes from './routes/categories.js';
 import expenseRoutes from './routes/expenses.js';
 import reportRoutes from './routes/reports.js';
 import abandonedRoutes from './routes/abandoned.js';
+import shippingRoutes from './routes/shipping.js';
+import couponRoutes from './routes/coupons.js';
+import customerRoutes from './routes/customers.js';
 
 // ⚠️ JWT_SECRET দুর্বল বা না থাকলে সার্ভার চালুই হবে না
 const secret = process.env.JWT_SECRET || '';
@@ -60,6 +63,9 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/expenses', expenseRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/abandoned', abandonedRoutes);
+app.use('/api/shipping', shippingRoutes);
+app.use('/api/coupons', couponRoutes);
+app.use('/api/customers', customerRoutes);
 
 app.get('/', (req, res) => {
     res.send('Tayyib MERN ব্যাকএন্ড চালু আছে ✅');

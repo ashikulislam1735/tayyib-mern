@@ -12,6 +12,10 @@ export default function Checkout() {
     const [form, setForm] = useState({ customerName: '', phone: '', address: '', paymentMethod: 'cod', deliveryArea: 'inside' });
     const [error, setError] = useState('');
     const [submitting, setSubmitting] = useState(false);
+    const [couponInput, setCouponInput] = useState('');
+    const [coupon, setCoupon] = useState(null); // { code, discount }
+    const [couponMsg, setCouponMsg] = useState('');
+    const [couponBusy, setCouponBusy] = useState(false);
     const lastSaved = useRef(''); // একই কার্ট বারবার সার্ভারে না পাঠানোর জন্য
 
     const chargeOf = (v, d) => (Number.isFinite(Number(v)) ? Number(v) : d);
@@ -42,6 +46,28 @@ export default function Checkout() {
         api.saveAbandonedCart(payload).catch(() => { lastSaved.current = ''; });
     }
 
+    async function applyCoupon() {
+        if (!couponInput.trim()) return;
+        setCouponBusy(true);
+        setCouponMsg('');
+        try {
+            const r = await api.validateCoupon({ code: couponInput, subtotal });
+            setCoupon({ code: r.code, discount: r.discount });
+            setCouponMsg(`কুপন প্রয়োগ হয়েছে: ৳${r.discount} ছাড়`);
+        } catch (err) {
+            setCoupon(null);
+            setCouponMsg(err.message);
+        } finally {
+            setCouponBusy(false);
+        }
+    }
+
+    function removeCoupon() {
+        setCoupon(null);
+        setCouponInput('');
+        setCouponMsg('');
+    }
+
     async function handleSubmit(e) {
         e.preventDefault();
         setError('');
@@ -49,6 +75,7 @@ export default function Checkout() {
         try {
             const payload = {
                 ...form,
+                couponCode: coupon ? coupon.code : undefined,
                 items: items.map((i) => ({
                     productId: i.productId,
                     variantId: i.variantId,
@@ -111,8 +138,18 @@ export default function Checkout() {
                         <span>৳{i.price * i.quantity}</span>
                     </div>
                 ))}
+                <div style={{ margin: '10px 0' }}>
+                    <label>কুপন কোড (থাকলে)</label>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                        <input value={couponInput} onChange={(e) => { setCouponInput(e.target.value); if (coupon) { setCoupon(null); setCouponMsg(''); } }} placeholder="যেমন: WELCOME10" maxLength={20} />
+                        <button type="button" className="btn-primary" onClick={applyCoupon} disabled={couponBusy}>{couponBusy ? '...' : 'প্রয়োগ'}</button>
+                    </div>
+                    {couponMsg && <p className={`status-msg ${coupon ? '' : 'error'}`} style={{ margin: '6px 0 0', fontSize: 13 }}>{couponMsg}</p>}
+                    {coupon && <button type="button" className="link-btn" onClick={removeCoupon}>কুপন সরান</button>}
+                </div>
+                {coupon && <div className="order-line"><span>কুপন ছাড় ({coupon.code})</span><span>− ৳{coupon.discount}</span></div>}
                 <div className="order-line"><span>ডেলিভারি চার্জ ({form.deliveryArea === 'outside' ? 'ঢাকার বাইরে' : 'ঢাকার ভেতরে'})</span><span>৳{deliveryCharge}</span></div>
-                <div className="order-total"><span>সর্বমোট</span><span>৳{subtotal + deliveryCharge}</span></div>
+                <div className="order-total"><span>সর্বমোট</span><span>৳{subtotal - (coupon ? coupon.discount : 0) + deliveryCharge}</span></div>
             </div>
         </div>
     );

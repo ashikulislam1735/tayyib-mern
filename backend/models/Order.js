@@ -8,6 +8,15 @@ const orderItemSchema = new mongoose.Schema({
     quantity: { type: Number, required: true },
 }, { _id: false });
 
+// কুরিয়ার শিপমেন্টের তথ্য (Steadfast)
+const shipmentSchema = new mongoose.Schema({
+    courier: { type: String, enum: ['steadfast'] },
+    consignmentId: { type: String },
+    trackingCode: { type: String, default: '' },
+    status: { type: String, default: '' }, // sending / in_review / pending / delivered / cancelled / hold ...
+    sentAt: { type: Date },
+}, { _id: false });
+
 const orderSchema = new mongoose.Schema({
     customerName: { type: String, required: true },
     phone: { type: String, required: true },
@@ -16,8 +25,11 @@ const orderSchema = new mongoose.Schema({
     items: { type: [orderItemSchema], required: true },
     deliveryArea: { type: String, enum: ['inside', 'outside'], default: 'inside' }, // ঢাকার ভেতরে / বাইরে
     deliveryCharge: { type: Number, default: 60 },
+    couponCode: { type: String, default: '' },   // ব্যবহৃত কুপন (থাকলে)
+    discount: { type: Number, default: 0 },      // কুপনের ছাড় (পণ্যের দাম থেকে)
     total: { type: Number, required: true },
     status: { type: String, enum: ['pending', 'confirmed', 'delivered', 'cancelled'], default: 'pending' },
+    shipment: { type: shipmentSchema, default: undefined },
 }, { timestamps: true });
 
 export default mongoose.model('Order', orderSchema);
