@@ -33,6 +33,7 @@ export default function Footer() {
                         <li><Link to="/offers">অফার</Link></li>
                         <li><Link to="/about">আমাদের সম্পর্কে</Link></li>
                         <li><Link to="/track">অর্ডার ট্র্যাক</Link></li>
+                        <li><Link to="/privacy">গোপনীয়তা নীতি</Link></li>
                     </ul>
                 </div>
 

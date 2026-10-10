@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { api } from '../api';
 import { useSite } from '../context/SiteContext';
@@ -93,6 +93,10 @@ export default function Checkout() {
                         <option value="bkash">bKash</option>
                         <option value="nagad">Nagad</option>
                     </select>
+
+                    <p style={{ fontSize: 12, color: 'var(--walnut-soft)', margin: '10px 0 0' }}>
+                        অর্ডার করলে আপনি আমাদের <Link to="/privacy">গোপনীয়তা নীতি</Link> মেনে নিচ্ছেন।
+                    </p>
 
                     <button className="btn-primary" type="submit" disabled={submitting}>
                         {submitting ? 'অর্ডার হচ্ছে...' : 'অর্ডার নিশ্চিত করুন'}

@@ -17,6 +17,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Shop from './pages/Shop';
 import Offers from './pages/Offers';
 import About from './pages/About';
+import PrivacyPolicy from './pages/PrivacyPolicy';
 import Checkout from './pages/Checkout';
 import OrderConfirmed from './pages/OrderConfirmed';
 import Track from './pages/Track';
@@ -130,6 +131,7 @@ function AppShell() {
                     <Route path="/category/:name" element={<CategoryPage />} />
                     <Route path="/offers" element={<Offers />} />
                     <Route path="/about" element={<About />} />
+                    <Route path="/privacy" element={<PrivacyPolicy />} />
                     <Route path="/checkout" element={<Checkout />} />
                     <Route path="/order-confirmed/:id" element={<OrderConfirmed />} />
                     <Route path="/track" element={<Track />} />
