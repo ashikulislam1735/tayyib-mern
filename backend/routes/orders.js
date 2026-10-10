@@ -18,6 +18,20 @@ router.post('/', async (req, res) => {
     const { customerName, phone, address, paymentMethod, items } = req.body;
     const deliveryArea = req.body.deliveryArea === 'outside' ? 'outside' : 'inside';
 
+    // পেমেন্ট পদ্ধতি যাচাই — ফাঁকা হলে ক্যাশ অন ডেলিভারি
+    const method = paymentMethod === undefined || paymentMethod === '' ? 'cod' : paymentMethod;
+    if (!['cod', 'bkash', 'nagad'].includes(method)) {
+        return res.status(400).json({ error: 'পেমেন্ট পদ্ধতি সঠিক নয়' });
+    }
+    // bKash/Nagad হলে ট্রানজেকশন আইডি লাগবে (ইংরেজি অক্ষর ও সংখ্যা, ৬–২০টি)
+    let paymentTrxId = '';
+    if (method !== 'cod') {
+        paymentTrxId = typeof req.body.paymentTrxId === 'string' ? req.body.paymentTrxId.trim().toUpperCase() : '';
+        if (!/^[A-Z0-9]{6,20}$/.test(paymentTrxId)) {
+            return res.status(400).json({ error: 'ট্রানজেকশন আইডি (TrxID) লিখুন — ৬ থেকে ২০টি ইংরেজি অক্ষর বা সংখ্যা' });
+        }
+    }
+
     if (!customerName || !phone || !address || !Array.isArray(items) || items.length === 0) {
         return res.status(400).json({ error: 'নাম, ফোন, ঠিকানা ও কার্ট আইটেম দরকার' });
     }
@@ -51,6 +65,12 @@ router.post('/', async (req, res) => {
     };
 
     try {
+        // একই ট্রানজেকশন আইডি দিয়ে দ্বিতীয়বার অর্ডার ঠেকানো (বাতিল/ফেরত অর্ডারের আইডি আবার ব্যবহার করা যাবে)
+        if (paymentTrxId) {
+            const dup = await Order.findOne({ paymentTrxId, status: { $nin: ['cancelled', 'returned'] } }).select('_id').lean();
+            if (dup) return res.status(400).json({ error: 'এই ট্রানজেকশন আইডি আগেই অন্য অর্ডারে ব্যবহার হয়েছে। সঠিক TrxID দিন।' });
+        }
+
         // ধাপ ১: স্টক না ছুঁয়ে সব আইটেম যাচাই ও দাম হিসাব
         let total = 0;
         const orderItems = [];
@@ -138,7 +158,8 @@ router.post('/', async (req, res) => {
         // ধাপ ৩: অর্ডার সংরক্ষণ — ব্যর্থ হলে বাইরের catch স্টক ফেরত দেবে
         const order = await Order.create({
             customerName, phone, address,
-            paymentMethod: paymentMethod || 'cod',
+            paymentMethod: method,
+            paymentTrxId,
             items: orderItems,
             deliveryArea,
             deliveryCharge,

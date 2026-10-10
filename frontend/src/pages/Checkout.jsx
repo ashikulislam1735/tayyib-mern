@@ -9,7 +9,7 @@ export default function Checkout() {
     const navigate = useNavigate();
     const { site } = useSite();
 
-    const [form, setForm] = useState({ customerName: '', phone: '', address: '', paymentMethod: 'cod', deliveryArea: 'inside' });
+    const [form, setForm] = useState({ customerName: '', phone: '', address: '', paymentMethod: 'cod', paymentTrxId: '', deliveryArea: 'inside' });
     const [error, setError] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const [couponInput, setCouponInput] = useState('');
@@ -22,6 +22,9 @@ export default function Checkout() {
     const deliveryCharge = form.deliveryArea === 'outside'
         ? chargeOf(site.deliveryOutside, 120)
         : chargeOf(site.deliveryInside, 60);
+
+    const payable = subtotal - (coupon ? coupon.discount : 0) + deliveryCharge;
+    const payNumber = form.paymentMethod === 'bkash' ? site.bkashNumber : form.paymentMethod === 'nagad' ? site.nagadNumber : '';
 
     if (items.length === 0) {
         return <p className="status-msg">আপনার কার্ট খালি। <a href="/">শপে ফিরে যান</a></p>;
@@ -117,9 +120,20 @@ export default function Checkout() {
                     <label>পেমেন্ট পদ্ধতি</label>
                     <select name="paymentMethod" value={form.paymentMethod} onChange={handleChange}>
                         <option value="cod">ক্যাশ অন ডেলিভারি</option>
-                        <option value="bkash">bKash</option>
-                        <option value="nagad">Nagad</option>
+                        {site.bkashNumber && <option value="bkash">bKash</option>}
+                        {site.nagadNumber && <option value="nagad">Nagad</option>}
                     </select>
+
+                    {form.paymentMethod !== 'cod' && (
+                        <>
+                            <p style={{ fontSize: 14, margin: '10px 0 0' }}>
+                                প্রথমে <strong>৳{payable}</strong> টাকা এই {form.paymentMethod === 'bkash' ? 'bKash' : 'Nagad'} নম্বরে <strong>Send Money</strong> করুন: <strong>{payNumber}</strong>
+                            </p>
+                            <label>ট্রানজেকশন আইডি (TrxID)</label>
+                            <input name="paymentTrxId" value={form.paymentTrxId} onChange={handleChange} maxLength={20} required placeholder="যেমন: 8N7A6D5EE" style={{ textTransform: 'uppercase' }} />
+                            <p style={{ fontSize: 12, color: 'var(--walnut-soft)', margin: '4px 0 0' }}>টাকা পাঠানোর পর মেসেজে যে TrxID আসে সেটা এখানে লিখুন। আমরা মিলিয়ে অর্ডার কনফার্ম করব।</p>
+                        </>
+                    )}
 
                     <p style={{ fontSize: 12, color: 'var(--walnut-soft)', margin: '10px 0 0' }}>
                         অর্ডার করলে আপনি আমাদের <Link to="/privacy">গোপনীয়তা নীতি</Link> মেনে নিচ্ছেন।

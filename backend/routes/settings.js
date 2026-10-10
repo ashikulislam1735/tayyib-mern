@@ -47,6 +47,9 @@ function clean(body = {}) {
         logo,
         deliveryInside,
         deliveryOutside,
+        // bKash/Nagad পেমেন্ট নম্বর (কাস্টমার এখানে টাকা পাঠাবে); খালি থাকলে চেকআউটে ওই অপশন দেখাবে না
+        bkashNumber: digits(body.bkashNumber, 11),
+        nagadNumber: digits(body.nagadNumber, 11),
         phone,
         email: str(body.email, 100),
         address: str(body.address, 200),

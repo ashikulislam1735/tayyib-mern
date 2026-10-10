@@ -146,6 +146,7 @@ export default function AdminOrders() {
                     <div style={{ fontSize: 13, color: 'var(--walnut-soft)', margin: '4px 0' }}>
                         {new Date(o.createdAt).toLocaleString('bn-BD')}
                         {o.paymentMethod ? ` · ${PAYMENT_LABEL[o.paymentMethod] || o.paymentMethod}` : ''}
+                        {o.paymentTrxId ? ` · TrxID: ${o.paymentTrxId}` : ''}
                     </div>
                     <div style={{ fontSize: 13, color: 'var(--walnut-soft)', margin: '4px 0' }}>ঠিকানা: {o.address}</div>
                     {o.risk && (

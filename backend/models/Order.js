@@ -23,6 +23,7 @@ const orderSchema = new mongoose.Schema({
     phone: { type: String, required: true },
     address: { type: String, required: true },
     paymentMethod: { type: String, enum: ['cod', 'bkash', 'nagad'], default: 'cod' },
+    paymentTrxId: { type: String, default: '' },   // bKash/Nagad-এর ট্রানজেকশন আইডি (হাতে মিলিয়ে নেওয়ার জন্য)
     items: { type: [orderItemSchema], required: true },
     deliveryArea: { type: String, enum: ['inside', 'outside'], default: 'inside' }, // ঢাকার ভেতরে / বাইরে
     deliveryCharge: { type: Number, default: 60 },

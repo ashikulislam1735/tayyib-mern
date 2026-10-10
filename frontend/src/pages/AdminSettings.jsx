@@ -9,6 +9,8 @@ function toForm(site) {
         logo: site.logo || '',
         deliveryInside: String(site.deliveryInside ?? 60),
         deliveryOutside: String(site.deliveryOutside ?? 120),
+        bkashNumber: site.bkashNumber || '',
+        nagadNumber: site.nagadNumber || '',
         phone: site.phone || '',
         email: site.email || '',
         address: site.address || '',
@@ -69,6 +71,8 @@ export default function AdminSettings() {
             logo: form.logo,
             deliveryInside: form.deliveryInside === '' ? 60 : Number(form.deliveryInside),
             deliveryOutside: form.deliveryOutside === '' ? 120 : Number(form.deliveryOutside),
+            bkashNumber: form.bkashNumber,
+            nagadNumber: form.nagadNumber,
             phone: form.phone,
             email: form.email,
             address: form.address,
@@ -119,6 +123,13 @@ export default function AdminSettings() {
             <input type="number" min="0" max="10000" step="1" value={form.deliveryInside} onChange={(e) => set('deliveryInside', e.target.value)} />
             <label>ঢাকার বাইরে ডেলিভারি চার্জ (৳)</label>
             <input type="number" min="0" max="10000" step="1" value={form.deliveryOutside} onChange={(e) => set('deliveryOutside', e.target.value)} />
+
+            <h3>পেমেন্ট নম্বর</h3>
+            <p style={{ fontSize: 13, color: 'var(--walnut-soft)', margin: '0 0 4px' }}>এখানে নম্বর দিলে চেকআউটে ওই পদ্ধতি দেখাবে, আর কাস্টমারকে টাকা পাঠিয়ে ট্রানজেকশন আইডি (TrxID) দিতে হবে। নম্বর খালি রাখলে ওই পদ্ধতি দেখাবে না।</p>
+            <label>bKash নম্বর (১১ ডিজিট)</label>
+            <input type="tel" value={form.bkashNumber} onChange={(e) => set('bkashNumber', e.target.value)} placeholder="01XXXXXXXXX" />
+            <label>Nagad নম্বর (১১ ডিজিট)</label>
+            <input type="tel" value={form.nagadNumber} onChange={(e) => set('nagadNumber', e.target.value)} placeholder="01XXXXXXXXX" />
 
             <h3>যোগাযোগ</h3>
             <p style={{ fontSize: 13, color: 'var(--walnut-soft)', margin: '0 0 4px' }}>যে ঘর খালি থাকবে, সেটা সাইটে দেখানো হবে না।</p>
