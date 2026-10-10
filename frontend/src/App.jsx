@@ -33,6 +33,8 @@ import AdminCategories from './pages/AdminCategories';
 import AdminImport from './pages/AdminImport';
 import AdminExpenses from './pages/AdminExpenses';
 import AdminCosts from './pages/AdminCosts';
+import AdminUsers from './pages/AdminUsers';
+import OwnerOnly from './components/OwnerOnly';
 import AdminAbandoned from './pages/AdminAbandoned';
 import AdminCoupons from './pages/AdminCoupons';
 import AdminCustomers from './pages/AdminCustomers';
@@ -102,15 +104,16 @@ function AdminApp() {
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/admin/orders" element={<AdminOrders />} />
                 <Route path="/admin/products" element={<AdminProducts />} />
-                <Route path="/admin/expenses" element={<AdminExpenses />} />
-                <Route path="/admin/costs" element={<AdminCosts />} />
+                <Route path="/admin/expenses" element={<OwnerOnly><AdminExpenses /></OwnerOnly>} />
+                <Route path="/admin/costs" element={<OwnerOnly><AdminCosts /></OwnerOnly>} />
+                <Route path="/admin/admins" element={<OwnerOnly><AdminUsers /></OwnerOnly>} />
                 <Route path="/admin/abandoned" element={<AdminAbandoned />} />
                 <Route path="/admin/coupons" element={<AdminCoupons />} />
                 <Route path="/admin/customers" element={<AdminCustomers />} />
                 <Route path="/admin/categories" element={<AdminCategories />} />
                 <Route path="/admin/import" element={<AdminImport />} />
                 <Route path="/admin/banners" element={<AdminBanners />} />
-                <Route path="/admin/settings" element={<AdminSettings />} />
+                <Route path="/admin/settings" element={<OwnerOnly><AdminSettings /></OwnerOnly>} />
                 <Route path="/admin/password" element={<AdminPassword />} />
             </Route>
         </Routes>

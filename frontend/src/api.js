@@ -34,6 +34,10 @@ async function uploadFile(file) {
 export const api = {
     getProduct: (id) => request(`/products/${id}`),
     uploadFile,
+    getAdmins: () => request('/admins'),
+    createAdmin: (data) => request('/admins', { method: 'POST', body: JSON.stringify(data) }),
+    updateAdmin: (id, data) => request(`/admins/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    deleteAdmin: (id) => request(`/admins/${id}`, { method: 'DELETE' }),
     getCosts: () => request('/settings/costs'),
     updateCosts: (data) => request('/settings/costs', { method: 'PUT', body: JSON.stringify(data) }),
     getAdminProducts: () => request('/products/admin/list'),

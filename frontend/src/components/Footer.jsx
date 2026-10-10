@@ -61,7 +61,6 @@ export default function Footer() {
 
             <div className="footer-bottom">
                 <span>© {new Date().getFullYear()} {name}। সর্বস্বত্ব সংরক্ষিত।</span>
-                <Link to="/admin" className="footer-admin">অ্যাডমিন</Link>
             </div>
         </footer>
     );

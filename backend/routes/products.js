@@ -60,7 +60,7 @@ router.post('/bulk', requireAdmin, async (req, res) => {
             if (original !== null && (!Number.isFinite(original) || original < price)) {
                 return err('originalPrice, price-এর চেয়ে কম হতে পারে না');
             }
-            const cost = num(r.costPrice);
+            const cost = req.admin.role === 'owner' ? num(r.costPrice) : null;
             if (cost !== null && (!Number.isFinite(cost) || cost < 0)) return err('costPrice সঠিক সংখ্যা নয়');
             if (stock === null) stock = 0;
             if (!Number.isInteger(stock) || stock < 0) return err('stock পূর্ণ সংখ্যা হতে হবে');
@@ -124,7 +124,9 @@ router.post('/bulk', requireAdmin, async (req, res) => {
 // GET /api/products/admin/list — ক্রয়মূল্যসহ সব প্রোডাক্ট (শুধু অ্যাডমিন)
 router.get('/admin/list', requireAdmin, async (req, res) => {
     try {
-        res.json(await Product.find().sort({ createdAt: -1 }));
+        const q = Product.find().sort({ createdAt: -1 });
+        if (req.admin.role !== 'owner') q.select('-variants.costPrice'); // স্টাফ ক্রয়মূল্য দেখে না
+        res.json(await q);
     } catch (err) {
         res.status(500).json({ error: 'প্রোডাক্ট লোড করতে সমস্যা হয়েছে' });
     }
@@ -144,7 +146,11 @@ router.get('/:id', async (req, res) => {
 // POST /api/products — নতুন প্রোডাক্ট যোগ (শুধু অ্যাডমিন)
 router.post('/', requireAdmin, async (req, res) => {
     try {
-        const product = await Product.create(req.body);
+        const body = { ...req.body };
+        if (req.admin.role !== 'owner' && Array.isArray(body.variants)) {
+            body.variants = body.variants.map((v) => ({ ...v, costPrice: 0 })); // স্টাফ ক্রয়মূল্য বসাতে পারে না
+        }
+        const product = await Product.create(body);
         res.status(201).json(product);
     } catch (err) {
         res.status(400).json({ error: err.message });
@@ -154,7 +160,14 @@ router.post('/', requireAdmin, async (req, res) => {
 // PUT /api/products/:id — প্রোডাক্ট এডিট (শুধু অ্যাডমিন)
 router.put('/:id', requireAdmin, async (req, res) => {
     try {
-        const product = await Product.findByIdAndUpdate(req.params.id, req.body, {
+        const body = { ...req.body };
+        if (req.admin.role !== 'owner' && Array.isArray(body.variants)) {
+            // স্টাফ এডিট করলে আগের ক্রয়মূল্য (সাইজের নাম মিলিয়ে) অক্ষত থাকে
+            const existing = await Product.findById(req.params.id).lean();
+            const old = new Map(((existing && existing.variants) || []).map((v) => [v.label, v.costPrice || 0]));
+            body.variants = body.variants.map((v) => ({ ...v, costPrice: old.get(v.label) || 0 }));
+        }
+        const product = await Product.findByIdAndUpdate(req.params.id, body, {
             new: true,
             runValidators: true,
         });

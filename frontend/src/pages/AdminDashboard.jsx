@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api';
+import { useAuth } from '../context/AuthContext';
 
 const LOW_STOCK = 5;
 const money = (v) => `৳${Number(v || 0).toLocaleString('en-BD', { maximumFractionDigits: 2 })}`;
@@ -8,6 +9,7 @@ const STATUS_LABEL = { pending: 'Pending', confirmed: 'Confirmed', delivered: 'D
 const PERIODS = [['today', 'আজ'], ['last7Days', 'শেষ ৭ দিন'], ['last30Days', 'শেষ ৩০ দিন']];
 
 export default function AdminDashboard() {
+    const { isOwner } = useAuth();
     const [orders, setOrders] = useState([]);
     const [products, setProducts] = useState([]);
     const [error, setError] = useState('');
@@ -27,8 +29,9 @@ export default function AdminDashboard() {
 
     // বিক্রির সারাংশ আলাদা লোড হয় — এটা ব্যর্থ হলেও বাকি ড্যাশবোর্ড চলবে
     useEffect(() => {
+        if (!isOwner) return;
         api.getReportSummary().then(setReport).catch((e) => setReportError(e.message));
-    }, []);
+    }, [isOwner]);
 
     const maxDaily = report ? Math.max(1, ...report.daily.map((d) => d.sales)) : 1;
 
@@ -56,7 +59,7 @@ export default function AdminDashboard() {
 
     return (
         <div>
-            <div className="panel">
+            {isOwner && <div className="panel">
                 <h3 style={{ marginTop: 0 }}>বিক্রি ও খরচের সারাংশ</h3>
                 {reportError && <p className="status-msg error">{reportError}</p>}
                 {!report && !reportError && <p style={{ margin: 0 }}>সারাংশ লোড হচ্ছে...</p>}
@@ -104,7 +107,7 @@ export default function AdminDashboard() {
                         </div>
                     </>
                 )}
-            </div>
+            </div>}
 
             <div className="admin-cards" style={{ marginTop: 18 }}>
                 <Link to="/admin/orders" className="admin-card">

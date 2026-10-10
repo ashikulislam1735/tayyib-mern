@@ -29,12 +29,12 @@ router.post('/login', loginLimiter, async (req, res) => {
     recordLoginSuccess(req);
 
     const token = jwt.sign(
-        { id: admin._id, username: admin.username },
+        { id: admin._id, username: admin.username, role: admin.role || 'owner' },
         process.env.JWT_SECRET,
         { expiresIn: '7d' }
     );
 
-    res.json({ token, username: admin.username });
+    res.json({ token, username: admin.username, role: admin.role || 'owner' });
 });
 
 // POST /api/auth/change-password — লগইন করা অ্যাডমিন নিজের পাসওয়ার্ড বদলাবে

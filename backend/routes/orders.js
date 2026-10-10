@@ -176,6 +176,14 @@ router.post('/', async (req, res) => {
 router.get('/', requireAdmin, async (req, res) => {
     try {
         const orders = await Order.find().sort({ createdAt: -1 }).lean();
+        if (req.admin.role !== 'owner') {
+            // স্টাফ ক্রয়মূল্য ও কুরিয়ার/প্যাকেজিং খরচ দেখে না
+            orders.forEach((o) => {
+                delete o.courierCost;
+                delete o.packagingCost;
+                (o.items || []).forEach((i) => { delete i.costPrice; });
+            });
+        }
         res.json(attachRisk(orders)); // প্রতিটা অর্ডারে ফোন নম্বরের ইতিহাস থেকে ঝুঁকির লেভেল
     } catch {
         res.status(500).json({ error: 'অর্ডারের তালিকা আনতে সমস্যা হয়েছে' });
@@ -190,7 +198,9 @@ router.patch('/:id/status', requireAdmin, async (req, res) => {
         return res.status(400).json({ error: 'অবৈধ স্ট্যাটাস' });
     }
 
-    const order = await Order.findByIdAndUpdate(req.params.id, { status }, { new: true });
+    const q = Order.findByIdAndUpdate(req.params.id, { status }, { new: true });
+    if (req.admin.role !== 'owner') q.select('-items.costPrice -courierCost -packagingCost');
+    const order = await q;
     if (!order) return res.status(404).json({ error: 'অর্ডার পাওয়া যায়নি' });
     res.json(order);
 });

@@ -17,7 +17,7 @@ async function run() {
         console.log(`⚠️  "${USERNAME}" নামে অ্যাডমিন ইতিমধ্যে আছে, নতুন করে বানানো হলো না।`);
     } else {
         const passwordHash = await bcrypt.hash(PASSWORD, 10);
-        await Admin.create({ username: USERNAME, passwordHash });
+        await Admin.create({ username: USERNAME, passwordHash, role: 'owner' });
         console.log(`✅ অ্যাডমিন তৈরি হয়েছে — ইউজারনেম: ${USERNAME}, পাসওয়ার্ড: ${PASSWORD}`);
         console.log('লগইন করার পর এই পাসওয়ার্ড বদলে নেওয়ার পরামর্শ থাকলো।');
     }

@@ -1,7 +1,7 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import Expense from '../models/Expense.js';
-import { requireAdmin } from '../middleware/auth.js';
+import { requireAdmin, requireOwner } from '../middleware/auth.js';
 
 const router = express.Router();
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -14,7 +14,7 @@ function parseDhakaDate(value, endOfDay = false) {
     return new Date(`${value}T${endOfDay ? '23:59:59.999' : '00:00:00.000'}+06:00`);
 }
 
-router.use(requireAdmin);
+router.use(requireAdmin, requireOwner);
 
 // GET /api/expenses?from=YYYY-MM-DD&to=YYYY-MM-DD
 router.get('/', async (req, res) => {

@@ -9,18 +9,19 @@ const MENU = [
     { to: '/admin/customers', label: 'কাস্টমার', icon: '👥' },
     { to: '/admin/coupons', label: 'কুপন', icon: '🎟️' },
     { to: '/admin/products', label: 'প্রোডাক্ট', icon: '🛍️' },
-    { to: '/admin/expenses', label: 'খরচ', icon: '💸' },
-    { to: '/admin/costs', label: 'কুরিয়ার ও প্যাকেজিং খরচ', icon: '🚚' },
+    { to: '/admin/expenses', label: 'খরচ', icon: '💸', owner: true },
+    { to: '/admin/costs', label: 'কুরিয়ার ও প্যাকেজিং খরচ', icon: '🚚', owner: true },
     { to: '/admin/categories', label: 'ক্যাটাগরির ছবি', icon: '🗂️' },
     { to: '/admin/import', label: 'প্রোডাক্ট ইমপোর্ট', icon: '📥' },
     { to: '/admin/banners', label: 'ব্যানার', icon: '🖼️' },
-    { to: '/admin/settings', label: 'সাইট সেটিংস', icon: '⚙️' },
+    { to: '/admin/settings', label: 'সাইট সেটিংস', icon: '⚙️', owner: true },
+    { to: '/admin/admins', label: 'অ্যাডমিন ব্যবহারকারী', icon: '👤', owner: true },
     { to: '/admin/password', label: 'পাসওয়ার্ড', icon: '🔑' },
 ];
 
 export default function AdminLayout() {
     const [open, setOpen] = useState(false);
-    const { username, logout } = useAuth();
+    const { username, logout, isOwner } = useAuth();
     const location = useLocation();
     const navigate = useNavigate();
 
@@ -64,7 +65,7 @@ export default function AdminLayout() {
                     <button className="admin-icon-btn" onClick={() => setOpen(false)} aria-label="মেনু বন্ধ করুন">✕</button>
                 </div>
                 <nav className="admin-menu">
-                    {MENU.map((m) => (
+                    {MENU.filter((m) => !m.owner || isOwner).map((m) => (
                         <NavLink key={m.to} to={m.to} end={m.end}>
                             <span>{m.icon}</span> {m.label}
                         </NavLink>

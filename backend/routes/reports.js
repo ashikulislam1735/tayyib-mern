@@ -1,7 +1,7 @@
 import express from 'express';
 import Order from '../models/Order.js';
 import Expense from '../models/Expense.js';
-import { requireAdmin } from '../middleware/auth.js';
+import { requireAdmin, requireOwner } from '../middleware/auth.js';
 
 const router = express.Router();
 const TIME_ZONE = 'Asia/Dhaka';
@@ -29,7 +29,7 @@ function money(value) {
     return Math.round((Number(value) || 0) * 100) / 100;
 }
 
-router.use(requireAdmin);
+router.use(requireAdmin, requireOwner);
 
 router.get('/summary', async (req, res) => {
     try {

@@ -1,6 +1,6 @@
 import express from 'express';
 import Setting from '../models/Setting.js';
-import { requireAdmin } from '../middleware/auth.js';
+import { requireAdmin, requireOwner } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -74,7 +74,7 @@ router.get('/', async (req, res) => {
 });
 
 // PUT /api/settings — শুধু অ্যাডমিন
-router.put('/', requireAdmin, async (req, res) => {
+router.put('/', requireAdmin, requireOwner, async (req, res) => {
     try {
         const data = clean(req.body);
         await Setting.findOneAndUpdate({ key: 'site' }, { key: 'site', data }, { upsert: true, new: true });
@@ -92,7 +92,7 @@ const cost = (v, label) => {
     return Math.round(n);
 };
 
-router.get('/costs', requireAdmin, async (req, res) => {
+router.get('/costs', requireAdmin, requireOwner, async (req, res) => {
     try {
         const doc = await Setting.findOne({ key: 'costs' });
         const d = (doc && doc.data) || {};
@@ -102,7 +102,7 @@ router.get('/costs', requireAdmin, async (req, res) => {
     }
 });
 
-router.put('/costs', requireAdmin, async (req, res) => {
+router.put('/costs', requireAdmin, requireOwner, async (req, res) => {
     try {
         const b = req.body || {};
         const data = {

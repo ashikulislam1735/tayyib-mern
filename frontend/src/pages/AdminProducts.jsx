@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { api } from '../api';
+import { useAuth } from '../context/AuthContext';
 
 const EMPTY_VARIANT = { label: '', price: '', originalPrice: '', costPrice: '', stock: '' };
 const EMPTY_FORM = { title: '', category: '', subCategory: '', icon: '🛍️', shortDescription: '', videoUrl: '', images: [], description: '', variants: [{ ...EMPTY_VARIANT }] };
 
 export default function AdminProducts() {
+    const { isOwner } = useAuth();
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -261,8 +263,12 @@ export default function AdminProducts() {
                             <input type="number" value={v.price} onChange={(e) => setVariant(i, 'price', e.target.value)} />
                             <label>ছাড়ের আগের দাম (ঐচ্ছিক)</label>
                             <input type="number" value={v.originalPrice} onChange={(e) => setVariant(i, 'originalPrice', e.target.value)} />
-                            <label>ক্রয়মূল্য (৳) — শুধু আপনি দেখবেন, কাস্টমার দেখবে না</label>
-                            <input type="number" value={v.costPrice} onChange={(e) => setVariant(i, 'costPrice', e.target.value)} />
+                            {isOwner && (
+                                <>
+                                    <label>ক্রয়মূল্য (৳) — শুধু মালিক দেখবেন, কাস্টমার ও স্টাফ দেখবে না</label>
+                                    <input type="number" value={v.costPrice} onChange={(e) => setVariant(i, 'costPrice', e.target.value)} />
+                                </>
+                            )}
                             <label>স্টক</label>
                             <input type="number" value={v.stock} onChange={(e) => setVariant(i, 'stock', e.target.value)} />
                             {form.variants.length > 1 && (

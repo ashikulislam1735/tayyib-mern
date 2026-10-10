@@ -69,6 +69,8 @@ router.post('/', async (req, res) => {
 
         const productIds = [...new Set([...wanted.values()].map((w) => w.productId))];
         const products = await Product.find({ _id: { $in: productIds } }).select('title variants').lean();
+        // ক্রয়মূল্য এখানে লাগে না — স্টাফের চোখ থেকে লুকাতে সরিয়ে দেওয়া হয়
+        products.forEach((p) => (p.variants || []).forEach((v) => { delete v.costPrice; }));
         const productMap = new Map(products.map((p) => [String(p._id), p]));
 
         const items = [];
