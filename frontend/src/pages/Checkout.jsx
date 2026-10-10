@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { api } from '../api';
@@ -12,6 +12,7 @@ export default function Checkout() {
     const [form, setForm] = useState({ customerName: '', phone: '', address: '', paymentMethod: 'cod', deliveryArea: 'inside' });
     const [error, setError] = useState('');
     const [submitting, setSubmitting] = useState(false);
+    const lastSaved = useRef(''); // একই কার্ট বারবার সার্ভারে না পাঠানোর জন্য
 
     const chargeOf = (v, d) => (Number.isFinite(Number(v)) ? Number(v) : d);
     const deliveryCharge = form.deliveryArea === 'outside'
@@ -24,6 +25,21 @@ export default function Checkout() {
 
     function handleChange(e) {
         setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
+    }
+
+    // ফোন নম্বর লেখা শেষ হলে কার্ট চুপচাপ সেভ — ব্যর্থ হলে কাস্টমারকে কিছু দেখানো হয় না
+    function saveCartQuietly() {
+        const phone = form.phone.trim();
+        if (!/^01[0-9]{9}$/.test(phone) || items.length === 0) return;
+        const payload = {
+            phone,
+            customerName: form.customerName.trim(),
+            items: items.map((i) => ({ productId: i.productId, variantId: i.variantId, quantity: i.quantity })),
+        };
+        const signature = JSON.stringify(payload);
+        if (signature === lastSaved.current) return;
+        lastSaved.current = signature;
+        api.saveAbandonedCart(payload).catch(() => { lastSaved.current = ''; });
     }
 
     async function handleSubmit(e) {
@@ -59,7 +75,8 @@ export default function Checkout() {
                     <input name="customerName" value={form.customerName} onChange={handleChange} required />
 
                     <label>মোবাইল নম্বর</label>
-                    <input name="phone" value={form.phone} onChange={handleChange} pattern="01[0-9]{9}" required />
+                    <input name="phone" value={form.phone} onChange={handleChange} onBlur={saveCartQuietly} pattern="01[0-9]{9}" required />
+                    <p style={{ fontSize: 12, color: 'var(--walnut-soft)', margin: '4px 0 0' }}>অর্ডার সম্পূর্ণ না হলে আমরা এই নম্বরে যোগাযোগ করতে পারি।</p>
 
                     <label>ডেলিভারি এলাকা</label>
                     <select name="deliveryArea" value={form.deliveryArea} onChange={handleChange}>

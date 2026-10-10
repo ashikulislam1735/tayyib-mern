@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import Order from '../models/Order.js';
 import Product from '../models/Product.js';
 import Setting from '../models/Setting.js';
+import AbandonedCart from '../models/AbandonedCart.js';
 import { requireAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -62,6 +63,16 @@ router.post('/', async (req, res) => {
             deliveryCharge,
             total,
         });
+
+        // অর্ডার হয়ে গেলে একই ফোনের অসম্পূর্ণ কার্ট "recovered" — এখানে সমস্যা হলেও অর্ডার আটকাবে না
+        try {
+            await AbandonedCart.updateMany(
+                { phone: String(phone).trim(), status: { $in: ['open', 'contacted'] } },
+                { $set: { status: 'recovered' } },
+            );
+        } catch (e) {
+            console.error('অসম্পূর্ণ কার্ট আপডেট করা যায়নি:', e.message);
+        }
 
         res.status(201).json(order);
     } catch (err) {

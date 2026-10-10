@@ -46,7 +46,7 @@ router.get('/summary', async (req, res) => {
                 } },
                 { $group: {
                     _id: '$day',
-                    orders: { $sum: 1 },
+                    orders: { $sum: { $cond: [{ $ne: ['$status', 'cancelled'] }, 1, 0] } },
                     sales: { $sum: { $cond: [{ $ne: ['$status', 'cancelled'] }, '$total', 0] } },
                 } },
             ]),
@@ -59,6 +59,19 @@ router.get('/summary', async (req, res) => {
                 { $group: { _id: '$day', expenses: { $sum: '$amount' } } },
             ]),
             Order.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]),
+            // শেষ ৩০ দিনের সেরা ৫ প্রোডাক্ট (বাতিল অর্ডার বাদে)
+            Order.aggregate([
+                { $match: { status: { $ne: 'cancelled' }, createdAt: { $gte: thirtyStart, $lt: tomorrowStart } } },
+                { $unwind: '$items' },
+                { $group: {
+                    _id: '$items.title',
+                    quantity: { $sum: '$items.quantity' },
+                    revenue: { $sum: { $multiply: ['$items.price', '$items.quantity'] } },
+                } },
+                { $sort: { quantity: -1, revenue: -1 } },
+                { $limit: 5 },
+                { $project: { _id: 0, title: '$_id', quantity: 1, revenue: 1 } },
+            ]),
             Order.aggregate([
                 { $match: { status: 'delivered', createdAt: { $gte: thirtyStart, $lt: tomorrowStart } } },
                 { $group: { _id: null, sales: { $sum: { $ifNull: ['$total', 0] } } } },

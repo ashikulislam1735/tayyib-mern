@@ -37,6 +37,11 @@ export const api = {
     getProducts: (category) => request(category ? `/products?category=${encodeURIComponent(category)}` : '/products'),
     getProduct: (id) => request(`/products/${id}`),
     createOrder: (payload) => request('/orders', { method: 'POST', body: JSON.stringify(payload) }),
+    // অসম্পূর্ণ অর্ডার: গ্রাহকের দিক থেকে কার্ট সেভ (লগইন লাগে না)
+    saveAbandonedCart: (payload) => request('/abandoned', { method: 'POST', body: JSON.stringify(payload) }),
+    getAbandonedCarts: (minutes) => request(`/abandoned?minutes=${encodeURIComponent(minutes)}`),
+    markAbandonedContacted: (id) => request(`/abandoned/${id}/contacted`, { method: 'PATCH' }),
+    deleteAbandonedCart: (id) => request(`/abandoned/${id}`, { method: 'DELETE' }),
     trackOrder: (query) => request(`/orders/track/${encodeURIComponent(query)}`),
 
     // admin
@@ -53,6 +58,16 @@ export const api = {
     setCategoryImage: (name, image) => request('/categories', { method: 'PUT', body: JSON.stringify({ name, image }) }),
     importProducts: (rows, dryRun) => request('/products/bulk', { method: 'POST', body: JSON.stringify({ rows, dryRun }) }),
     getAllOrders: () => request('/orders'),
+    getReportSummary: () => request('/reports/summary'),
+    getExpenses: (f = {}) => {
+        const q = new URLSearchParams();
+        if (f.from) q.set('from', f.from);
+        if (f.to) q.set('to', f.to);
+        const qs = q.toString();
+        return request(`/expenses${qs ? `?${qs}` : ''}`);
+    },
+    createExpense: (data) => request('/expenses', { method: 'POST', body: JSON.stringify(data) }),
+    deleteExpense: (id) => request(`/expenses/${id}`, { method: 'DELETE' }),
     createProduct: (data) => request('/products', { method: 'POST', body: JSON.stringify(data) }),
     updateProduct: (id, data) => request(`/products/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
     deleteProduct: (id) => request(`/products/${id}`, { method: 'DELETE' }),

@@ -286,3 +286,26 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid 
 /* হেডারের লোগো */
 .brand { display: inline-flex; align-items: center; gap: 8px; }
 .brand-logo { height: 36px; width: auto; max-width: 120px; object-fit: contain; }
+
+/* বিক্রি ও খরচের রিপোর্ট */
+.report-periods { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.report-period { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+.report-muted { font-size: 12px; color: var(--walnut-soft); margin: 8px 0 0; }
+.report-chart { display: flex; align-items: flex-end; gap: 2px; height: 120px; border-bottom: 1px solid var(--line); }
+.report-bar-wrap { flex: 1; height: 100%; display: flex; align-items: flex-end; }
+.report-bar { width: 100%; background: var(--walnut-soft, #8a6a4a); border-radius: 2px 2px 0 0; min-height: 2px; }
+
+/* খরচ পেজ */
+.expense-form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 12px; }
+.expense-note-field { grid-column: 1 / -1; }
+.expense-list-panel { margin-top: 18px; }
+.expense-list-heading { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+.expense-filter { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; margin: 10px 0; }
+.expense-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); }
+.expense-details { flex: 1; display: flex; flex-direction: column; font-size: 14px; }
+.expense-details span { font-size: 12px; color: var(--walnut-soft); }
+.expense-delete { background: none; border: 0; color: var(--danger); cursor: pointer; font: inherit; }
+
+/* অসম্পূর্ণ অর্ডার */
+.abandoned-ago { font-size: 13px; color: var(--walnut-soft); margin: 4px 0; }
+.abandoned-actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: 10px; }

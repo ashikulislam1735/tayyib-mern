@@ -3,12 +3,17 @@ import { Link } from 'react-router-dom';
 import { api } from '../api';
 
 const LOW_STOCK = 5;
+const money = (v) => `৳${Number(v || 0).toLocaleString('en-BD', { maximumFractionDigits: 2 })}`;
+const STATUS_LABEL = { pending: 'Pending', confirmed: 'Confirmed', delivered: 'Delivered', cancelled: 'Cancelled' };
+const PERIODS = [['today', 'আজ'], ['last7Days', 'শেষ ৭ দিন'], ['last30Days', 'শেষ ৩০ দিন']];
 
 export default function AdminDashboard() {
     const [orders, setOrders] = useState([]);
     const [products, setProducts] = useState([]);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(true);
+    const [report, setReport] = useState(null);
+    const [reportError, setReportError] = useState('');
 
     useEffect(() => {
         Promise.all([api.getAllOrders(), api.getProducts()])
@@ -19,6 +24,13 @@ export default function AdminDashboard() {
             .catch((e) => setError(e.message))
             .finally(() => setLoading(false));
     }, []);
+
+    // বিক্রির সারাংশ আলাদা লোড হয় — এটা ব্যর্থ হলেও বাকি ড্যাশবোর্ড চলবে
+    useEffect(() => {
+        api.getReportSummary().then(setReport).catch((e) => setReportError(e.message));
+    }, []);
+
+    const maxDaily = report ? Math.max(1, ...report.daily.map((d) => d.sales)) : 1;
 
     const stats = useMemo(() => {
         const today = new Date().toDateString();
@@ -44,7 +56,54 @@ export default function AdminDashboard() {
 
     return (
         <div>
-            <div className="admin-cards">
+            <div className="panel">
+                <h3 style={{ marginTop: 0 }}>বিক্রি ও খরচের সারাংশ</h3>
+                {reportError && <p className="status-msg error">{reportError}</p>}
+                {!report && !reportError && <p style={{ margin: 0 }}>সারাংশ লোড হচ্ছে...</p>}
+                {report && (
+                    <>
+                        <div className="report-periods">
+                            {PERIODS.map(([key, label]) => {
+                                const r = report[key];
+                                return (
+                                    <div className="report-period" key={key}>
+                                        <strong>{label}</strong>
+                                        <div className="order-line"><span>অর্ডার (বাতিল বাদে)</span><span>{r.orders}</span></div>
+                                        <div className="order-line"><span>বিক্রি</span><span>{money(r.sales)}</span></div>
+                                        <div className="order-line"><span>খরচ</span><span>{money(r.expenses)}</span></div>
+                                        <div className="order-line"><strong>নিট (বিক্রি − খরচ)</strong><strong style={{ color: r.net < 0 ? 'var(--danger)' : 'inherit' }}>{money(r.net)}</strong></div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                        <p className="report-muted">মোট বিক্রি বলতে ডেলিভারি চার্জসহ, বাতিল বাদে সব অর্ডার। এটা পণ্যের কেনা দাম বাদ দেওয়া আসল লাভ নয়। শেষ ৩০ দিনে ডেলিভারড অর্ডারের বিক্রি: {money(report.deliveredSales30Days)}</p>
+
+                        <h4 style={{ margin: '14px 0 6px' }}>শেষ ৩০ দিনের দৈনিক বিক্রি</h4>
+                        <div className="report-chart">
+                            {report.daily.map((d) => (
+                                <div className="report-bar-wrap" key={d.date} title={`${d.date}: ${money(d.sales)} (${d.orders}টি অর্ডার)`}>
+                                    <div className="report-bar" style={{ height: `${Math.max(2, (d.sales / maxDaily) * 100)}%` }} />
+                                </div>
+                            ))}
+                        </div>
+
+                        <h4 style={{ margin: '14px 0 6px' }}>সেরা ৫ প্রোডাক্ট (শেষ ৩০ দিন)</h4>
+                        {report.topProducts.length === 0 && <p style={{ margin: 0 }}>এখনো কোনো বিক্রি নেই।</p>}
+                        {report.topProducts.map((t) => (
+                            <div className="order-line" key={t.title}><span>{t.title} × {t.quantity}</span><span>{money(t.revenue)}</span></div>
+                        ))}
+
+                        <h4 style={{ margin: '14px 0 6px' }}>অর্ডারের অবস্থা (সব সময়)</h4>
+                        <div className="chip-row">
+                            {Object.keys(STATUS_LABEL).map((s) => (
+                                <span className="cat-chip" key={s}>{STATUS_LABEL[s]} ({report.statusCounts[s]})</span>
+                            ))}
+                        </div>
+                    </>
+                )}
+            </div>
+
+            <div className="admin-cards" style={{ marginTop: 18 }}>
                 <Link to="/admin/orders" className="admin-card">
                     <span className="admin-card-num">{stats.todayCount}</span>
                     <span className="admin-card-label">আজকের অর্ডার</span>
