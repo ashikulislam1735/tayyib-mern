@@ -1,3 +1,3 @@
-bKash/Nagad ট্রানজেকশন আইডি (TrxID) — শুধু বদলানো ফাইল।
+ইনভয়েস + সামারি ডাউনলোড (এর সাথে আগের bKash/Nagad TrxID-এর ফাইলগুলোও আছে, তাই এটাই সর্বশেষ)।
 backend ও frontend ফোল্ডার আপনার রিপোতে কপি করে Replace করুন, তারপর GitHub Desktop থেকে Commit ও Push।
 .env ও node_modules এই জিপে নেই। নতুন কোনো প্যাকেজ লাগে না।

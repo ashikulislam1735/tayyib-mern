@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
+import { downloadCsv, dhakaDate, dhakaDateTime } from '../utils/download';
 
 const LOW_STOCK = 5;
 const money = (v) => `৳${Number(v || 0).toLocaleString('en-BD', { maximumFractionDigits: 2 })}`;
@@ -54,13 +55,44 @@ export default function AdminDashboard() {
         return { todayCount: todayOrders.length, todaySales, pending, low };
     }, [orders, products]);
 
+    // সারাংশ CSV — স্ক্রিনে যে হিসাব দেখাচ্ছে (সার্ভারের হিসাব) হুবহু সেটাই ডাউনলোড হয়
+    function downloadSummary() {
+        const rows = [
+            ['বিক্রি ও লাভের সামারি'],
+            ['তৈরির সময় (ঢাকা)', dhakaDateTime(new Date())],
+            [],
+            ['সময়কাল', 'অর্ডার (বাতিল ও ফেরত বাদে)', 'বিক্রি', 'পণ্যের ক্রয়মূল্য', 'কুরিয়ার ও প্যাকেজিং', 'খরচ', 'নিট (বিক্রি − খরচ)', 'আসল লাভ'],
+            ...PERIODS.map(([key, label]) => {
+                const r = report[key];
+                return [label, r.orders, r.sales, r.cogs, r.fees, r.expenses, r.net, r.profit];
+            }),
+            [],
+            ['শেষ ৩০ দিনের দৈনিক হিসাব'],
+            ['তারিখ', 'অর্ডার', 'বিক্রি', 'পণ্যের ক্রয়মূল্য', 'কুরিয়ার ও প্যাকেজিং', 'খরচ'],
+            ...report.daily.map((d) => [d.date, d.orders, d.sales, d.cogs, d.fees, d.expenses]),
+            [],
+            ['সেরা ৫ প্রোডাক্ট (শেষ ৩০ দিন)'],
+            ['নাম', 'বিক্রির সংখ্যা', 'বিক্রি'],
+            ...report.topProducts.map((t) => [t.title, t.quantity, t.revenue]),
+            [],
+            ['অর্ডারের অবস্থা (সব সময়)'],
+            ...Object.keys(STATUS_LABEL).map((s) => [STATUS_LABEL[s], report.statusCounts[s]]),
+            [],
+            ['নোট', 'আসল লাভ = বিক্রি − পণ্যের ক্রয়মূল্য − কুরিয়ার ও প্যাকেজিং − খরচ। ক্রয়মূল্য দেওয়া নেই এমন অর্ডারে ক্রয়মূল্য ০ ধরা হয়।'],
+        ];
+        downloadCsv(`tayyib-summary-${dhakaDate()}.csv`, rows);
+    }
+
     if (loading) return <p className="status-msg">লোড হচ্ছে...</p>;
     if (error) return <p className="status-msg error">{error}</p>;
 
     return (
         <div>
             {isOwner && <div className="panel">
-                <h3 style={{ marginTop: 0 }}>বিক্রি ও খরচের সারাংশ</h3>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+                    <h3 style={{ margin: 0 }}>বিক্রি ও খরচের সারাংশ</h3>
+                    {report && <button className="link-btn" onClick={downloadSummary}>📥 সামারি ডাউনলোড (Excel/CSV)</button>}
+                </div>
                 {reportError && <p className="status-msg error">{reportError}</p>}
                 {!report && !reportError && <p style={{ margin: 0 }}>সারাংশ লোড হচ্ছে...</p>}
                 {report && (

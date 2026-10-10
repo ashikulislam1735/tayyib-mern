@@ -402,3 +402,23 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid 
 .social-icon:hover { background: var(--gold-btn); border-color: var(--gold-btn); color: #1b2a21; }
 @media (max-width: 900px) { .footer-grid { grid-template-columns: 1fr 1fr; } .footer-about { grid-column: 1 / -1; } }
 @media (max-width: 560px) { .footer-grid { grid-template-columns: 1fr 1fr; gap: 20px; } .footer-cta-btns { width: 100%; } .fcta-solid, .fcta-line { flex: 1; justify-content: center; } }
+
+/* ইনভয়েস (স্ক্রিনে পপআপ, প্রিন্টে শুধু ইনভয়েস) */
+.invoice-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.55); z-index: 2000; overflow: auto; padding: 16px; }
+.invoice-actions { max-width: 780px; margin: 0 auto 10px; display: flex; gap: 14px; justify-content: flex-end; align-items: center; }
+.invoice-sheet { background: #fff; color: #222; max-width: 780px; margin: 0 auto; padding: 28px; border-radius: 8px; font-size: 14px; line-height: 1.6; }
+.invoice-head { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; border-bottom: 2px solid #ddd; padding-bottom: 12px; margin-bottom: 12px; }
+.invoice-logo { max-height: 56px; max-width: 160px; object-fit: contain; }
+.invoice-block { margin: 12px 0; }
+.invoice-table { width: 100%; border-collapse: collapse; margin: 8px 0; }
+.invoice-table th, .invoice-table td { border-bottom: 1px solid #e5e5e5; padding: 6px 4px; text-align: left; }
+.invoice-totals { margin-left: auto; max-width: 340px; }
+.invoice-totals > div { display: flex; justify-content: space-between; padding: 3px 0; gap: 16px; }
+.invoice-grand { border-top: 2px solid #222; font-weight: 700; font-size: 16px; margin-top: 4px; padding-top: 6px !important; }
+.invoice-thanks { text-align: center; margin-top: 24px; color: #666; }
+@media print {
+    #root { display: none !important; }
+    .invoice-overlay { position: static; background: none; padding: 0; overflow: visible; }
+    .invoice-actions { display: none !important; }
+    .invoice-sheet { max-width: none; margin: 0; padding: 0; border-radius: 0; }
+}

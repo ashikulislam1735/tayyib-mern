@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../api';
+import Invoice from '../components/Invoice';
+import { downloadCsv, dhakaDate, dhakaDateTime } from '../utils/download';
 
 const STATUS_OPTIONS = ['pending', 'confirmed', 'delivered', 'cancelled', 'returned'];
 const STATUS_LABEL = { pending: 'Pending', confirmed: 'Confirmed', delivered: 'Delivered', cancelled: 'Cancelled', returned: 'ফেরত' };
@@ -27,6 +29,7 @@ function normalize(text) {
 }
 
 export default function AdminOrders() {
+    const [invoiceOrder, setInvoiceOrder] = useState(null);
     const [orders, setOrders] = useState([]);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(true);
@@ -102,6 +105,26 @@ export default function AdminOrders() {
 
     const isFiltering = status !== 'all' || search.trim() !== '';
 
+    // এখন যে তালিকা দেখাচ্ছে (ফিল্টারসহ) সেটা CSV হিসেবে ডাউনলোড
+    function exportOrders() {
+        const hasCosts = filtered.some((o) => 'courierCost' in o); // স্টাফের ডেটায় খরচ থাকে না
+        const head = ['অর্ডার নং', 'তারিখ', 'নাম', 'ফোন', 'ঠিকানা', 'পেমেন্ট', 'TrxID', 'স্ট্যাটাস', 'পণ্য', 'পণ্যের দাম', 'কুপন ছাড়', 'ডেলিভারি চার্জ', 'মোট'];
+        if (hasCosts) head.push('ক্রয়মূল্য', 'কুরিয়ার খরচ', 'প্যাকেজিং খরচ');
+        const rows = [head];
+        filtered.forEach((o) => {
+            const items = (o.items || []).map((i) => `${i.title} (${i.variantLabel}) x${i.quantity}`).join('; ');
+            const goods = (o.items || []).reduce((s, i) => s + i.price * i.quantity, 0);
+            const row = [String(o._id).slice(-6).toUpperCase(), dhakaDateTime(o.createdAt), o.customerName, o.phone, o.address,
+                PAYMENT_LABEL[o.paymentMethod] || o.paymentMethod || '', o.paymentTrxId || '', STATUS_LABEL[o.status] || o.status,
+                items, goods, o.discount || 0, o.deliveryCharge || 0, o.total || 0];
+            if (hasCosts) {
+                row.push((o.items || []).reduce((s, i) => s + (i.costPrice || 0) * i.quantity, 0), o.courierCost || 0, o.packagingCost || 0);
+            }
+            rows.push(row);
+        });
+        downloadCsv(`tayyib-orders-${dhakaDate()}.csv`, rows);
+    }
+
     return (
         <div>
             <input
@@ -112,6 +135,7 @@ export default function AdminOrders() {
                 onChange={(e) => setSearch(e.target.value)}
             />
 
+            <button className="link-btn" onClick={exportOrders} disabled={filtered.length === 0}>📥 এই তালিকা ডাউনলোড (CSV)</button>
             <div className="chip-row">
                 <button className={`cat-chip ${status === 'all' ? 'active' : ''}`} onClick={() => setStatus('all')}>
                     সব ({counts.all})
@@ -136,6 +160,8 @@ export default function AdminOrders() {
             {!loading && isFiltering && orders.length > 0 && filtered.length === 0 && (
                 <p className="status-msg">এই শর্তে কোনো অর্ডার মেলেনি।</p>
             )}
+
+            {invoiceOrder && <Invoice order={invoiceOrder} onClose={() => setInvoiceOrder(null)} />}
 
             {filtered.map((o) => (
                 <div className="order-card" key={o._id}>
@@ -192,6 +218,7 @@ export default function AdminOrders() {
                                 <option key={s} value={s}>{STATUS_LABEL[s]}</option>
                             ))}
                         </select>
+                        <button className="link-btn" style={{ marginLeft: 12 }} onClick={() => setInvoiceOrder(o)}>🧾 ইনভয়েস</button>
                     </div>
                 </div>
             ))}

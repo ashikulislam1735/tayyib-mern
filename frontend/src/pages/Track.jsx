@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { api } from '../api';
+import Invoice from '../components/Invoice';
 
 const STATUS_LABEL = { pending: 'অর্ডার সম্পন্ন হয়েছে', confirmed: 'কনফার্ম হয়েছে', delivered: 'ডেলিভারি সম্পন্ন', cancelled: 'বাতিল', returned: 'ফেরত এসেছে' };
 
@@ -7,6 +8,7 @@ export default function Track() {
     const [query, setQuery] = useState('');
     const [orders, setOrders] = useState([]);
     const [error, setError] = useState('');
+    const [invoiceOrder, setInvoiceOrder] = useState(null);
 
     async function handleSearch(e) {
         e.preventDefault();
@@ -37,6 +39,8 @@ export default function Track() {
 
             {error && <p className="status-msg error">{error}</p>}
 
+            {invoiceOrder && <Invoice order={invoiceOrder} onClose={() => setInvoiceOrder(null)} />}
+
             {orders.map((o) => (
                 <div className="order-card" key={o._id}>
                     <div className="order-line">
@@ -48,6 +52,7 @@ export default function Track() {
                         <div key={idx} style={{ fontSize: 14 }}>{it.title} ({it.variantLabel}) × {it.quantity}</div>
                     ))}
                     <div className="order-total"><span>সর্বমোট</span><span>৳{o.total}</span></div>
+                    <button className="link-btn" onClick={() => setInvoiceOrder(o)}>🧾 ইনভয়েস দেখুন / ডাউনলোড</button>
                 </div>
             ))}
         </div>
