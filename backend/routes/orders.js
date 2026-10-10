@@ -4,6 +4,7 @@ import Order from '../models/Order.js';
 import Product from '../models/Product.js';
 import Setting from '../models/Setting.js';
 import AbandonedCart from '../models/AbandonedCart.js';
+import { attachRisk } from '../utils/risk.js';
 import { requireAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -131,8 +132,12 @@ router.post('/', async (req, res) => {
 
 // GET /api/orders — সব অর্ডার (শুধু লগইন করা অ্যাডমিনের জন্য)
 router.get('/', requireAdmin, async (req, res) => {
-    const orders = await Order.find().sort({ createdAt: -1 });
-    res.json(orders);
+    try {
+        const orders = await Order.find().sort({ createdAt: -1 }).lean();
+        res.json(attachRisk(orders)); // প্রতিটা অর্ডারে ফোন নম্বরের ইতিহাস থেকে ঝুঁকির লেভেল
+    } catch {
+        res.status(500).json({ error: 'অর্ডারের তালিকা আনতে সমস্যা হয়েছে' });
+    }
 });
 
 // PATCH /api/orders/:id/status — অর্ডারের স্ট্যাটাস বদলানো (শুধু অ্যাডমিন)

@@ -3,6 +3,13 @@ import { api } from '../api';
 
 const STATUS_OPTIONS = ['pending', 'confirmed', 'delivered', 'cancelled'];
 const STATUS_LABEL = { pending: 'Pending', confirmed: 'Confirmed', delivered: 'Delivered', cancelled: 'Cancelled' };
+const RISK_LABEL = { high: '⚠️ High Risk', medium: '⚠️ Medium Risk', low: '✅ নিরাপদ', new: '🆕 নতুন/অল্প ইতিহাস' };
+
+function riskNote(r) {
+    if (!r || r.otherOrders === 0) return 'এই নম্বরে আগে কোনো অর্ডার নেই';
+    return `আগে শেষ হয়েছে ${r.delivered + r.cancelled}টি অর্ডার — ডেলিভারড ${r.delivered}, বাতিল ${r.cancelled}`;
+}
+
 const PAYMENT_LABEL = { cod: 'ক্যাশ অন ডেলিভারি', bkash: 'bKash', nagad: 'Nagad' };
 
 // বাংলা অঙ্ককে ইংরেজি অঙ্কে বদলে নেয়, যাতে ফোন নম্বর দুভাবেই খোঁজা যায়
@@ -99,6 +106,12 @@ export default function AdminOrders() {
                         {o.paymentMethod ? ` · ${PAYMENT_LABEL[o.paymentMethod] || o.paymentMethod}` : ''}
                     </div>
                     <div style={{ fontSize: 13, color: 'var(--walnut-soft)', margin: '4px 0' }}>ঠিকানা: {o.address}</div>
+                    {o.risk && (
+                        <div className="risk-row">
+                            <span className={`risk-badge ${o.risk.level}`}>{RISK_LABEL[o.risk.level]}</span>
+                            <span className="risk-note">{riskNote(o.risk)}</span>
+                        </div>
+                    )}
                     {o.items.map((it, idx) => (
                         <div key={idx} style={{ fontSize: 14 }}>{it.title} ({it.variantLabel}) × {it.quantity} — ৳{it.price * it.quantity}</div>
                     ))}

@@ -309,3 +309,12 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid 
 /* অসম্পূর্ণ অর্ডার */
 .abandoned-ago { font-size: 13px; color: var(--walnut-soft); margin: 4px 0; }
 .abandoned-actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: 10px; }
+
+/* অর্ডারের ঝুঁকির ব্যাজ */
+.risk-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 6px 0; }
+.risk-badge { font-size: 0.75rem; font-weight: 700; padding: 3px 12px; border-radius: 12px; white-space: nowrap; }
+.risk-badge.high { background: #fbdcd7; color: #a33d2f; }
+.risk-badge.medium { background: #fdecc8; color: #8a5a0f; }
+.risk-badge.low { background: #dcf2e0; color: #1f7a3a; }
+.risk-badge.new { background: #e8e8e8; color: #555; }
+.risk-note { font-size: 12px; color: var(--walnut-soft); }
