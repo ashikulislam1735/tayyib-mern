@@ -422,3 +422,6 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid 
     .invoice-actions { display: none !important; }
     .invoice-sheet { max-width: none; margin: 0; padding: 0; border-radius: 0; }
 }
+
+/* রিভিউয়ের "ক্রেতা" ব্যাজ */
+.verified-badge { font-size: 0.72rem; font-weight: 700; padding: 2px 10px; border-radius: 12px; background: #dcf2e0; color: #1f7a3a; white-space: nowrap; }

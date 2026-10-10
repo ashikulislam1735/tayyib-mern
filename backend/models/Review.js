@@ -6,6 +6,7 @@ const reviewSchema = new mongoose.Schema({
     name: { type: String, required: true, trim: true, maxlength: 40 },
     rating: { type: Number, required: true, min: 1, max: 5 },
     comment: { type: String, required: true, trim: true, maxlength: 600 },
+    verifiedBuyer: { type: Boolean, default: false },   // রিভিউদাতার ফোনে এই প্রোডাক্টের ডেলিভারড অর্ডার মিলেছে
     status: { type: String, enum: ['pending', 'approved'], default: 'pending', index: true },
 }, { timestamps: true });
 

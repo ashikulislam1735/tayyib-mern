@@ -2,6 +2,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import Review from '../models/Review.js';
 import Product from '../models/Product.js';
+import Order from '../models/Order.js';
 import { requireAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -43,7 +44,7 @@ router.get('/product/:id', async (req, res) => {
     try {
         if (!mongoose.isValidObjectId(req.params.id)) return res.status(400).json({ error: 'অবৈধ প্রোডাক্ট ID' });
         const reviews = await Review.find({ product: req.params.id, status: 'approved' })
-            .select('name rating comment createdAt')
+            .select('name rating comment verifiedBuyer createdAt')
             .sort({ createdAt: -1 })
             .limit(100)
             .lean();
@@ -70,7 +71,16 @@ router.post('/', async (req, res) => {
         const exists = await Product.exists({ _id: b.productId });
         if (!exists) return res.status(404).json({ error: 'প্রোডাক্ট পাওয়া যায়নি' });
 
-        await Review.create({ product: b.productId, name, rating, comment, status: 'pending' });
+        // ঐচ্ছিক ফোন নম্বর: শুধু "✅ ক্রেতা" ব্যাজ যাচাইয়ের জন্য। নম্বরটা সেভ করা হয় না, উত্তরেও কিছু বলা হয় না
+        // (যাতে কেউ রিভিউ ফর্ম দিয়ে "এই নম্বর কিনেছে কিনা" জানতে না পারে)
+        let verifiedBuyer = false;
+        const rawPhone = typeof b.phone === 'string' ? b.phone.replace(/\s+/g, '') : '';
+        if (rawPhone) {
+            if (!/^01[0-9]{9}$/.test(rawPhone)) return res.status(400).json({ error: 'মোবাইল নম্বর ১১ ডিজিটের (01XXXXXXXXX) হতে হবে' });
+            verifiedBuyer = Boolean(await Order.exists({ phone: rawPhone, status: 'delivered', 'items.productId': b.productId }));
+        }
+
+        await Review.create({ product: b.productId, name, rating, comment, verifiedBuyer, status: 'pending' });
         res.status(201).json({ message: 'ধন্যবাদ! আপনার রিভিউ অনুমোদনের পর সাইটে দেখা যাবে।' });
     } catch {
         res.status(500).json({ error: 'রিভিউ জমা দেওয়া যায়নি' });

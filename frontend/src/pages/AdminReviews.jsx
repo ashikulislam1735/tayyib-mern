@@ -49,7 +49,7 @@ export default function AdminReviews() {
                 <div className="panel review-admin" key={r._id}>
                     <div className="expense-details">
                         <strong>{r.product ? r.product.title : '(প্রোডাক্ট মুছে গেছে)'}</strong>
-                        <span><Stars value={r.rating} /> {r.name} · {new Date(r.createdAt).toLocaleString('bn-BD', { timeZone: 'Asia/Dhaka' })}</span>
+                        <span><Stars value={r.rating} /> {r.name} {r.verifiedBuyer && <strong style={{ color: '#1f7a3a' }}>✅ ক্রেতা (যাচাইকৃত)</strong>} · {new Date(r.createdAt).toLocaleString('bn-BD', { timeZone: 'Asia/Dhaka' })}</span>
                         <p style={{ margin: '6px 0 0' }}>{r.comment}</p>
                     </div>
                     <div className="review-actions">

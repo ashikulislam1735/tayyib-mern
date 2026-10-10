@@ -5,7 +5,7 @@ import Stars from './Stars';
 // প্রোডাক্ট ডিটেইল পেজের রিভিউ অংশ: অনুমোদিত রিভিউ দেখায় + নতুন রিভিউ নেয়
 export default function Reviews({ productId }) {
     const [reviews, setReviews] = useState(null);
-    const [form, setForm] = useState({ name: '', rating: 0, comment: '' });
+    const [form, setForm] = useState({ name: '', phone: '', rating: 0, comment: '' });
     const [sending, setSending] = useState(false);
     const [error, setError] = useState('');
     const [done, setDone] = useState('');
@@ -25,7 +25,7 @@ export default function Reviews({ productId }) {
         try {
             const r = await api.submitReview({ productId, ...form });
             setDone(r.message);
-            setForm({ name: '', rating: 0, comment: '' });
+            setForm({ name: '', phone: '', rating: 0, comment: '' });
         } catch (err) {
             setError(err.message);
         } finally {
@@ -43,7 +43,7 @@ export default function Reviews({ productId }) {
 
             {reviews && reviews.map((r) => (
                 <div className="review-item" key={r._id}>
-                    <div><Stars value={r.rating} /> <strong>{r.name}</strong></div>
+                    <div><Stars value={r.rating} /> <strong>{r.name}</strong> {r.verifiedBuyer && <span className="verified-badge">✅ ক্রেতা</span>}</div>
                     <p>{r.comment}</p>
                     <small>{new Date(r.createdAt).toLocaleDateString('bn-BD', { timeZone: 'Asia/Dhaka' })}</small>
                 </div>
@@ -72,6 +72,15 @@ export default function Reviews({ productId }) {
                         maxLength={40}
                         required
                     />
+                    <input
+                        type="tel"
+                        value={form.phone}
+                        onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+                        placeholder="মোবাইল নম্বর (ঐচ্ছিক)"
+                        pattern="01[0-9]{9}"
+                        maxLength={11}
+                    />
+                    <small className="report-muted" style={{ display: 'block', marginTop: -4 }}>অর্ডারের নম্বর দিলে আপনার রিভিউতে "✅ ক্রেতা" ব্যাজ বসতে পারে। নম্বরটা সাইটে দেখানো বা সংরক্ষণ করা হয় না।</small>
                     <textarea
                         value={form.comment}
                         onChange={(e) => setForm((f) => ({ ...f, comment: e.target.value }))}
