@@ -1,3 +1,6 @@
 {
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "rewrites": [
+    { "source": "/sitemap.xml", "destination": "https://tayyib-mern-1.onrender.com/api/products/sitemap.xml" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }

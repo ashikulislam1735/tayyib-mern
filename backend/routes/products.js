@@ -158,6 +158,34 @@ router.get('/top', async (req, res) => {
     }
 });
 
+// GET /api/products/sitemap.xml — গুগলের জন্য সাইটম্যাপ (পাবলিক পেজ, ক্যাটাগরি ও সব প্রোডাক্ট)
+// Vercel-এর /sitemap.xml এখানে ঘুরিয়ে আনা হয় (frontend/vercel.json দেখুন)।
+// সাইটের ঠিকানা আসে SITE_URL থেকে; সেট না থাকলে CORS_ORIGINS-এর প্রথম ঠিকানা।
+router.get('/sitemap.xml', async (req, res) => {
+    try {
+        const base = (process.env.SITE_URL || (process.env.CORS_ORIGINS || '').split(',')[0] || '').trim().replace(/\/$/, '');
+        if (!/^https?:\/\/[^\s<>"']+$/.test(base)) {
+            return res.status(503).type('text/plain').send('SITE_URL বা CORS_ORIGINS সেট করা নেই');
+        }
+        const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+        const [products, categories] = await Promise.all([
+            Product.find().select('_id updatedAt').sort({ updatedAt: -1 }).limit(5000).lean(),
+            Product.distinct('category'),
+        ]);
+
+        const urls = ['/', '/offers', '/about', '/privacy', '/categories'].map((p) => ({ loc: `${base}${p}` }));
+        categories.filter(Boolean).forEach((c) => urls.push({ loc: `${base}/category/${encodeURIComponent(c)}` }));
+        products.forEach((p) => urls.push({ loc: `${base}/product/${p._id}`, lastmod: new Date(p.updatedAt).toISOString().slice(0, 10) }));
+
+        const xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+            + urls.map((u) => `  <url><loc>${esc(u.loc)}</loc>${u.lastmod ? `<lastmod>${u.lastmod}</lastmod>` : ''}</url>`).join('\n')
+            + '\n</urlset>\n';
+        res.set('Cache-Control', 'public, max-age=3600').type('application/xml').send(xml);
+    } catch {
+        res.status(500).type('text/plain').send('সাইটম্যাপ বানানো যায়নি');
+    }
+});
+
 // GET /api/products/admin/list — ক্রয়মূল্যসহ সব প্রোডাক্ট (শুধু অ্যাডমিন)
 router.get('/admin/list', requireAdmin, async (req, res) => {
     try {

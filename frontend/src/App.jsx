@@ -14,6 +14,7 @@ import CartDrawer from './components/CartDrawer';
 import Footer from './components/Footer';
 import FloatingWhatsApp from './components/FloatingWhatsApp';
 import ScrollToTop from './components/ScrollToTop';
+import RouteSeo from './components/RouteSeo';
 import ProtectedRoute from './components/ProtectedRoute';
 import Shop from './pages/Shop';
 import Offers from './pages/Offers';
@@ -166,6 +167,7 @@ export default function App() {
             <SiteProvider>
                 <CatalogProvider>
                     <CartProvider>
+                        <RouteSeo />
                         <AppShell />
                     </CartProvider>
                 </CatalogProvider>

@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /checkout
+Disallow: /order-confirmed
+
+Sitemap: https://tayyib-mern.vercel.app/sitemap.xml
