@@ -36,4 +36,9 @@ const orderSchema = new mongoose.Schema({
     shipment: { type: shipmentSchema, default: undefined },
 }, { timestamps: true });
 
+// ইনডেক্স: অর্ডার বাড়লেও ফোন, স্ট্যাটাস ও তারিখ ধরে খোঁজা দ্রুত থাকে
+orderSchema.index({ phone: 1, createdAt: -1 });
+orderSchema.index({ status: 1, createdAt: -1 });
+orderSchema.index({ createdAt: -1 });
+
 export default mongoose.model('Order', orderSchema);

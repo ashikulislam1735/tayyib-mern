@@ -9,7 +9,8 @@ const router = express.Router();
 
 // POST /api/auth/login — username + password দিয়ে লগইন, সফল হলে JWT টোকেন ফেরত দেয়
 router.post('/login', loginLimiter, async (req, res) => {
-    const { username, password } = req.body;
+  try {
+    const { username, password } = req.body || {};
 
     if (!username || !password || typeof username !== 'string' || typeof password !== 'string') {
         return res.status(400).json({ error: 'ইউজারনেম ও পাসওয়ার্ড দিন' });
@@ -35,11 +36,16 @@ router.post('/login', loginLimiter, async (req, res) => {
     );
 
     res.json({ token, username: admin.username, role: admin.role || 'owner' });
+  } catch (err) {
+    console.error('login error:', err);
+    res.status(500).json({ error: 'লগইনে সমস্যা হয়েছে, আবার চেষ্টা করুন' });
+  }
 });
 
 // POST /api/auth/change-password — লগইন করা অ্যাডমিন নিজের পাসওয়ার্ড বদলাবে
 router.post('/change-password', requireAdmin, async (req, res) => {
-    const { currentPassword, newPassword } = req.body;
+  try {
+    const { currentPassword, newPassword } = req.body || {};
 
     if (!currentPassword || !newPassword) {
         return res.status(400).json({ error: 'বর্তমান ও নতুন পাসওয়ার্ড দিন' });
@@ -61,6 +67,10 @@ router.post('/change-password', requireAdmin, async (req, res) => {
     admin.passwordHash = await bcrypt.hash(newPassword, 10);
     await admin.save();
     res.json({ message: 'পাসওয়ার্ড বদলানো হয়েছে' });
+  } catch (err) {
+    console.error('change-password error:', err);
+    res.status(500).json({ error: 'পাসওয়ার্ড বদলাতে সমস্যা হয়েছে' });
+  }
 });
 
 export default router;

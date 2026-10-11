@@ -23,4 +23,9 @@ const productSchema = new mongoose.Schema({
     ratingCount: { type: Number, default: 0 },
 }, { timestamps: true });
 
+// ইনডেক্স: ক্যাটাগরি, নাম ও নতুন-পুরোনো সাজানো দ্রুত করে
+productSchema.index({ category: 1, createdAt: -1 });
+productSchema.index({ title: 1 });
+productSchema.index({ createdAt: -1 });
+
 export default mongoose.model('Product', productSchema);

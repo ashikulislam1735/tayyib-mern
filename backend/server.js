@@ -75,6 +75,29 @@ app.get('/', (req, res) => {
     res.send('Tayyib MERN ব্যাকএন্ড চালু আছে ✅');
 });
 
+// অজানা /api ঠিকানা
+app.use('/api', (req, res) => {
+    res.status(404).json({ error: 'এই ঠিকানা পাওয়া যায়নি' });
+});
+
+// সার্বজনীন এরর হ্যান্ডলার — কোনো অপ্রত্যাশিত ভুলে সার্ভার থেমে না গিয়ে পরিষ্কার বার্তা দেয়
+app.use((err, req, res, next) => {
+    if (err && err.type === 'entity.parse.failed') {
+        return res.status(400).json({ error: 'পাঠানো তথ্যের ফরম্যাট ভুল' });
+    }
+    if (err && err.type === 'entity.too.large') {
+        return res.status(413).json({ error: 'পাঠানো তথ্য খুব বড়' });
+    }
+    console.error('Unhandled error:', err);
+    if (res.headersSent) return next(err);
+    res.status(500).json({ error: 'সার্ভারে সমস্যা হয়েছে, আবার চেষ্টা করুন' });
+});
+
+// অপ্রত্যাশিত async ভুলে পুরো সার্ভার বন্ধ হওয়া ঠেকাতে শুধু লগ করা হয়
+process.on('unhandledRejection', (reason) => {
+    console.error('Unhandled rejection:', reason);
+});
+
 const PORT = process.env.PORT || 5000;
 
 connectDB().then(() => {

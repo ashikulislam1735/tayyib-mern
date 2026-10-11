@@ -8,8 +8,21 @@ const router = express.Router();
 // GET /api/products — সব প্রোডাক্ট (ঐচ্ছিক ?category= ফিল্টার সহ)
 router.get('/', async (req, res) => {
     try {
-        const filter = req.query.category ? { category: req.query.category } : {};
-        const products = await Product.find(filter).select('-variants.costPrice').sort({ createdAt: -1 });
+        const filter = req.query.category ? { category: String(req.query.category) } : {};
+
+        // ঐচ্ছিক পেজিনেশন: ?page=1&limit=20 দিলে { items, total, page, pages } ফেরত আসে।
+        // না দিলে আগের মতোই অ্যারে আসে (সর্বোচ্চ ১০০০টি), তাই বর্তমান সাইট ভাঙে না।
+        if (req.query.page !== undefined) {
+            const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 20, 1), 100);
+            const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+            const [items, total] = await Promise.all([
+                Product.find(filter).select('-variants.costPrice').sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit),
+                Product.countDocuments(filter),
+            ]);
+            return res.json({ items, total, page, pages: Math.max(1, Math.ceil(total / limit)) });
+        }
+
+        const products = await Product.find(filter).select('-variants.costPrice').sort({ createdAt: -1 }).limit(1000);
         res.json(products);
     } catch (err) {
         res.status(500).json({ error: 'প্রোডাক্ট লোড করতে সমস্যা হয়েছে' });
