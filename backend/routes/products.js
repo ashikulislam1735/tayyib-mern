@@ -1,5 +1,6 @@
 import express from 'express';
 import Product from '../models/Product.js';
+import Order from '../models/Order.js';
 import Review from '../models/Review.js';
 import { requireAdmin } from '../middleware/auth.js';
 
@@ -132,6 +133,28 @@ router.post('/bulk', requireAdmin, async (req, res) => {
         });
     } catch (err) {
         res.status(500).json({ error: 'ইমপোর্টে সমস্যা হয়েছে: ' + err.message });
+    }
+});
+
+// GET /api/products/top?limit=6 — গত ৩০ দিনে সবচেয়ে বেশি বিক্রি হওয়া প্রোডাক্ট (পাবলিক; শুধু প্রোডাক্ট ফেরত আসে, বিক্রির হিসাব নয়)
+router.get('/top', async (req, res) => {
+    try {
+        const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 6, 1), 12);
+        const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+        const rows = await Order.aggregate([
+            { $match: { createdAt: { $gte: since }, status: { $nin: ['cancelled', 'returned'] } } },
+            { $unwind: '$items' },
+            { $match: { 'items.productId': { $ne: null } } },
+            { $group: { _id: '$items.productId', qty: { $sum: '$items.quantity' } } },
+            { $sort: { qty: -1 } },
+            { $limit: limit },
+        ]);
+        const ids = rows.map((r) => r._id);
+        const found = await Product.find({ _id: { $in: ids } }).select('-variants.costPrice');
+        const byId = new Map(found.map((p) => [String(p._id), p]));
+        res.json(ids.map((id) => byId.get(String(id))).filter(Boolean));
+    } catch (err) {
+        res.status(500).json({ error: 'সেরা বিক্রিত প্রোডাক্ট লোড করতে সমস্যা হয়েছে' });
     }
 });
 

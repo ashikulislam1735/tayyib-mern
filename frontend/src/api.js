@@ -41,6 +41,7 @@ export const api = {
     getCosts: () => request('/settings/costs'),
     updateCosts: (data) => request('/settings/costs', { method: 'PUT', body: JSON.stringify(data) }),
     getAdminProducts: () => request('/products/admin/list'),
+    getTopProducts: (limit = 6) => request(`/products/top?limit=${limit}`),
     getProducts: (category) => request(category ? `/products?category=${encodeURIComponent(category)}` : '/products'),
     getProduct: (id) => request(`/products/${id}`),
     createOrder: (payload) => request('/orders', { method: 'POST', body: JSON.stringify(payload) }),

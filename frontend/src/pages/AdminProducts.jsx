@@ -4,7 +4,7 @@ import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 
 const EMPTY_VARIANT = { label: '', price: '', originalPrice: '', costPrice: '', stock: '' };
-const EMPTY_FORM = { title: '', category: '', subCategory: '', icon: '🛍️', shortDescription: '', videoUrl: '', images: [], description: '', variants: [{ ...EMPTY_VARIANT }] };
+const EMPTY_FORM = { title: '', category: '', subCategory: '', icon: '🛍️', shortDescription: '', videoUrl: '', images: [], featured: false, description: '', variants: [{ ...EMPTY_VARIANT }] };
 
 export default function AdminProducts() {
     const { isOwner } = useAuth();
@@ -43,6 +43,7 @@ export default function AdminProducts() {
             shortDescription: p.shortDescription || '',
             videoUrl: p.videoUrl || '',
             images: p.images || [],
+            featured: !!p.featured,
             description: p.description || '',
             variants: p.variants.map((v) => ({
                 label: v.label,
@@ -140,6 +141,7 @@ export default function AdminProducts() {
             shortDescription: form.shortDescription.trim(),
             videoUrl: form.videoUrl.trim(),
             images: form.images,
+            featured: !!form.featured,
             description: form.description,
             variants: form.variants.map((v) => ({
                 label: v.label.trim(),
@@ -232,6 +234,10 @@ export default function AdminProducts() {
                     <datalist id="sub-list">
                         {[...new Set(products.filter((p) => p.category === form.category && p.subCategory).map((p) => p.subCategory))].map((s) => <option key={s} value={s} />)}
                     </datalist>
+                    <label style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                        <input type="checkbox" style={{ width: 'auto' }} checked={!!form.featured} onChange={(e) => setField('featured', e.target.checked)} />
+                        ⭐ ফিচার্ড (হোমপেজের "ফিচার্ড প্রোডাক্ট" সেকশনে দেখাবে)
+                    </label>
                     <label>আইকন (একটা ইমোজি)</label>
                     <input value={form.icon} onChange={(e) => setField('icon', e.target.value)} />
                     <label>সংক্ষিপ্ত বিবরণ (কার্ডে এক লাইন)</label>

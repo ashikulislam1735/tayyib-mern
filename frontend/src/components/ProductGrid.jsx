@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import Stars from './Stars';
 
@@ -12,63 +12,79 @@ function firstDiscountIndex(product) {
     return i === -1 ? 0 : i;
 }
 
-// প্রোডাক্ট কার্ডের তালিকা — শপ ও অফার পেজ দুটোতেই ব্যবহার হয়।
-// preferOffer = true হলে, ছাড় আছে এমন সাইজটা আগে থেকেই সিলেক্ট করা থাকে।
-export default function ProductGrid({ products, preferOffer = false }) {
-    const [selectedVariant, setSelectedVariant] = useState({}); // productId -> variant index
-    const { addToCart } = useCart();
+function StockBadge({ stock }) {
+    if (stock <= 0) return <span className="stock-badge out">স্টকে নেই</span>;
+    if (stock <= 5) return <span className="stock-badge low">মাত্র {stock}টি বাকি</span>;
+    return <span className="stock-badge">স্টকে আছে</span>;
+}
+
+function ProductCard({ p, layout, preferOffer }) {
+    const [vIdx, setVIdx] = useState(() => (preferOffer ? firstDiscountIndex(p) : 0));
+    const { items, addToCart } = useCart();
+    const navigate = useNavigate();
+
+    const variant = p.variants[vIdx];
+    const hasDiscount = isDiscounted(variant);
+    const percent = hasDiscount ? Math.round((1 - variant.price / variant.originalPrice) * 100) : 0;
+    const soldOut = variant.stock <= 0;
+
+    function orderNow() {
+        // কার্টে আগে থেকে থাকলে সংখ্যা না বাড়িয়ে সরাসরি চেকআউটে যায়
+        const inCart = items.some((i) => i.productId === p._id && i.variantId === variant._id);
+        if (!inCart) addToCart(p, variant);
+        navigate('/checkout');
+    }
 
     return (
-        <div className="grid">
-            {products.map((p) => {
-                const vIdx = selectedVariant[p._id] ?? (preferOffer ? firstDiscountIndex(p) : 0);
-                const variant = p.variants[vIdx];
-                const hasDiscount = isDiscounted(variant);
-                const percent = hasDiscount ? Math.round((1 - variant.price / variant.originalPrice) * 100) : 0;
+        <div className={`pcard ${layout === 'row' ? 'row' : ''}`}>
+            <Link to={`/product/${p._id}`} className="pcard-media">
+                {p.images && p.images[0] ? <img src={p.images[0]} alt={p.title} loading="lazy" /> : p.icon}
+                {hasDiscount && <span className="discount-badge">-{percent}%</span>}
+            </Link>
 
-                return (
-                    <div className="card" key={p._id}>
-                        <Link to={`/product/${p._id}`} className="card-media">
-                            {p.images && p.images[0] ? <img src={p.images[0]} alt={p.title} /> : p.icon}
-                            {hasDiscount && <span className="discount-badge">-{percent}%</span>}
-                        </Link>
-                        <div className="card-body">
-                            <span className="card-cat">{p.category}{p.subCategory ? ` › ${p.subCategory}` : ''}</span>
-                            <Link to={`/product/${p._id}`} className="card-name card-link">{p.title}</Link>
-                            {p.ratingCount > 0 && <span className="card-rating"><Stars value={p.ratingAvg} size={14} /> <small>({p.ratingCount})</small></span>}
-                            {p.shortDescription && <span style={{ fontSize: 12, color: 'var(--walnut-soft)' }}>{p.shortDescription}</span>}
-                            <div className="variant-row">
-                                {p.variants.map((v, i) => (
-                                    <button
-                                        key={v._id}
-                                        className={`variant-chip ${i === vIdx ? 'active' : ''}`}
-                                        onClick={() => setSelectedVariant((s) => ({ ...s, [p._id]: i }))}
-                                    >
-                                        {v.label}
-                                    </button>
-                                ))}
-                            </div>
-                            {variant.stock <= 5 && variant.stock > 0 && (
-                                <span className="stock-low">মাত্র {variant.stock}টি বাকি</span>
-                            )}
-                            {variant.stock <= 0 && <span className="stock-low">স্টকে নেই</span>}
-                            <div className="card-foot">
-                                <div className="price-wrap">
-                                    <span className="price">৳{variant.price}</span>
-                                    {hasDiscount && <span className="price-orig">৳{variant.originalPrice}</span>}
-                                </div>
-                                <button
-                                    className="add-btn"
-                                    disabled={variant.stock <= 0}
-                                    onClick={() => addToCart(p, variant)}
-                                >
-                                    কার্টে যোগ করুন
-                                </button>
-                            </div>
-                        </div>
+            <div className="pcard-body">
+                <div className="pcard-top">
+                    <span className="pcard-cat">{p.category}</span>
+                    {p.ratingCount > 0 && (
+                        <span className="card-rating"><Stars value={p.ratingAvg} size={13} /> <small>({p.ratingCount})</small></span>
+                    )}
+                </div>
+
+                <Link to={`/product/${p._id}`} className="pcard-title">{p.title}</Link>
+
+                <div className="pcard-priceline">
+                    <div className="price-wrap">
+                        <span className="price">৳{variant.price}</span>
+                        {hasDiscount && <span className="price-orig">৳{variant.originalPrice}</span>}
                     </div>
-                );
-            })}
+                    <StockBadge stock={variant.stock} />
+                </div>
+
+                <div className="variant-row">
+                    {p.variants.map((v, i) => (
+                        <button key={v._id} className={`variant-chip ${i === vIdx ? 'active' : ''}`} onClick={() => setVIdx(i)}>
+                            {v.label}
+                        </button>
+                    ))}
+                </div>
+
+                <div className="pcard-actions">
+                    <button className="btn-order" disabled={soldOut} onClick={orderNow}>এখনই অর্ডার</button>
+                    <button className="btn-cart" disabled={soldOut} onClick={() => addToCart(p, variant)}>🛒 কার্টে যোগ করুন</button>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// layout: 'grid' (সাধারণ, নিচে ছবি) | 'compact' (ছোট কার্ড, এক সারিতে ৫টি পর্যন্ত) | 'row' (পাশাপাশি ছবি + তথ্য, দুই কলাম)
+// preferOffer = true হলে ছাড় আছে এমন সাইজটা আগে থেকেই সিলেক্ট করা থাকে।
+export default function ProductGrid({ products, preferOffer = false, layout = 'grid' }) {
+    return (
+        <div className={`pgrid ${layout}`}>
+            {products.map((p) => (
+                <ProductCard key={p._id} p={p} layout={layout} preferOffer={preferOffer} />
+            ))}
         </div>
     );
 }

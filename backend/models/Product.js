@@ -19,6 +19,7 @@ const productSchema = new mongoose.Schema({
     icon: { type: String, default: '🛍️' },
     description: { type: String, default: '' },
     variants: { type: [variantSchema], required: true },
+    featured: { type: Boolean, default: false },      // হোমপেজের "ফিচার্ড" সেকশনে দেখাবে কিনা
     ratingAvg: { type: Number, default: 0 },          // অনুমোদিত রিভিউয়ের গড় (সার্ভার নিজে হিসাব করে)
     ratingCount: { type: Number, default: 0 },
 }, { timestamps: true });

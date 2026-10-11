@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useLocation, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { api } from '../api';
 import ProductGrid from '../components/ProductGrid';
 import HomeBanners from '../components/HomeBanners';
@@ -14,6 +14,8 @@ export default function Shop() {
     const q = (params.get('q') || '').trim();
     const category = params.get('category') || '';
     const sub = params.get('sub') || '';
+    const isHome = pathname === '/' && !q && !category && !sub;
+    const [topProducts, setTopProducts] = useState([]);
 
     useEffect(() => {
         api.getProducts()
@@ -21,6 +23,14 @@ export default function Shop() {
             .catch((e) => setError(e.message))
             .finally(() => setLoading(false));
     }, []);
+
+    // সেরা বিক্রিত (গত ৩০ দিনের বিক্রি থেকে) — বিক্রি না থাকলে সেকশন লুকানো থাকে
+    useEffect(() => {
+        if (pathname !== '/') return;
+        api.getTopProducts(6).then(setTopProducts).catch(() => {});
+    }, [pathname]);
+
+    const featured = useMemo(() => products.filter((p) => p.featured).slice(0, 10), [products]);
 
     const subs = useMemo(
         () => [...new Set(products.filter((p) => p.category === category && p.subCategory).map((p) => p.subCategory))],
@@ -48,9 +58,47 @@ export default function Shop() {
     if (error) return <p className="status-msg error">{error} — ব্যাকএন্ড সার্ভার চালু আছে কিনা এবং MongoDB কানেক্টেড কিনা চেক করুন।</p>;
     if (products.length === 0) return <p className="status-msg">কোনো প্রোডাক্ট নেই। প্রথমে ব্যাকএন্ডে <code>npm run seed</code> চালান।</p>;
 
+    if (isHome) {
+        return (
+            <>
+                <HomeBanners />
+
+                {topProducts.length > 0 && (
+                    <section className="home-section">
+                        <div className="section-head section-center">
+                            <span className="section-eyebrow">সেরা বিক্রিত প্রোডাক্ট</span>
+                            <h2 className="section-title">গ্রাহকদের সবচেয়ে পছন্দের</h2>
+                        </div>
+                        <ProductGrid products={topProducts} layout="row" />
+                    </section>
+                )}
+
+                {featured.length > 0 && (
+                    <section className="home-section">
+                        <div className="section-head">
+                            <span className="section-eyebrow">ফিচার্ড প্রোডাক্ট</span>
+                            <h2 className="section-title">স্বাস্থ্যসচেতন পরিবারের জন্য বাছাই</h2>
+                        </div>
+                        <ProductGrid products={featured} layout="compact" />
+                    </section>
+                )}
+
+                <section className="home-section">
+                    <div className="section-head">
+                        <span className="section-eyebrow">আমাদের কালেকশন</span>
+                        <h2 className="section-title">সব প্রোডাক্ট</h2>
+                    </div>
+                    <ProductGrid products={products.slice(0, 8)} />
+                    {products.length > 8 && (
+                        <div className="show-all"><Link to="/products">সব প্রোডাক্ট দেখুন →</Link></div>
+                    )}
+                </section>
+            </>
+        );
+    }
+
     return (
         <>
-            {pathname === '/' && !q && !category && !sub && <HomeBanners />}
             {category && subs.length > 0 && (
                 <div className="chip-row" id="categories">
                     <button className={`cat-chip ${!sub ? 'active' : ''}`} onClick={() => setSub('')}>সব {category}</button>

@@ -13,6 +13,7 @@ import { useSite } from './context/SiteContext';
 import CartDrawer from './components/CartDrawer';
 import Footer from './components/Footer';
 import FloatingWhatsApp from './components/FloatingWhatsApp';
+import ScrollToTop from './components/ScrollToTop';
 import ProtectedRoute from './components/ProtectedRoute';
 import Shop from './pages/Shop';
 import Offers from './pages/Offers';
@@ -153,6 +154,7 @@ function AppShell() {
             </main>
             <Footer />
             <FloatingWhatsApp />
+            <ScrollToTop />
             <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />
         </div>
     );
