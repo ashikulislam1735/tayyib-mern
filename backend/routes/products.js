@@ -224,16 +224,33 @@ router.post('/', requireAdmin, async (req, res) => {
 });
 
 // PUT /api/products/:id — প্রোডাক্ট এডিট (শুধু অ্যাডমিন)
+// গুরুত্বপূর্ণ: আগে থেকে থাকা সাইজের স্টক এখানে বদলানো যায় না (ফর্ম খোলা থাকার সময় আসা অর্ডারের স্টক কমা মুছে ফেলত)।
+// স্টক বদলাতে "স্টক" পেজ ব্যবহার করুন — সেখানে ইতিহাসও থাকে। নতুন সাইজ যোগ করলে ফর্মের স্টকই শুরুর স্টক।
 router.put('/:id', requireAdmin, async (req, res) => {
     try {
         const body = { ...req.body };
         delete body.ratingAvg; delete body.ratingCount; // রেটিং শুধু রিভিউ থেকে আসে
-        if (req.admin.role !== 'owner' && Array.isArray(body.variants)) {
-            // স্টাফ এডিট করলে আগের ক্রয়মূল্য (সাইজের নাম মিলিয়ে) অক্ষত থাকে
+
+        if (Array.isArray(body.variants)) {
             const existing = await Product.findById(req.params.id).lean();
-            const old = new Map(((existing && existing.variants) || []).map((v) => [v.label, v.costPrice || 0]));
-            body.variants = body.variants.map((v) => ({ ...v, costPrice: old.get(v.label) || 0 }));
+            if (!existing) return res.status(404).json({ error: 'প্রোডাক্ট পাওয়া যায়নি' });
+            const byId = new Map((existing.variants || []).map((v) => [String(v._id), v]));
+            const byLabel = new Map((existing.variants || []).map((v) => [v.label, v]));
+            const isOwner = req.admin.role === 'owner';
+
+            body.variants = body.variants.map((v) => {
+                const old = (v._id && byId.get(String(v._id))) || null;
+                const out = { ...v };
+                if (old) out.stock = old.stock; // বিদ্যমান সাইজের স্টক অক্ষত
+                if (!isOwner) {
+                    // স্টাফ ক্রয়মূল্য বদলাতে পারে না
+                    const ref = old || byLabel.get(v.label);
+                    out.costPrice = ref ? ref.costPrice || 0 : 0;
+                }
+                return out;
+            });
         }
+
         const product = await Product.findByIdAndUpdate(req.params.id, body, {
             new: true,
             runValidators: true,
