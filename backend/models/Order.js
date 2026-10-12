@@ -33,6 +33,7 @@ const orderSchema = new mongoose.Schema({
     discount: { type: Number, default: 0 },      // কুপনের ছাড় (পণ্যের দাম থেকে)
     total: { type: Number, required: true },
     status: { type: String, enum: ['pending', 'confirmed', 'delivered', 'cancelled', 'returned'], default: 'pending' },
+    stockRestored: { type: Boolean, default: false }, // বাতিল/ফেরতের কারণে স্টক ফেরত দেওয়া হয়েছে কিনা (দুবার যোগ আটকাতে)
     shipment: { type: shipmentSchema, default: undefined },
 }, { timestamps: true });
 

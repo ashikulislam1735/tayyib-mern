@@ -1,0 +1,6 @@
+বাটন, মেনু, ক্যাটাগরির ফিল্টার, ব্যাজ, ফর্মের লেবেল, "Added to cart" লেখা — সব ইংরেজি। প্রোডাক্টের নাম ও বিবরণ অ্যাডমিন থেকে যেভাবে লিখবেন সেভাবেই দেখাবে।
+এর সাথে আগের প্রোডাক্ট পেজ, রিভিউ সেকশন, ফেভিকন ও index.css-ও আছে, তাই এই ZIP-ই সর্বশেষ।
+frontend ফোল্ডার রিপোতে কপি করে Replace করুন, তারপর GitHub Desktop থেকে Commit ও Push।
+.env ও node_modules এই জিপে নেই। নতুন কোনো প্যাকেজ লাগে না।
+
+সাবধান: App.jsx, Shop.jsx, ProductGrid.jsx, CategoriesMenu.jsx, CategoryStrip.jsx, index.css আপনি নিজে বদলে থাকলে Replace করার আগে আমাকে দেখান।

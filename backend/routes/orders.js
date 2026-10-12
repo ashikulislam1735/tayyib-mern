@@ -2,6 +2,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import Order from '../models/Order.js';
 import Product from '../models/Product.js';
+import StockLog from '../models/StockLog.js';
 import Setting from '../models/Setting.js';
 import AbandonedCart from '../models/AbandonedCart.js';
 import { attachRisk } from '../utils/risk.js';
@@ -215,19 +216,123 @@ router.get('/', requireAdmin, async (req, res) => {
     }
 });
 
+// বাতিল/ফেরত হলে অর্ডারের পণ্য স্টকে ফেরত যায়; আবার চালু করলে স্টক থেকে কমে।
+// অর্ডারে ভ্যারিয়েন্টের শুধু নাম (variantLabel) রাখা হয়, তাই নাম দিয়ে ভ্যারিয়েন্ট খোঁজা হয়।
+const isClosed = (s) => s === 'cancelled' || s === 'returned';
+
+async function logStock(order, item, variant, change, reason, by) {
+    try {
+        await StockLog.create({
+            product: item.productId, productTitle: item.title,
+            variantId: variant._id, variantLabel: variant.label,
+            mode: change > 0 ? 'add' : 'subtract',
+            before: variant.stock - change, after: variant.stock, change,
+            reason, note: `অর্ডার #${String(order._id).slice(-6)}`, by,
+        });
+    } catch (e) { console.error('স্টকের ইতিহাস লেখা যায়নি:', e.message); }
+}
+
+// স্টক ফেরত দেওয়া। যে আইটেম পাওয়া যায়নি সেগুলোর তালিকা ফেরত দেয়।
+async function giveBackStock(order, by) {
+    const missing = [];
+    for (const it of order.items) {
+        const prod = it.productId && await Product.findOneAndUpdate(
+            { _id: it.productId, variants: { $elemMatch: { label: it.variantLabel } } },
+            { $inc: { 'variants.$[v].stock': it.quantity } },
+            { new: true, arrayFilters: [{ 'v.label': it.variantLabel }] },
+        );
+        const variant = prod && prod.variants.find((v) => v.label === it.variantLabel);
+        if (!variant) { missing.push(`${it.title} (${it.variantLabel})`); continue; }
+        await logStock(order, it, variant, it.quantity, 'return', by);
+    }
+    return missing;
+}
+
+// আবার চালু করলে স্টক কমানো। কোনোটায় স্টক কম পড়লে আগে কমানোগুলো ফেরত দিয়ে ব্যর্থ হয়।
+async function takeStockAgain(order, by) {
+    const done = [];
+    for (const it of order.items) {
+        const prod = it.productId && await Product.findOneAndUpdate(
+            { _id: it.productId, variants: { $elemMatch: { label: it.variantLabel, stock: { $gte: it.quantity } } } },
+            { $inc: { 'variants.$[v].stock': -it.quantity } },
+            { new: true, arrayFilters: [{ 'v.label': it.variantLabel, 'v.stock': { $gte: it.quantity } }] },
+        );
+        const variant = prod && prod.variants.find((v) => v.label === it.variantLabel);
+        if (!variant) {
+            for (const d of done) {
+                await Product.updateOne(
+                    { _id: d.productId },
+                    { $inc: { 'variants.$[v].stock': d.quantity } },
+                    { arrayFilters: [{ 'v.label': d.variantLabel }] },
+                ).catch((e) => console.error('স্টক ফেরত দেওয়া যায়নি:', e.message));
+            }
+            return { ok: false, failed: `${it.title} (${it.variantLabel})` };
+        }
+        done.push(it);
+        await logStock(order, it, variant, -it.quantity, 'other', by);
+    }
+    return { ok: true };
+}
+
 // PATCH /api/orders/:id/status — অর্ডারের স্ট্যাটাস বদলানো (শুধু অ্যাডমিন)
 router.patch('/:id/status', requireAdmin, async (req, res) => {
-    const { status } = req.body;
-    const allowed = ['pending', 'confirmed', 'delivered', 'cancelled', 'returned'];
-    if (!allowed.includes(status)) {
-        return res.status(400).json({ error: 'অবৈধ স্ট্যাটাস' });
-    }
+    try {
+        const { status } = req.body;
+        const allowed = ['pending', 'confirmed', 'delivered', 'cancelled', 'returned'];
+        if (!allowed.includes(status)) {
+            return res.status(400).json({ error: 'অবৈধ স্ট্যাটাস' });
+        }
+        if (!mongoose.isValidObjectId(req.params.id)) {
+            return res.status(404).json({ error: 'অর্ডার পাওয়া যায়নি' });
+        }
 
-    const q = Order.findByIdAndUpdate(req.params.id, { status }, { new: true });
-    if (req.admin.role !== 'owner') q.select('-items.costPrice -courierCost -packagingCost');
-    const order = await q;
-    if (!order) return res.status(404).json({ error: 'অর্ডার পাওয়া যায়নি' });
-    res.json(order);
+        const current = await Order.findById(req.params.id).select('status stockRestored items _id').lean();
+        if (!current) return res.status(404).json({ error: 'অর্ডার পাওয়া যায়নি' });
+
+        const by = req.admin.username;
+        const update = { status };
+        const claim = { _id: current._id };
+        let stockNote = '';
+
+        if (!isClosed(current.status) && isClosed(status)) {
+            // বাতিল/ফেরত: একবারই স্টক ফেরত। আগে চিহ্ন বসিয়ে নিই, যাতে একসাথে দুবার চাপলেও দুবার যোগ না হয়।
+            const claimed = await Order.findOneAndUpdate(
+                { _id: current._id, stockRestored: { $ne: true } },
+                { $set: { status, stockRestored: true } },
+            );
+            if (claimed) {
+                const missing = await giveBackStock(current, by);
+                if (missing.length) stockNote = `এই পণ্যের স্টক ফেরত দেওয়া যায়নি (ভ্যারিয়েন্ট পাওয়া যায়নি): ${missing.join(', ')}`;
+            }
+            update.status = status; // নিচের সাধারণ আপডেটেও একই স্ট্যাটাস থাকবে
+        } else if (isClosed(current.status) && !isClosed(status)) {
+            // আবার চালু: আগে স্টক ফেরত দেওয়া হয়ে থাকলেই কেবল আবার কমাতে হবে
+            if (current.stockRestored) {
+                const r = await takeStockAgain(current, by);
+                if (!r.ok) {
+                    return res.status(400).json({ error: `স্টক পর্যাপ্ত নেই, তাই অর্ডার আবার চালু করা গেল না: ${r.failed}` });
+                }
+                const flipped = await Order.findOneAndUpdate(
+                    { _id: current._id, stockRestored: true },
+                    { $set: { stockRestored: false } },
+                );
+                if (!flipped) {
+                    // একই সময়ে অন্য কেউ বদলে ফেলেছে — কমানো স্টক ফেরত দিয়ে থামি
+                    await giveBackStock(current, by);
+                    return res.status(409).json({ error: 'অর্ডারটি এইমাত্র অন্য জায়গা থেকে বদলেছে, পাতা রিফ্রেশ করে আবার চেষ্টা করুন' });
+                }
+            }
+        }
+
+        const q = Order.findOneAndUpdate(claim, { $set: update }, { new: true });
+        if (req.admin.role !== 'owner') q.select('-items.costPrice -courierCost -packagingCost');
+        const order = await q;
+        if (!order) return res.status(404).json({ error: 'অর্ডার পাওয়া যায়নি' });
+        res.json(stockNote ? { ...order.toObject(), stockNote } : order);
+    } catch (e) {
+        console.error('স্ট্যাটাস বদলাতে সমস্যা:', e);
+        res.status(500).json({ error: 'স্ট্যাটাস বদলানো যায়নি' });
+    }
 });
 
 // GET /api/orders/track/:query — অর্ডার ID বা ফোন নম্বর দিয়ে ট্র্যাকিং
