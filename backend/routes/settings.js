@@ -35,6 +35,13 @@ function clean(body = {}) {
     const deliveryInside = charge(body.deliveryInside, charge(body.deliveryCharge, 60, 'ঢাকার ভেতরের'), 'ঢাকার ভেতরের');
     const deliveryOutside = charge(body.deliveryOutside, 120, 'ঢাকার বাইরের');
 
+    // ফ্রি ডেলিভারির সীমা (৳): কুপন ছাড়ের পরের পণ্যের দাম এর সমান বা বেশি হলে ডেলিভারি চার্জ ০। ০ মানে অফার বন্ধ
+    const freeRaw = body.freeDeliveryMin === undefined || body.freeDeliveryMin === '' ? 0 : Number(body.freeDeliveryMin);
+    if (!Number.isFinite(freeRaw) || freeRaw < 0 || freeRaw > 1000000) {
+        throw new Error('ফ্রি ডেলিভারির সীমা ০ থেকে ১০,০০,০০০ টাকার মধ্যে হতে হবে');
+    }
+    const freeDeliveryMin = Math.round(freeRaw);
+
     // লোগো: Cloudinary (বা যেকোনো https) ছবির লিংক, খালি থাকলে শুধু নাম দেখাবে
     const logo = url(body.logo);
     if (logo === null) throw new Error('লোগোর লিংক https:// দিয়ে শুরু হতে হবে');
@@ -47,6 +54,7 @@ function clean(body = {}) {
         logo,
         deliveryInside,
         deliveryOutside,
+        freeDeliveryMin,
         // bKash/Nagad পেমেন্ট নম্বর (কাস্টমার এখানে টাকা পাঠাবে); খালি থাকলে চেকআউটে ওই অপশন দেখাবে না
         bkashNumber: digits(body.bkashNumber, 11),
         nagadNumber: digits(body.nagadNumber, 11),

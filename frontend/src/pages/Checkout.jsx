@@ -19,11 +19,16 @@ export default function Checkout() {
     const lastSaved = useRef(''); // একই কার্ট বারবার সার্ভারে না পাঠানোর জন্য
 
     const chargeOf = (v, d) => (Number.isFinite(Number(v)) ? Number(v) : d);
-    const deliveryCharge = form.deliveryArea === 'outside'
+    const baseCharge = form.deliveryArea === 'outside'
         ? chargeOf(site.deliveryOutside, 120)
         : chargeOf(site.deliveryInside, 60);
+    // ফ্রি ডেলিভারি: কুপন ছাড়ের পরের পণ্যের দাম সীমার সমান বা বেশি হলে চার্জ ০ (সার্ভারও একই নিয়মে হিসাব করে)
+    const freeMin = Number(site.freeDeliveryMin) > 0 ? Number(site.freeDeliveryMin) : 0;
+    const afterDiscount = subtotal - (coupon ? coupon.discount : 0);
+    const isFree = freeMin > 0 && afterDiscount >= freeMin;
+    const deliveryCharge = isFree ? 0 : baseCharge;
 
-    const payable = subtotal - (coupon ? coupon.discount : 0) + deliveryCharge;
+    const payable = afterDiscount + deliveryCharge;
     const payNumber = form.paymentMethod === 'bkash' ? site.bkashNumber : form.paymentMethod === 'nagad' ? site.nagadNumber : '';
 
     if (items.length === 0) {
@@ -162,8 +167,9 @@ export default function Checkout() {
                     {coupon && <button type="button" className="link-btn" onClick={removeCoupon}>Remove coupon</button>}
                 </div>
                 {coupon && <div className="order-line"><span>Coupon discount ({coupon.code})</span><span>− ৳{coupon.discount}</span></div>}
-                <div className="order-line"><span>Delivery charge ({form.deliveryArea === 'outside' ? 'Outside Dhaka' : 'Inside Dhaka'})</span><span>৳{deliveryCharge}</span></div>
-                <div className="order-total"><span>Total</span><span>৳{subtotal - (coupon ? coupon.discount : 0) + deliveryCharge}</span></div>
+                <div className="order-line"><span>Delivery charge ({form.deliveryArea === 'outside' ? 'Outside Dhaka' : 'Inside Dhaka'})</span><span>{isFree ? 'Free' : `৳${deliveryCharge}`}</span></div>
+                {freeMin > 0 && !isFree && <p style={{ margin: '4px 0 0', fontSize: 14, color: '#7a5a00' }}>🚚 Add ৳{freeMin - afterDiscount} more for free delivery</p>}
+                <div className="order-total"><span>Total</span><span>৳{payable}</span></div>
             </div>
         </div>
     );

@@ -9,6 +9,7 @@ function toForm(site) {
         logo: site.logo || '',
         deliveryInside: String(site.deliveryInside ?? 60),
         deliveryOutside: String(site.deliveryOutside ?? 120),
+        freeDeliveryMin: String(site.freeDeliveryMin ?? 0),
         bkashNumber: site.bkashNumber || '',
         nagadNumber: site.nagadNumber || '',
         phone: site.phone || '',
@@ -71,6 +72,7 @@ export default function AdminSettings() {
             logo: form.logo,
             deliveryInside: form.deliveryInside === '' ? 60 : Number(form.deliveryInside),
             deliveryOutside: form.deliveryOutside === '' ? 120 : Number(form.deliveryOutside),
+            freeDeliveryMin: form.freeDeliveryMin === '' ? 0 : Number(form.freeDeliveryMin),
             bkashNumber: form.bkashNumber,
             nagadNumber: form.nagadNumber,
             phone: form.phone,
@@ -123,6 +125,9 @@ export default function AdminSettings() {
             <input type="number" min="0" max="10000" step="1" value={form.deliveryInside} onChange={(e) => set('deliveryInside', e.target.value)} />
             <label>ঢাকার বাইরে ডেলিভারি চার্জ (৳)</label>
             <input type="number" min="0" max="10000" step="1" value={form.deliveryOutside} onChange={(e) => set('deliveryOutside', e.target.value)} />
+            <label>ফ্রি ডেলিভারির সীমা (৳)</label>
+            <input type="number" min="0" max="1000000" step="1" value={form.freeDeliveryMin} onChange={(e) => set('freeDeliveryMin', e.target.value)} placeholder="যেমন: 2999" />
+            <p style={{ fontSize: 14, color: 'var(--walnut-soft)', margin: '4px 0 0' }}>কুপন ছাড়ের পরে পণ্যের দাম এই টাকা বা তার বেশি হলে ডেলিভারি চার্জ ০ হবে (ঢাকার ভেতরে ও বাইরে দুই জায়গাতেই)। ০ রাখলে অফার বন্ধ থাকবে।</p>
 
             <h3>পেমেন্ট নম্বর</h3>
             <p style={{ fontSize: 13, color: 'var(--walnut-soft)', margin: '0 0 4px' }}>এখানে নম্বর দিলে চেকআউটে ওই পদ্ধতি দেখাবে, আর কাস্টমারকে টাকা পাঠিয়ে ট্রানজেকশন আইডি (TrxID) দিতে হবে। নম্বর খালি রাখলে ওই পদ্ধতি দেখাবে না।</p>

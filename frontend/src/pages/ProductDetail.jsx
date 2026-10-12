@@ -26,6 +26,7 @@ export default function ProductDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
     const { site } = useSite();
+    const freeMin = Number(site.freeDeliveryMin) > 0 ? Number(site.freeDeliveryMin) : 0;
     const { items, addToCart, changeQty } = useCart();
     const [product, setProduct] = useState(null);
     const [error, setError] = useState('');
@@ -172,6 +173,14 @@ export default function ProductDetail() {
                         <button type="button" onClick={() => setQty((q) => Math.min(maxQty, q + 1))} disabled={soldOut || qty >= maxQty} aria-label="বাড়ান">+</button>
                     </div>
                     {!soldOut && qty > 1 && <p className="pd-total">Total: <strong>৳{variant.price * qty}</strong> (excluding delivery)</p>}
+
+                    {freeMin > 0 && (
+                        <div style={{ background: '#fff3c4', border: '1px solid #e8c660', color: '#7a5a00', borderRadius: 8, padding: '10px 14px', marginTop: 14, fontWeight: 600 }}>
+                            {!soldOut && variant.price * qty >= freeMin
+                                ? '🎉 You get free delivery on this order!'
+                                : `🚚 Free delivery on orders of ৳${freeMin} or more`}
+                        </div>
+                    )}
 
                     <div className="pd-actions">
                         <button className="btn-pd order" disabled={soldOut} onClick={handleOrderNow}>Order Now</button>

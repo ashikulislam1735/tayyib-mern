@@ -125,7 +125,10 @@ router.post('/', async (req, res) => {
         const pick = (v, fallback) => (v !== undefined && v !== null && v !== '' && Number.isFinite(Number(v)) && Number(v) >= 0 ? Number(v) : fallback);
         const inside = pick(sd.deliveryInside, pick(sd.deliveryCharge, 60));
         const outside = pick(sd.deliveryOutside, 120);
-        const deliveryCharge = deliveryArea === 'outside' ? outside : inside;
+        const baseCharge = deliveryArea === 'outside' ? outside : inside;
+        // ফ্রি ডেলিভারি: কুপন ছাড়ের পরের পণ্যের দাম সীমার সমান বা বেশি হলে চার্জ ০ (সার্ভার নিজে হিসাব করে)
+        const freeMin = pick(sd.freeDeliveryMin, 0);
+        const deliveryCharge = freeMin > 0 && subtotal - discount >= freeMin ? 0 : baseCharge;
         total = subtotal - discount + deliveryCharge;
 
         // কুরিয়ার ও প্যাকেজিং খরচ (শুধু অ্যাডমিনের হিসাবের জন্য, কাস্টমারকে দেখানো হয় না)
