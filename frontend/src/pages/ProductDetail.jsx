@@ -17,9 +17,9 @@ function getEmbedUrl(url) {
 
 // স্টকের লেখা ও ধরন: স্টকে আছে / মাত্র N টি বাকি / স্টকে নেই
 function stockInfo(stock) {
-    if (stock <= 0) return { text: 'স্টকে নেই', cls: 'out' };
-    if (stock <= 5) return { text: `মাত্র ${stock}টি বাকি`, cls: 'low' };
-    return { text: 'স্টকে আছে', cls: '' };
+    if (stock <= 0) return { text: 'Out of Stock', cls: 'out' };
+    if (stock <= 5) return { text: `Only ${stock} left`, cls: 'low' };
+    return { text: 'In Stock', cls: '' };
 }
 
 export default function ProductDetail() {
@@ -103,7 +103,7 @@ export default function ProductDetail() {
     return (
         <div>
             <p className="crumbs">
-                <Link to="/">হোম</Link> / <Link to="/categories">ক্যাটাগরি</Link> /{' '}
+                <Link to="/">Home</Link> / <Link to="/categories">Categories</Link> /{' '}
                 <Link to={`/category/${encodeURIComponent(product.category)}`}>{product.category}</Link>
                 {product.subCategory ? <> / <Link to={`/category/${encodeURIComponent(product.category)}?sub=${encodeURIComponent(product.subCategory)}`}>{product.subCategory}</Link></> : null}
             </p>
@@ -137,11 +137,11 @@ export default function ProductDetail() {
                     </div>
                     <h1 className="detail-title">{product.title}</h1>
                     {product.ratingCount > 0 && (
-                        <p className="reviews-summary"><Stars value={product.ratingAvg} /> {product.ratingAvg} ({product.ratingCount}টি রিভিউ)</p>
+                        <p className="reviews-summary"><Stars value={product.ratingAvg} /> {product.ratingAvg} ({product.ratingCount} reviews)</p>
                     )}
                     {product.shortDescription && <p className="detail-short">{product.shortDescription}</p>}
 
-                    <div className="pd-label">সাইজ বেছে নিন</div>
+                    <div className="pd-label">Select size</div>
                     <div className="pd-variants">
                         {product.variants.map((v, i) => {
                             const s = stockInfo(v.stock);
@@ -162,30 +162,30 @@ export default function ProductDetail() {
                     <div className="pd-priceline">
                         {hasDiscount && <span className="pd-price-old">৳{variant.originalPrice}</span>}
                         <span className="pd-price">৳{variant.price}</span>
-                        {hasDiscount && <span className="pd-save">সাশ্রয় ৳{save}</span>}
+                        {hasDiscount && <span className="pd-save">Save ৳{save}</span>}
                     </div>
 
-                    <div className="pd-label">পরিমাণ</div>
+                    <div className="pd-label">Quantity</div>
                     <div className="qty-box">
                         <button type="button" onClick={() => setQty((q) => Math.max(1, q - 1))} disabled={soldOut || qty <= 1} aria-label="কমান">−</button>
                         <span>{soldOut ? 0 : qty}</span>
                         <button type="button" onClick={() => setQty((q) => Math.min(maxQty, q + 1))} disabled={soldOut || qty >= maxQty} aria-label="বাড়ান">+</button>
                     </div>
-                    {!soldOut && qty > 1 && <p className="pd-total">মোট: <strong>৳{variant.price * qty}</strong> (ডেলিভারি চার্জ ছাড়া)</p>}
+                    {!soldOut && qty > 1 && <p className="pd-total">Total: <strong>৳{variant.price * qty}</strong> (excluding delivery)</p>}
 
                     <div className="pd-actions">
-                        <button className="btn-pd order" disabled={soldOut} onClick={handleOrderNow}>এখনই অর্ডার</button>
-                        <button className="btn-pd cart" disabled={soldOut} onClick={handleAddToCart}>🛒 কার্টে যোগ করুন</button>
+                        <button className="btn-pd order" disabled={soldOut} onClick={handleOrderNow}>Order Now</button>
+                        <button className="btn-pd cart" disabled={soldOut} onClick={handleAddToCart}>🛒 Add to Cart</button>
                         {waNumber && (
-                            <a className="btn-pd wa" href={`https://wa.me/${waNumber}?text=${encodeURIComponent(waText)}`} target="_blank" rel="noopener noreferrer">💬 WhatsApp-এ অর্ডার</a>
+                            <a className="btn-pd wa" href={`https://wa.me/${waNumber}?text=${encodeURIComponent(waText)}`} target="_blank" rel="noopener noreferrer">💬 Order on WhatsApp</a>
                         )}
-                        {phone && <a className="btn-pd call" href={`tel:${phone}`}>📞 কল করে অর্ডার</a>}
+                        {phone && <a className="btn-pd call" href={`tel:${phone}`}>📞 Call for Order</a>}
                     </div>
-                    {added && <p className="pd-added">✓ কার্টে যোগ হয়েছে</p>}
+                    {added && <p className="pd-added">✓ Added to cart</p>}
 
                     {product.description && (
                         <div className="detail-desc">
-                            <h3>বিস্তারিত</h3>
+                            <h3>Description</h3>
                             {product.description}
                         </div>
                     )}

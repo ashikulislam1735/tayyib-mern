@@ -13,9 +13,9 @@ function firstDiscountIndex(product) {
 }
 
 function StockBadge({ stock }) {
-    if (stock <= 0) return <span className="stock-badge out">স্টকে নেই</span>;
-    if (stock <= 5) return <span className="stock-badge low">মাত্র {stock}টি বাকি</span>;
-    return <span className="stock-badge">স্টকে আছে</span>;
+    if (stock <= 0) return <span className="stock-badge out">Out of Stock</span>;
+    if (stock <= 5) return <span className="stock-badge low">Only {stock} left</span>;
+    return <span className="stock-badge">In Stock</span>;
 }
 
 function ProductCard({ p, layout, preferOffer }) {
@@ -69,8 +69,8 @@ function ProductCard({ p, layout, preferOffer }) {
                 </div>
 
                 <div className="pcard-actions">
-                    <button className="btn-order" disabled={soldOut} onClick={orderNow}>এখনই অর্ডার</button>
-                    <button className="btn-cart" disabled={soldOut} onClick={() => addToCart(p, variant)}>🛒 কার্টে যোগ করুন</button>
+                    <button className="btn-order" disabled={soldOut} onClick={orderNow}>Order Now</button>
+                    <button className="btn-cart" disabled={soldOut} onClick={() => addToCart(p, variant)}>🛒 Add to Cart</button>
                 </div>
             </div>
         </div>

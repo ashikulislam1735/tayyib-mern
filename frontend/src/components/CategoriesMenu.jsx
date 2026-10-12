@@ -9,7 +9,7 @@ export default function CategoriesMenu() {
     return (
         <div className="nav-dropdown" onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
             <Link className="nav-dd-btn" to="/categories" onClick={() => setOpen(false)}>
-                ক্যাটাগরি ▾
+                Categories ▾
             </Link>
             {open && categories.length > 0 && (
                 <div className="dd-panel">

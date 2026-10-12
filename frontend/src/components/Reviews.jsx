@@ -38,13 +38,13 @@ export default function Reviews({ productId, title }) {
     return (
         <section className="reviews">
             <div className="reviews-card">
-                <h3>{title ? `${title} — কাস্টমার রিভিউ` : 'কাস্টমার রিভিউ'}</h3>
+                <h3>{title ? `Reviews for ${title}` : 'Customer Reviews'}</h3>
 
                 <div className="reviews-layout">
                     <aside className="rating-summary">
                         <div className="rating-big">{avg.toFixed(1)}</div>
                         <Stars value={avg} size={22} />
-                        <div className="rating-count">{count}টি রিভিউ</div>
+                        <div className="rating-count">{count} {count === 1 ? 'review' : 'reviews'}</div>
                         <div className="dist">
                             {dist.map(({ n, c }) => (
                                 <div className="dist-row" key={n}>
@@ -62,7 +62,7 @@ export default function Reviews({ productId, title }) {
 
                         {reviews && reviews.map((r) => (
                             <div className="review-item" key={r._id}>
-                                <div><Stars value={r.rating} /> <strong>{r.name}</strong> {r.verifiedBuyer && <span className="verified-badge">✅ ক্রেতা</span>}</div>
+                                <div><Stars value={r.rating} /> <strong>{r.name}</strong> {r.verifiedBuyer && <span className="verified-badge">✅ Verified Buyer</span>}</div>
                                 <p>{r.comment}</p>
                                 <small>{new Date(r.createdAt).toLocaleDateString('bn-BD', { timeZone: 'Asia/Dhaka' })}</small>
                             </div>
@@ -72,9 +72,9 @@ export default function Reviews({ productId, title }) {
                             <p className="status-msg" style={{ padding: 16 }}>{done}</p>
                         ) : (
                             <form className="review-form" onSubmit={submit}>
-                                <h4>আপনার অভিজ্ঞতা জানান</h4>
+                                <h4>Share your experience</h4>
 
-                                <label className="rf-label">আপনার নাম</label>
+                                <label className="rf-label">Your name</label>
                                 <input
                                     value={form.name}
                                     onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
@@ -83,7 +83,7 @@ export default function Reviews({ productId, title }) {
                                     required
                                 />
 
-                                <label className="rf-label">আপনার রেটিং</label>
+                                <label className="rf-label">Your rating</label>
                                 <div className="star-pick" role="radiogroup" aria-label="রেটিং">
                                     {[1, 2, 3, 4, 5].map((n) => (
                                         <button
@@ -96,7 +96,7 @@ export default function Reviews({ productId, title }) {
                                     ))}
                                 </div>
 
-                                <label className="rf-label">মোবাইল নম্বর (ঐচ্ছিক)</label>
+                                <label className="rf-label">Mobile number (optional)</label>
                                 <input
                                     type="tel"
                                     value={form.phone}
@@ -105,9 +105,9 @@ export default function Reviews({ productId, title }) {
                                     pattern="01[0-9]{9}"
                                     maxLength={11}
                                 />
-                                <small className="report-muted" style={{ display: 'block', marginTop: -4 }}>অর্ডারের নম্বর দিলে আপনার রিভিউতে "✅ ক্রেতা" ব্যাজ বসতে পারে। নম্বরটা সাইটে দেখানো বা সংরক্ষণ করা হয় না।</small>
+                                <small className="report-muted" style={{ display: 'block', marginTop: -4 }}>অর্ডারের নম্বর দিলে আপনার রিভিউতে "✅ Verified Buyer" ব্যাজ বসতে পারে। নম্বরটা সাইটে দেখানো বা সংরক্ষণ করা হয় না।</small>
 
-                                <label className="rf-label">আপনার রিভিউ</label>
+                                <label className="rf-label">Your review</label>
                                 <textarea
                                     value={form.comment}
                                     onChange={(e) => setForm((f) => ({ ...f, comment: e.target.value }))}
@@ -118,7 +118,7 @@ export default function Reviews({ productId, title }) {
                                 />
                                 {error && <p className="status-msg error" style={{ padding: 6 }}>{error}</p>}
                                 <button className="btn-primary" type="submit" disabled={sending} style={{ width: 'auto', alignSelf: 'flex-start', padding: '10px 22px' }}>
-                                    {sending ? 'জমা হচ্ছে...' : 'রিভিউ দিন'}
+                                    {sending ? 'Posting...' : 'Post Review'}
                                 </button>
                             </form>
                         )}

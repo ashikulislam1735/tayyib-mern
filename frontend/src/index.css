@@ -522,3 +522,6 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid 
 .reviews-main .review-form { margin-top: 12px; border: none; padding: 0; background: transparent; }
 .rf-label { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.04em; color: var(--walnut-soft); margin-top: 4px; }
 @media (max-width: 700px) { .reviews-layout { grid-template-columns: 1fr; gap: 20px; } .reviews-card { padding: 16px; } }
+
+/* ইংরেজি লেবেল বড় হাতের অক্ষরে (PHP সাইটের মতো) */
+.pd-label, .rf-label { text-transform: uppercase; }

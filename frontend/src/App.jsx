@@ -72,27 +72,27 @@ function Header({ onCartClick }) {
                         placeholder="মধু, ঘি, খেজুর খুঁজুন..."
                         aria-label="প্রোডাক্ট খুঁজুন"
                     />
-                    <button type="submit" className="search-btn">খুঁজুন</button>
+                    <button type="submit" className="search-btn">Search</button>
                 </form>
 
                 <div className="header-actions">
                     {siteConfig.phone && (
-                        <a className="hdr-btn" href={`tel:${siteConfig.phone}`}>📞 <span>কল</span></a>
+                        <a className="hdr-btn" href={`tel:${siteConfig.phone}`}>📞 <span>Call</span></a>
                     )}
-                    <Link className="hdr-btn" to="/track">📦 <span>ট্র্যাক</span></Link>
+                    <Link className="hdr-btn" to="/track">📦 <span>Track</span></Link>
                     <button className="cart-btn" onClick={onCartClick}>
-                        🧺 কার্ট <span className="cart-badge">{count}</span>
+                        🧺 Cart <span className="cart-badge">{count}</span>
                     </button>
                 </div>
             </div>
 
             <nav className="main-nav">
                 <div className="main-nav-inner">
-                    <NavLink to="/" end>হোম</NavLink>
-                    <NavLink to="/products">প্রোডাক্ট</NavLink>
+                    <NavLink to="/" end>Home</NavLink>
+                    <NavLink to="/products">Products</NavLink>
                     <CategoriesMenu />
-                    <NavLink to="/offers">অফার</NavLink>
-                    <NavLink to="/about">আমাদের সম্পর্কে</NavLink>
+                    <NavLink to="/offers">Offers</NavLink>
+                    <NavLink to="/about">About Us</NavLink>
                 </div>
             </nav>
             <CategoryStrip />

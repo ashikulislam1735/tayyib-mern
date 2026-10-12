@@ -90,7 +90,7 @@ export default function Shop() {
                     </div>
                     <ProductGrid products={products.slice(0, 8)} />
                     {products.length > 8 && (
-                        <div className="show-all"><Link to="/products">সব প্রোডাক্ট দেখুন →</Link></div>
+                        <div className="show-all"><Link to="/products">View All Products →</Link></div>
                     )}
                 </section>
             </>
@@ -101,7 +101,7 @@ export default function Shop() {
         <>
             {category && subs.length > 0 && (
                 <div className="chip-row" id="categories">
-                    <button className={`cat-chip ${!sub ? 'active' : ''}`} onClick={() => setSub('')}>সব {category}</button>
+                    <button className={`cat-chip ${!sub ? 'active' : ''}`} onClick={() => setSub('')}>All {category}</button>
                     {subs.map((s) => (
                         <button key={s} className={`cat-chip ${sub === s ? 'active' : ''}`} onClick={() => setSub(s)}>{s}</button>
                     ))}
@@ -111,7 +111,7 @@ export default function Shop() {
             {(q || category || sub) && (
                 <p className="result-note">
                     {q ? `“${q}” এর ফলাফল: ` : ''}{filtered.length}টি প্রোডাক্ট{' '}
-                    <button className="link-btn" onClick={() => setParams({})}>সব দেখুন</button>
+                    <button className="link-btn" onClick={() => setParams({})}>View All</button>
                 </p>
             )}
 

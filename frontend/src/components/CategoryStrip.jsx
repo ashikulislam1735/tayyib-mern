@@ -14,7 +14,7 @@ export default function CategoryStrip() {
             <div className="cat-strip-inner">
                 <Link to="/products" className="cat-item">
                     <span className="cat-circle">🛒</span>
-                    <span className="cat-label">সব</span>
+                    <span className="cat-label">All</span>
                 </Link>
                 {categories.map((c) => (
                     <Link
