@@ -2,13 +2,42 @@ import express from 'express';
 import mongoose from 'mongoose';
 import Product from '../models/Product.js';
 import StockLog from '../models/StockLog.js';
-import { requireAdmin } from '../middleware/auth.js';
+import Setting from '../models/Setting.js';
+import { requireAdmin, requireOwner } from '../middleware/auth.js';
 
 const router = express.Router();
 const REASONS = ['restock', 'damaged', 'return', 'correction', 'other'];
 const MAX_QTY = 1000000;
 
 router.use(requireAdmin);
+
+const DEFAULT_LOW = 5;
+
+// GET /api/stock/settings — কম স্টকের সীমা (সব অ্যাডমিন দেখে)
+router.get('/settings', async (req, res) => {
+    try {
+        const doc = await Setting.findOne({ key: 'stock' }).lean();
+        const n = Number(doc && doc.data && doc.data.lowStockLimit);
+        res.json({ lowStockLimit: Number.isInteger(n) && n >= 0 ? n : DEFAULT_LOW });
+    } catch (err) {
+        res.status(500).json({ error: 'স্টকের সেটিংস লোড করতে সমস্যা হয়েছে' });
+    }
+});
+
+// PUT /api/stock/settings — শুধু মালিক
+router.put('/settings', requireOwner, async (req, res) => {
+    try {
+        const n = Number(req.body && req.body.lowStockLimit);
+        if (!Number.isInteger(n) || n < 0 || n > 1000) {
+            return res.status(400).json({ error: 'কম স্টকের সীমা ০ থেকে ১০০০ এর মধ্যে পূর্ণ সংখ্যা হতে হবে' });
+        }
+        const data = { lowStockLimit: n };
+        await Setting.findOneAndUpdate({ key: 'stock' }, { key: 'stock', data }, { upsert: true, new: true });
+        res.json(data);
+    } catch (err) {
+        res.status(500).json({ error: 'সেভ করতে সমস্যা হয়েছে' });
+    }
+});
 
 // GET /api/stock — সব প্রোডাক্টের প্রতিটা সাইজের স্টক (ক্রয়মূল্য শুধু মালিক দেখে)
 router.get('/', async (req, res) => {

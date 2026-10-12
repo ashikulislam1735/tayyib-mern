@@ -4,7 +4,6 @@ import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { downloadCsv, dhakaDate, dhakaDateTime } from '../utils/download';
 
-const LOW_STOCK = 5;
 const money = (v) => `৳${Number(v || 0).toLocaleString('en-BD', { maximumFractionDigits: 2 })}`;
 const STATUS_LABEL = { pending: 'Pending', confirmed: 'Confirmed', delivered: 'Delivered', cancelled: 'Cancelled', returned: 'ফেরত' };
 const addDaysStr = (dateStr, n) => dhakaDate(new Date(new Date(`${dateStr}T00:00:00+06:00`).getTime() + n * 86400000));
@@ -29,8 +28,13 @@ export default function AdminDashboard() {
     const [report, setReport] = useState(null);
     const [reportError, setReportError] = useState('');
     const [reportLoading, setReportLoading] = useState(false);
+    const [lowLimit, setLowLimit] = useState(5);
     const [from, setFrom] = useState(() => addDaysStr(dhakaDate(), -6));
     const [to, setTo] = useState(() => dhakaDate());
+
+    useEffect(() => {
+        api.getStockSettings().then((x) => setLowLimit(x.lowStockLimit)).catch(() => {});
+    }, []);
 
     useEffect(() => {
         Promise.all([api.getAllOrders(), api.getProducts()])
@@ -69,13 +73,13 @@ export default function AdminDashboard() {
         const low = [];
         products.forEach((p) => {
             p.variants.forEach((v) => {
-                if (v.stock <= LOW_STOCK) low.push({ id: p._id + v._id, title: p.title, label: v.label, stock: v.stock });
+                if (v.stock <= lowLimit) low.push({ id: p._id + v._id, title: p.title, label: v.label, stock: v.stock });
             });
         });
         low.sort((a, b) => a.stock - b.stock);
 
         return { todayCount: todayOrders.length, todaySales, pending, low };
-    }, [orders, products]);
+    }, [orders, products, lowLimit]);
 
     // সারাংশ CSV — স্ক্রিনে যে হিসাব দেখাচ্ছে (সার্ভারের হিসাব) হুবহু সেটাই ডাউনলোড হয়
     function downloadSummary() {
@@ -191,7 +195,7 @@ export default function AdminDashboard() {
             </div>
 
             <div className="panel" style={{ marginTop: 18 }}>
-                <h3 style={{ marginTop: 0 }}>স্টক কম ({LOW_STOCK}টি বা তার কম)</h3>
+                <h3 style={{ marginTop: 0 }}>স্টক কম ({lowLimit}টি বা তার কম)</h3>
                 {stats.low.length === 0 && <p style={{ margin: 0 }}>সব প্রোডাক্টের স্টক ঠিক আছে ✅</p>}
                 {stats.low.slice(0, 8).map((x) => (
                     <div className="admin-low-row" key={x.id}>

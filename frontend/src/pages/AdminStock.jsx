@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
-import { dhakaDateTime } from '../utils/download';
+import { downloadCsv, dhakaDate, dhakaDateTime } from '../utils/download';
 
-const LOW_STOCK = 5;
 const money = (v) => `৳${Number(v || 0).toLocaleString('en-BD', { maximumFractionDigits: 2 })}`;
 const REASONS = [
     ['restock', 'নতুন মাল এলো'],
@@ -15,9 +14,9 @@ const REASONS = [
 const REASON_LABEL = Object.fromEntries(REASONS);
 const MODES = [['add', 'যোগ করুন (+)'], ['subtract', 'কমান (−)'], ['set', 'সরাসরি সংখ্যা বসান']];
 
-function statusOf(stock) {
+function statusOf(stock, limit) {
     if (stock <= 0) return 'out';
-    if (stock <= LOW_STOCK) return 'low';
+    if (stock <= limit) return 'low';
     return 'ok';
 }
 const STATUS_TEXT = { out: 'স্টক নেই', low: 'কম', ok: 'ঠিক আছে' };
@@ -49,6 +48,9 @@ export default function AdminStock() {
     const [formError, setFormError] = useState('');
     const [msg, setMsg] = useState('');
     const [recent, setRecent] = useState([]);
+    const [lowLimit, setLowLimit] = useState(5);
+    const [limitInput, setLimitInput] = useState('5');
+    const [limitMsg, setLimitMsg] = useState('');
 
     function loadRecent() {
         api.getStockLogs(null, 30).then(setRecent).catch(() => {});
@@ -60,6 +62,9 @@ export default function AdminStock() {
             .catch((e) => setError(e.message))
             .finally(() => setLoading(false));
         loadRecent();
+        api.getStockSettings()
+            .then((x) => { setLowLimit(x.lowStockLimit); setLimitInput(String(x.lowStockLimit)); })
+            .catch(() => {});
     }, []);
 
     const categories = useMemo(() => [...new Set(rows.map((r) => r.category))].sort(), [rows]);
@@ -67,7 +72,7 @@ export default function AdminStock() {
     const summary = useMemo(() => {
         let low = 0, out = 0, units = 0, value = 0, noCost = 0;
         rows.forEach((r) => {
-            const st = statusOf(r.stock);
+            const st = statusOf(r.stock, lowLimit);
             if (st === 'low') low += 1;
             if (st === 'out') out += 1;
             units += Math.max(0, r.stock);
@@ -77,13 +82,13 @@ export default function AdminStock() {
             }
         });
         return { sizes: rows.length, low, out, units, value, noCost };
-    }, [rows, isOwner]);
+    }, [rows, isOwner, lowLimit]);
 
     const visible = useMemo(() => {
         const term = search.trim().toLowerCase();
         const list = rows.filter((r) => {
             if (category && r.category !== category) return false;
-            const st = statusOf(r.stock);
+            const st = statusOf(r.stock, lowLimit);
             if (filter === 'low' && st !== 'low') return false;
             if (filter === 'out' && st !== 'out') return false;
             if (term && !`${r.title} ${r.label}`.toLowerCase().includes(term)) return false;
@@ -91,7 +96,36 @@ export default function AdminStock() {
         });
         if (filter !== 'all') list.sort((a, b) => a.stock - b.stock);
         return list;
-    }, [rows, search, filter, category]);
+    }, [rows, search, filter, category, lowLimit]);
+
+    async function saveLimit() {
+        setLimitMsg('');
+        const n = Number(limitInput);
+        if (limitInput === '' || !Number.isInteger(n) || n < 0 || n > 1000) return setLimitMsg('০ থেকে ১০০০ এর মধ্যে পূর্ণ সংখ্যা লিখুন');
+        try {
+            const res = await api.saveStockSettings(n);
+            setLowLimit(res.lowStockLimit);
+            setLimitMsg('✅ সেভ হয়েছে');
+        } catch (e) {
+            setLimitMsg(e.message);
+        }
+    }
+
+    // এখন স্ক্রিনে যে তালিকা দেখাচ্ছে (ফিল্টারসহ) সেটাই CSV হয়ে নামে
+    function downloadList() {
+        const head = ['প্রোডাক্ট', 'ক্যাটাগরি', 'সাইজ', 'স্টক', 'অবস্থা', ...(isOwner ? ['ক্রয়মূল্য', 'স্টকের মূল্য'] : [])];
+        const body = visible.map((r) => [
+            r.title, r.category, r.label, r.stock, STATUS_TEXT[statusOf(r.stock, lowLimit)],
+            ...(isOwner ? [r.costPrice || 0, Math.max(0, r.stock) * (r.costPrice || 0)] : []),
+        ]);
+        downloadCsv(`tayyib-stock-${dhakaDate()}.csv`, [
+            ['স্টকের তালিকা'],
+            ['তৈরির সময় (ঢাকা)', dhakaDateTime(new Date())],
+            [],
+            head,
+            ...body,
+        ]);
+    }
 
     function openForm(r) {
         if (openId === r.variantId) { setOpenId(null); return; }
@@ -162,7 +196,7 @@ export default function AdminStock() {
                 </div>
                 <div className={`admin-card ${summary.low > 0 ? 'alert' : ''}`}>
                     <span className="admin-card-num">{summary.low}</span>
-                    <span className="admin-card-label">কম স্টক ({LOW_STOCK}টি বা কম)</span>
+                    <span className="admin-card-label">কম স্টক ({lowLimit}টি বা কম)</span>
                 </div>
                 <div className={`admin-card ${summary.out > 0 ? 'alert' : ''}`}>
                     <span className="admin-card-num">{summary.out}</span>
@@ -180,6 +214,18 @@ export default function AdminStock() {
             )}
 
             <div className="panel" style={{ marginTop: 18 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
+                    <h3 style={{ margin: 0 }}>স্টকের তালিকা</h3>
+                    <button type="button" className="link-btn" onClick={downloadList}>📥 তালিকা ডাউনলোড (Excel/CSV)</button>
+                </div>
+                {isOwner && (
+                    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center', marginBottom: 14 }}>
+                        <span>কত পিস বা তার কম হলে "কম স্টক" ধরা হবে:</span>
+                        <input type="number" min="0" max="1000" step="1" inputMode="numeric" value={limitInput} onChange={(e) => setLimitInput(e.target.value)} style={{ width: 90 }} />
+                        <button type="button" className="cat-chip active" onClick={saveLimit}>সেভ</button>
+                        {limitMsg && <span style={{ fontWeight: 600 }}>{limitMsg}</span>}
+                    </div>
+                )}
                 <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center', marginBottom: 12 }}>
                     <input
                         type="search"
@@ -203,7 +249,7 @@ export default function AdminStock() {
                 {visible.length === 0 && <p className="status-msg">কিছু পাওয়া যায়নি।</p>}
 
                 {visible.map((r) => {
-                    const st = statusOf(r.stock);
+                    const st = statusOf(r.stock, lowLimit);
                     const preview = openId === r.variantId ? previewStock(r) : null;
                     return (
                         <div key={r.variantId} style={{ borderBottom: '1px solid var(--cream-2)', padding: '10px 0' }}>
