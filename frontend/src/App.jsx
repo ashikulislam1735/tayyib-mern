@@ -92,7 +92,6 @@ function Header({ onCartClick }) {
                     <NavLink to="/products">Products</NavLink>
                     <CategoriesMenu />
                     <NavLink to="/offers">Offers</NavLink>
-                    <NavLink to="/about">About Us</NavLink>
                 </div>
             </nav>
             <CategoryStrip />
