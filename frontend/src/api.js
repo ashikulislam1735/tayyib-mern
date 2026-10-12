@@ -87,7 +87,7 @@ export const api = {
     setCategoryImage: (name, image) => request('/categories', { method: 'PUT', body: JSON.stringify({ name, image }) }),
     importProducts: (rows, dryRun) => request('/products/bulk', { method: 'POST', body: JSON.stringify({ rows, dryRun }) }),
     getAllOrders: () => request('/orders'),
-    getReportSummary: () => request('/reports/summary'),
+    getReportSummary: (from, to) => request(from && to ? `/reports/summary?from=${from}&to=${to}` : '/reports/summary'),
     getExpenses: (f = {}) => {
         const q = new URLSearchParams();
         if (f.from) q.set('from', f.from);

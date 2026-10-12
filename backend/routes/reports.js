@@ -31,17 +31,37 @@ function money(value) {
 
 router.use(requireAdmin, requireOwner);
 
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const MAX_DAYS = 366;
+
+function validDate(value) {
+    if (typeof value !== 'string' || !DATE_RE.test(value)) return false;
+    const d = dateAtDhakaStart(value);
+    return !Number.isNaN(d.getTime()) && dhakaDateString(d) === value;
+}
+
+// ?from=YYYY-MM-DD&to=YYYY-MM-DD (ঢাকার তারিখ)। না দিলে শেষ ৩০ দিন
 router.get('/summary', async (req, res) => {
     try {
         const todayString = dhakaDateString(new Date());
-        const todayStart = dateAtDhakaStart(todayString);
-        const sevenStart = dateAtDhakaStart(addDays(todayString, -6));
-        const thirtyStart = dateAtDhakaStart(addDays(todayString, -29));
-        const tomorrowStart = dateAtDhakaStart(addDays(todayString, 1));
+        let from = req.query.from;
+        let to = req.query.to;
+        if (!from && !to) {
+            from = addDays(todayString, -29);
+            to = todayString;
+        } else if (!validDate(from) || !validDate(to)) {
+            return res.status(400).json({ error: 'তারিখ ঠিক নেই' });
+        }
+        if (from > to) return res.status(400).json({ error: '"থেকে" তারিখ "পর্যন্ত" তারিখের আগে হতে হবে' });
+        const spanDays = Math.round((dateAtDhakaStart(to) - dateAtDhakaStart(from)) / DAY_MS) + 1;
+        if (spanDays > MAX_DAYS) return res.status(400).json({ error: 'সর্বোচ্চ ৩৬৬ দিনের হিসাব দেখা যায়' });
+
+        const rangeStart = dateAtDhakaStart(from);
+        const rangeEnd = dateAtDhakaStart(addDays(to, 1));
 
         const [periodOrders, periodExpenses, statusRows, productRows, deliveredRows] = await Promise.all([
             Order.aggregate([
-                { $match: { createdAt: { $gte: thirtyStart, $lt: tomorrowStart } } },
+                { $match: { createdAt: { $gte: rangeStart, $lt: rangeEnd } } },
                 { $project: {
                     status: 1, total: { $ifNull: ['$total', 0] },
                     fees: { $add: [{ $ifNull: ['$courierCost', 0] }, { $ifNull: ['$packagingCost', 0] }] },
@@ -58,7 +78,7 @@ router.get('/summary', async (req, res) => {
                 } },
             ]),
             Expense.aggregate([
-                { $match: { date: { $gte: thirtyStart, $lt: tomorrowStart } } },
+                { $match: { date: { $gte: rangeStart, $lt: rangeEnd } } },
                 { $project: {
                     amount: 1,
                     day: { $dateToString: { format: '%Y-%m-%d', date: '$date', timezone: TIME_ZONE } },
@@ -66,9 +86,9 @@ router.get('/summary', async (req, res) => {
                 { $group: { _id: '$day', expenses: { $sum: '$amount' } } },
             ]),
             Order.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]),
-            // শেষ ৩০ দিনের সেরা ৫ প্রোডাক্ট (বাতিল অর্ডার বাদে)
+            // নির্বাচিত সময়ের সেরা ৫ প্রোডাক্ট (বাতিল ও ফেরত বাদে)
             Order.aggregate([
-                { $match: { status: { $nin: ['cancelled', 'returned'] }, createdAt: { $gte: thirtyStart, $lt: tomorrowStart } } },
+                { $match: { status: { $nin: ['cancelled', 'returned'] }, createdAt: { $gte: rangeStart, $lt: rangeEnd } } },
                 { $unwind: '$items' },
                 { $group: {
                     _id: '$items.title',
@@ -80,7 +100,7 @@ router.get('/summary', async (req, res) => {
                 { $project: { _id: 0, title: '$_id', quantity: 1, revenue: 1 } },
             ]),
             Order.aggregate([
-                { $match: { status: 'delivered', createdAt: { $gte: thirtyStart, $lt: tomorrowStart } } },
+                { $match: { status: 'delivered', createdAt: { $gte: rangeStart, $lt: rangeEnd } } },
                 { $group: { _id: null, sales: { $sum: { $ifNull: ['$total', 0] } } } },
             ]),
         ]);
@@ -88,8 +108,8 @@ router.get('/summary', async (req, res) => {
         const salesByDay = new Map(periodOrders.map((row) => [row._id, row]));
         const expensesByDay = new Map(periodExpenses.map((row) => [row._id, row.expenses]));
         const daily = [];
-        for (let offset = -29; offset <= 0; offset += 1) {
-            const date = addDays(todayString, offset);
+        for (let offset = 0; offset < spanDays; offset += 1) {
+            const date = addDays(from, offset);
             const orderRow = salesByDay.get(date);
             daily.push({
                 date,
@@ -101,15 +121,18 @@ router.get('/summary', async (req, res) => {
             });
         }
 
-        function summarize(fromDate) {
-            const days = daily.filter((row) => row.date >= fromDate);
-            const sales = money(days.reduce((sum, row) => sum + row.sales, 0));
-            const expenses = money(days.reduce((sum, row) => sum + row.expenses, 0));
-            const cogs = money(days.reduce((sum, row) => sum + row.cogs, 0));
-            const fees = money(days.reduce((sum, row) => sum + row.fees, 0));
-            const orders = days.reduce((sum, row) => sum + row.orders, 0);
-            return { orders, sales, cogs, fees, expenses, net: money(sales - expenses), profit: money(sales - cogs - fees - expenses) };
-        }
+        const sum = (key) => money(daily.reduce((total, row) => total + row[key], 0));
+        const sales = sum('sales');
+        const expenses = sum('expenses');
+        const cogs = sum('cogs');
+        const fees = sum('fees');
+        const range = {
+            from, to,
+            orders: daily.reduce((total, row) => total + row.orders, 0),
+            sales, cogs, fees, expenses,
+            net: money(sales - expenses),
+            profit: money(sales - cogs - fees - expenses),
+        };
 
         const statusCounts = { pending: 0, confirmed: 0, delivered: 0, cancelled: 0, returned: 0 };
         for (const row of statusRows) {
@@ -117,10 +140,8 @@ router.get('/summary', async (req, res) => {
         }
 
         res.json({
-            today: summarize(todayString),
-            last7Days: summarize(addDays(todayString, -6)),
-            last30Days: summarize(addDays(todayString, -29)),
-            deliveredSales30Days: money(deliveredRows[0]?.sales),
+            range,
+            deliveredSales: money(deliveredRows[0]?.sales),
             statusCounts,
             daily,
             topProducts: productRows.map((row) => ({
