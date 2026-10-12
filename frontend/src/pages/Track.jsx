@@ -42,9 +42,9 @@ export default function Track() {
             {invoiceOrder && <Invoice order={invoiceOrder} onClose={() => setInvoiceOrder(null)} />}
 
             {orders.map((o) => (
-                <div className="order-card" key={o._id}>
+                <div className="order-card" key={o._id || o.ref}>
                     <div className="order-line">
-                        <strong>Order #{o._id.slice(-6).toUpperCase()}</strong>
+                        <strong>Order #{o.ref || o._id.slice(-6).toUpperCase()}</strong>
                         <span className="badge">{STATUS_LABEL[o.status]}</span>
                     </div>
                     <div style={{ fontSize: 14, color: '#888' }}>{new Date(o.createdAt).toLocaleString('en-GB', { timeZone: 'Asia/Dhaka', dateStyle: 'medium', timeStyle: 'short' })}</div>
@@ -52,7 +52,7 @@ export default function Track() {
                         <div key={idx} style={{ fontSize: 14 }}>{it.title} ({it.variantLabel}) × {it.quantity}</div>
                     ))}
                     <div className="order-total"><span>Total</span><span>৳{o.total}</span></div>
-                    <button className="link-btn" onClick={() => setInvoiceOrder(o)}>🧾 View / Download Invoice</button>
+                    {o.address && <button className="link-btn" onClick={() => setInvoiceOrder(o)}>🧾 View / Download Invoice</button>}
                 </div>
             ))}
         </div>

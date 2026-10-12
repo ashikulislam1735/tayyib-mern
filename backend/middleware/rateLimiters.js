@@ -23,3 +23,13 @@ export const orderCreateLimiter = rateLimit({
     legacyHeaders: false,
     message: { error: 'এই নেটওয়ার্ক থেকে অনেক বেশি অর্ডার এসেছে। কিছুক্ষণ পরে আবার চেষ্টা করুন বা WhatsApp-এ যোগাযোগ করুন।' },
 });
+
+// ৩) অর্ডার ট্র্যাকিংয়ের জন্য কড়া সীমা: প্রতি IP থেকে ১৫ মিনিটে ৩০টা খোঁজা।
+// (ফোন নম্বর একটার পর একটা অনুমান করে দেখা আটকানোর জন্য)
+export const trackLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 30,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Too many lookups. Please try again in a few minutes.' },
+});

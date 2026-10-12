@@ -18,7 +18,7 @@ import customerRoutes from './routes/customers.js';
 import adminRoutes from './routes/admins.js';
 import reviewRoutes from './routes/reviews.js';
 import stockRoutes from './routes/stock.js';
-import { apiLimiter, orderCreateLimiter } from './middleware/rateLimiters.js';
+import { apiLimiter, orderCreateLimiter, trackLimiter } from './middleware/rateLimiters.js';
 
 // ⚠️ JWT_SECRET দুর্বল বা না থাকলে সার্ভার চালুই হবে না
 const secret = process.env.JWT_SECRET || '';
@@ -61,6 +61,7 @@ app.use('/api/auth', authRoutes);
 // রিকোয়েস্টের সীমা: আগে সাধারণ সীমা, আর নতুন অর্ডারের (POST) জন্য আলাদা কড়া সীমা
 app.use('/api', apiLimiter);
 app.post('/api/orders', orderCreateLimiter);
+app.use('/api/orders/track', trackLimiter);
 
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);

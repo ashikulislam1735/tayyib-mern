@@ -336,15 +336,36 @@ router.patch('/:id/status', requireAdmin, async (req, res) => {
 });
 
 // GET /api/orders/track/:query — অর্ডার ID বা ফোন নম্বর দিয়ে ট্র্যাকিং
+// গোপনীয়তা: পুরো অর্ডার ID (২৪ অক্ষর, অনুমান করা যায় না) দিলে পুরো তথ্য পাওয়া যায় (আগের মতোই)।
+// শুধু ফোন নম্বর দিলে নাম, ঠিকানা, ফোন ও পুরো ID লুকিয়ে কেবল স্ট্যাটাস, পণ্য ও মোট দাম দেখানো হয় —
+// কারণ ফোন নম্বর যে কেউ অনুমান করতে পারে।
 router.get('/track/:query', async (req, res) => {
-    const { query } = req.params;
-    const filter = mongoose.isValidObjectId(query)
-        ? { _id: query }
-        : { phone: query };
+    try {
+        const { query } = req.params;
 
-    const orders = await Order.find(filter).select('-items.costPrice -courierCost -packagingCost').sort({ createdAt: -1 });
-    if (orders.length === 0) return res.status(404).json({ error: 'No orders found' });
-    res.json(orders);
+        if (mongoose.isValidObjectId(query)) {
+            const orders = await Order.find({ _id: query }).select('-items.costPrice -courierCost -packagingCost').sort({ createdAt: -1 });
+            if (orders.length === 0) return res.status(404).json({ error: 'No orders found' });
+            return res.json(orders);
+        }
+
+        const orders = await Order.find({ phone: query })
+            .select('status createdAt total items.title items.variantLabel items.quantity')
+            .sort({ createdAt: -1 })
+            .limit(20)
+            .lean();
+        if (orders.length === 0) return res.status(404).json({ error: 'No orders found' });
+        res.json(orders.map((o) => ({
+            ref: String(o._id).slice(-6).toUpperCase(),
+            status: o.status,
+            createdAt: o.createdAt,
+            total: o.total,
+            items: o.items.map((it) => ({ title: it.title, variantLabel: it.variantLabel, quantity: it.quantity })),
+        })));
+    } catch (e) {
+        console.error('ট্র্যাকিং ত্রুটি:', e);
+        res.status(500).json({ error: 'Could not look up the order. Please try again.' });
+    }
 });
 
 export default router;
