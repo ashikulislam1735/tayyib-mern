@@ -2,7 +2,6 @@ import mongoose from 'mongoose';
 
 const orderItemSchema = new mongoose.Schema({
     productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
-    variantId: { type: mongoose.Schema.Types.ObjectId },   // কোন সাইজ — বাতিল হলে সঠিক সাইজের স্টক ফেরত দিতে লাগে
     title: { type: String, required: true },
     variantLabel: { type: String, required: true },
     price: { type: Number, required: true },

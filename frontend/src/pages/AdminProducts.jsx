@@ -46,7 +46,6 @@ export default function AdminProducts() {
             featured: !!p.featured,
             description: p.description || '',
             variants: p.variants.map((v) => ({
-                _id: v._id,
                 label: v.label,
                 price: v.price,
                 originalPrice: v.originalPrice ?? '',
@@ -145,7 +144,6 @@ export default function AdminProducts() {
             featured: !!form.featured,
             description: form.description,
             variants: form.variants.map((v) => ({
-                _id: v._id, // আগে থেকে থাকা সাইজ চেনার জন্য — এর স্টক সার্ভার বদলায় না
                 label: v.label.trim(),
                 price: Number(v.price),
                 originalPrice: v.originalPrice === '' ? undefined : Number(v.originalPrice),
@@ -277,14 +275,8 @@ export default function AdminProducts() {
                                     <input type="number" value={v.costPrice} onChange={(e) => setVariant(i, 'costPrice', e.target.value)} />
                                 </>
                             )}
-                            <label>{v._id ? 'স্টক (বদলাতে "স্টক" পেজ ব্যবহার করুন)' : 'শুরুর স্টক'}</label>
-                            <input
-                                type="number"
-                                value={v.stock}
-                                readOnly={Boolean(v._id)}
-                                style={v._id ? { background: '#f1f1f1', cursor: 'not-allowed' } : undefined}
-                                onChange={(e) => setVariant(i, 'stock', e.target.value)}
-                            />
+                            <label>স্টক</label>
+                            <input type="number" value={v.stock} onChange={(e) => setVariant(i, 'stock', e.target.value)} />
                             {form.variants.length > 1 && (
                                 <button
                                     className="btn-primary"

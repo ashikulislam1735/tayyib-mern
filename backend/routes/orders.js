@@ -7,23 +7,14 @@ import AbandonedCart from '../models/AbandonedCart.js';
 import { attachRisk } from '../utils/risk.js';
 import { checkCoupon, claimCoupon, releaseCoupon } from '../utils/coupon.js';
 import { requireAdmin } from '../middleware/auth.js';
-import { makeLimiter } from '../utils/rateLimit.js';
-import { restoreItems, reserveItems } from '../utils/stock.js';
 
 const router = express.Router();
-
-// ভুয়া অর্ডার ও নম্বর অনুমান করে খোঁজা ঠেকাতে IP-প্রতি সীমা
-const orderLimiter = makeLimiter({ windowMs: 10 * 60 * 1000, max: 20, message: 'Too many orders from this connection. Please try again in a little while.' });
-const trackLimiter = makeLimiter({ windowMs: 10 * 60 * 1000, max: 30, message: 'Too many lookups. Please try again in a little while.' });
-
-// যেসব স্ট্যাটাসে অর্ডারের জন্য স্টক কাটা থাকে (বাতিল/ফেরত হলে স্টক ফেরত যায়)
-const HOLDS_STOCK = ['pending', 'confirmed', 'delivered'];
 
 // POST /api/orders — নতুন অর্ডার তৈরি
 // নিরাপত্তার জন্য দাম ক্লায়েন্ট থেকে নেওয়া হয় না — ডাটাবেজ থেকে আসল দাম ধরে সার্ভারেই মোট হিসাব করা হয়
 // স্টক কমানোর নিয়ম: আগে সব আইটেম যাচাই (স্টক না ছুঁয়ে), তারপর একটা একটা করে নিরাপদভাবে কমানো।
 // মাঝপথে কোনোটা ব্যর্থ হলে আগে কমানো স্টক ফেরত দেওয়া হয়, তাই অর্ডার না হলে স্টকও কমে না।
-router.post('/', orderLimiter, async (req, res) => {
+router.post('/', async (req, res) => {
     const { customerName, phone, address, paymentMethod, items } = req.body;
     const deliveryArea = req.body.deliveryArea === 'outside' ? 'outside' : 'inside';
 
@@ -108,7 +99,6 @@ router.post('/', orderLimiter, async (req, res) => {
 
             orderItems.push({
                 productId: product._id,
-                variantId: variant._id,
                 title: product.title,
                 variantLabel: variant.label,
                 price: variant.price,
@@ -226,103 +216,30 @@ router.get('/', requireAdmin, async (req, res) => {
 });
 
 // PATCH /api/orders/:id/status — অর্ডারের স্ট্যাটাস বদলানো (শুধু অ্যাডমিন)
-// বাতিল/ফেরত করলে স্টক ও কুপনের ব্যবহার ফেরত যায়; বাতিল অর্ডার আবার চালু করলে স্টক আবার কাটে (স্টক না থাকলে আটকায়)।
 router.patch('/:id/status', requireAdmin, async (req, res) => {
-    const { status } = req.body || {};
+    const { status } = req.body;
     const allowed = ['pending', 'confirmed', 'delivered', 'cancelled', 'returned'];
     if (!allowed.includes(status)) {
         return res.status(400).json({ error: 'অবৈধ স্ট্যাটাস' });
     }
-    if (!mongoose.isValidObjectId(req.params.id)) {
-        return res.status(400).json({ error: 'অবৈধ অর্ডার ID' });
-    }
 
-    // স্টাফ ক্রয়মূল্য ও কুরিয়ার/প্যাকেজিং খরচ দেখে না
-    const present = (o) => {
-        const x = { ...o };
-        if (req.admin.role !== 'owner') {
-            delete x.courierCost;
-            delete x.packagingCost;
-            x.items = (x.items || []).map(({ costPrice, ...item }) => item);
-        }
-        return x;
-    };
-
-    try {
-        const current = await Order.findById(req.params.id).lean();
-        if (!current) return res.status(404).json({ error: 'অর্ডার পাওয়া যায়নি' });
-        if (current.status === status) return res.json(present(current));
-
-        const wasHolding = HOLDS_STOCK.includes(current.status);
-        const willHold = HOLDS_STOCK.includes(status);
-        const ctx = { by: req.admin.username, note: `অর্ডার #${String(current._id).slice(-6).toUpperCase()}: ${current.status} → ${status}` };
-
-        // বাতিল/ফেরত অর্ডার আবার চালু: আগে স্টক কাটা, না পারলে স্ট্যাটাস বদলানো হবে না
-        if (!wasHolding && willHold) {
-            const r = await reserveItems(current.items, ctx);
-            if (!r.ok) {
-                return res.status(400).json({ error: `"${r.title}" (${r.label}) এর স্টক পর্যাপ্ত নেই, তাই অর্ডারটি আবার চালু করা গেল না` });
-            }
-        }
-
-        // পুরোনো স্ট্যাটাস মিললে তবেই বদলায় — দুজন একসাথে বদলালে স্টক দুইবার ফেরত যাওয়া ঠেকায়
-        const updated = await Order.findOneAndUpdate({ _id: current._id, status: current.status }, { status }, { new: true }).lean();
-        if (!updated) {
-            if (!wasHolding && willHold) await restoreItems(current.items, ctx, { silent: true });
-            return res.status(409).json({ error: 'অর্ডারটি এইমাত্র অন্য কেউ বদলেছে। পেজ রিলোড করে আবার চেষ্টা করুন।' });
-        }
-
-        if (wasHolding && !willHold) {
-            await restoreItems(current.items, ctx);
-            if (current.couponCode) {
-                try { await releaseCoupon(current.couponCode); } catch (e) { console.error('কুপন ফেরত দেওয়া যায়নি:', e.message); }
-            }
-        } else if (!wasHolding && willHold && current.couponCode) {
-            try { await claimCoupon(current.couponCode); } catch (e) { console.error('কুপন আবার গণনা করা যায়নি:', e.message); }
-        }
-
-        res.json(present(updated));
-    } catch (err) {
-        console.error('status update error:', err);
-        res.status(500).json({ error: 'স্ট্যাটাস বদলাতে সমস্যা হয়েছে' });
-    }
+    const q = Order.findByIdAndUpdate(req.params.id, { status }, { new: true });
+    if (req.admin.role !== 'owner') q.select('-items.costPrice -courierCost -packagingCost');
+    const order = await q;
+    if (!order) return res.status(404).json({ error: 'অর্ডার পাওয়া যায়নি' });
+    res.json(order);
 });
 
 // GET /api/orders/track/:query — অর্ডার ID বা ফোন নম্বর দিয়ে ট্র্যাকিং
-// • পুরো অর্ডার ID (অনুমান করা অসম্ভব) দিলে: পুরো অর্ডার, ইনভয়েসসহ।
-// • ফোন নম্বর দিলে: নাম/ঠিকানা/পূর্ণ ID ছাড়া শুধু অবস্থা, তারিখ, পণ্য ও মোট — যাতে অন্যের নম্বর দিয়ে ঠিকানা বের করা না যায়।
-router.get('/track/:query', trackLimiter, async (req, res) => {
-    try {
-        const query = String(req.params.query || '').trim();
+router.get('/track/:query', async (req, res) => {
+    const { query } = req.params;
+    const filter = mongoose.isValidObjectId(query)
+        ? { _id: query }
+        : { phone: query };
 
-        if (/^[a-f0-9]{24}$/i.test(query)) {
-            const order = await Order.findById(query).select('-items.costPrice -courierCost -packagingCost').lean();
-            if (!order) return res.status(404).json({ error: 'No orders found' });
-            return res.json([order]);
-        }
-
-        const phone = query.replace(/[\s-]/g, '');
-        if (!/^01[0-9]{9}$/.test(phone)) {
-            return res.status(400).json({ error: 'Enter your full order ID or an 11-digit mobile number (01XXXXXXXXX)' });
-        }
-
-        const orders = await Order.find({ phone })
-            .select('status total createdAt items.title items.variantLabel items.quantity')
-            .sort({ createdAt: -1 }).limit(20).lean();
-        if (orders.length === 0) return res.status(404).json({ error: 'No orders found' });
-
-        res.json(orders.map((o) => ({
-            redacted: true,
-            shortId: String(o._id).slice(-6).toUpperCase(),
-            status: o.status,
-            total: o.total,
-            createdAt: o.createdAt,
-            items: (o.items || []).map((i) => ({ title: i.title, variantLabel: i.variantLabel, quantity: i.quantity })),
-        })));
-    } catch (err) {
-        console.error('track error:', err);
-        res.status(500).json({ error: 'Could not look up your order. Please try again.' });
-    }
+    const orders = await Order.find(filter).select('-items.costPrice -courierCost -packagingCost').sort({ createdAt: -1 });
+    if (orders.length === 0) return res.status(404).json({ error: 'No orders found' });
+    res.json(orders);
 });
 
 export default router;

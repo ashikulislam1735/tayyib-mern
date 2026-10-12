@@ -22,14 +22,12 @@ export default function Track() {
         }
     }
 
-    const hasRedacted = orders.some((o) => o.redacted);
-
     return (
         <div className="panel" style={{ maxWidth: 560, margin: '0 auto' }}>
             <h2>Track Your Order</h2>
             <form onSubmit={handleSearch} style={{ display: 'flex', gap: 8 }}>
                 <input
-                    placeholder="Order ID or mobile number"
+                    placeholder="Order ID or phone number"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     style={{ flex: 1 }}
@@ -41,33 +39,22 @@ export default function Track() {
 
             {error && <p className="status-msg error">{error}</p>}
 
-            {hasRedacted && (
-                <p style={{ fontSize: 14, color: 'var(--walnut-soft)', margin: '12px 0 0' }}>
-                    For your privacy, searching by mobile number shows only the status of your orders. Use your full order ID to see delivery details and the invoice.
-                </p>
-            )}
-
             {invoiceOrder && <Invoice order={invoiceOrder} onClose={() => setInvoiceOrder(null)} />}
 
-            {orders.map((o) => {
-                const shortId = o.redacted ? o.shortId : o._id.slice(-6).toUpperCase();
-                return (
-                    <div className="order-card" key={o.redacted ? `${o.shortId}-${o.createdAt}` : o._id}>
-                        <div className="order-line">
-                            <strong>Order #{shortId}</strong>
-                            <span className="badge">{STATUS_LABEL[o.status] || o.status}</span>
-                        </div>
-                        <div style={{ fontSize: 14, color: '#888' }}>{new Date(o.createdAt).toLocaleString('en-GB', { timeZone: 'Asia/Dhaka', dateStyle: 'medium', timeStyle: 'short' })}</div>
-                        {o.items.map((it, idx) => (
-                            <div key={idx} style={{ fontSize: 14 }}>{it.title} ({it.variantLabel}) × {it.quantity}</div>
-                        ))}
-                        <div className="order-total"><span>Total</span><span>৳{o.total}</span></div>
-                        {!o.redacted && (
-                            <button className="link-btn" onClick={() => setInvoiceOrder(o)}>🧾 View / Download Invoice</button>
-                        )}
+            {orders.map((o) => (
+                <div className="order-card" key={o._id}>
+                    <div className="order-line">
+                        <strong>Order #{o._id.slice(-6).toUpperCase()}</strong>
+                        <span className="badge">{STATUS_LABEL[o.status]}</span>
                     </div>
-                );
-            })}
+                    <div style={{ fontSize: 14, color: '#888' }}>{new Date(o.createdAt).toLocaleString('en-GB', { timeZone: 'Asia/Dhaka', dateStyle: 'medium', timeStyle: 'short' })}</div>
+                    {o.items.map((it, idx) => (
+                        <div key={idx} style={{ fontSize: 14 }}>{it.title} ({it.variantLabel}) × {it.quantity}</div>
+                    ))}
+                    <div className="order-total"><span>Total</span><span>৳{o.total}</span></div>
+                    <button className="link-btn" onClick={() => setInvoiceOrder(o)}>🧾 View / Download Invoice</button>
+                </div>
+            ))}
         </div>
     );
 }
