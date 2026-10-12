@@ -51,6 +51,8 @@ export default function AdminProducts() {
                 originalPrice: v.originalPrice ?? '',
                 costPrice: v.costPrice ?? '',
                 stock: v.stock,
+                origLabel: v.label,   // ফর্ম খোলার সময়ের নাম ও স্টক — সার্ভার এই পার্থক্য ধরে স্টক ঠিক রাখে
+                baseStock: v.stock,
             })),
         });
     }
@@ -149,6 +151,7 @@ export default function AdminProducts() {
                 originalPrice: v.originalPrice === '' ? undefined : Number(v.originalPrice),
                 costPrice: v.costPrice === '' ? 0 : Number(v.costPrice),
                 stock: Number(v.stock),
+                ...(v.baseStock !== undefined ? { origLabel: v.origLabel, baseStock: Number(v.baseStock) } : {}),
             })),
         };
         setSaving(true);

@@ -1,5 +1,6 @@
 import express from 'express';
 import Product from '../models/Product.js';
+import StockLog from '../models/StockLog.js';
 import Order from '../models/Order.js';
 import Review from '../models/Review.js';
 import { requireAdmin } from '../middleware/auth.js';
@@ -234,11 +235,47 @@ router.put('/:id', requireAdmin, async (req, res) => {
             const old = new Map(((existing && existing.variants) || []).map((v) => [v.label, v.costPrice || 0]));
             body.variants = body.variants.map((v) => ({ ...v, costPrice: old.get(v.label) || 0 }));
         }
+        // স্টক: ফর্ম খোলার সময়ের স্টক (baseStock) আর সেভের সময়ের সংখ্যার পার্থক্যটুকুই এখনকার স্টকে যোগ/বিয়োগ হয়।
+        // তাই ফর্ম খোলা থাকাকালীন অর্ডার এসে স্টক কমলে, সেভ করলে সেই কমানো স্টক আর মুছে যায় না।
+        const stockLogs = [];
+        if (Array.isArray(body.variants)) {
+            const existing = await Product.findById(req.params.id).lean();
+            if (existing) {
+                const byLabel = new Map(existing.variants.map((v) => [v.label, v]));
+                body.variants = body.variants.map((v) => {
+                    const { origLabel, baseStock, ...rest } = v;
+                    const cur = byLabel.get(origLabel ?? rest.label);
+                    const base = Number(baseStock);
+                    const typed = Number(rest.stock);
+                    if (cur && baseStock !== undefined && baseStock !== null && Number.isFinite(base) && Number.isFinite(typed)) {
+                        const delta = typed - base;
+                        const newStock = Math.max(0, (Number(cur.stock) || 0) + delta);
+                        if (newStock !== cur.stock) stockLogs.push({ label: rest.label, before: cur.stock, after: newStock });
+                        return { ...rest, stock: newStock };
+                    }
+                    return rest; // নতুন সাইজ, বা পুরনো ফর্ম (baseStock নেই) — আগের মতো সরাসরি বসবে
+                });
+            } else {
+                body.variants = body.variants.map(({ origLabel, baseStock, ...rest }) => rest);
+            }
+        }
         const product = await Product.findByIdAndUpdate(req.params.id, body, {
             new: true,
             runValidators: true,
         });
         if (!product) return res.status(404).json({ error: 'প্রোডাক্ট পাওয়া যায়নি' });
+        for (const l of stockLogs) {
+            try {
+                const variant = product.variants.find((v) => v.label === l.label);
+                await StockLog.create({
+                    product: product._id, productTitle: product.title,
+                    variantId: variant ? variant._id : product._id, variantLabel: l.label,
+                    mode: l.after > l.before ? 'add' : 'subtract',
+                    before: l.before, after: l.after, change: l.after - l.before,
+                    reason: 'correction', note: 'প্রোডাক্ট এডিট ফর্ম থেকে', by: req.admin.username,
+                });
+            } catch (e) { console.error('স্টকের ইতিহাস লেখা যায়নি:', e.message); }
+        }
         res.json(product);
     } catch (err) {
         res.status(400).json({ error: err.message });
