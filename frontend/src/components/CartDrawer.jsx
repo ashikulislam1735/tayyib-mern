@@ -9,12 +9,12 @@ export default function CartDrawer({ open, onClose }) {
             <div className={`overlay ${open ? 'open' : ''}`} onClick={onClose}></div>
             <aside className={`drawer ${open ? 'open' : ''}`}>
                 <div className="drawer-head">
-                    <h3>আপনার কার্ট</h3>
+                    <h3>Your Cart</h3>
                     <button className="drawer-close" onClick={onClose}>✕</button>
                 </div>
                 <div className="drawer-items">
                     {items.length === 0 ? (
-                        <p className="empty-note">কার্ট খালি।</p>
+                        <p className="empty-note">Your cart is empty.</p>
                     ) : (
                         items.map((i) => (
                             <div className="drawer-item" key={i.variantId}>
@@ -33,9 +33,9 @@ export default function CartDrawer({ open, onClose }) {
                     )}
                 </div>
                 <div className="drawer-foot">
-                    <div className="subtotal-row"><span>সাবটোটাল</span><span>৳{subtotal}</span></div>
+                    <div className="subtotal-row"><span>Subtotal</span><span>৳{subtotal}</span></div>
                     <Link to="/checkout" className="btn-primary" onClick={onClose} style={{ textAlign: 'center', display: 'block' }}>
-                        চেকআউট করুন
+                        Checkout
                     </Link>
                 </div>
             </aside>

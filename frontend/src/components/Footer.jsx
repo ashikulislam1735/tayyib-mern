@@ -31,8 +31,8 @@ export default function Footer() {
                 <div className="footer-cta">
                     <div className="footer-cta-inner">
                         <div>
-                            <strong>কিছু জানার আছে?</strong>
-                            <p>অর্ডার, পণ্য বা ডেলিভারি — যেকোনো প্রশ্নে সরাসরি কথা বলুন</p>
+                            <strong>Have a question?</strong>
+                            <p>Orders, products or delivery — talk to us directly</p>
                         </div>
                         <div className="footer-cta-btns">
                             {phone && <a className="fcta-solid" href={`tel:${phone}`}>{ICONS.phone} {phone}</a>}
@@ -58,33 +58,33 @@ export default function Footer() {
                 </div>
 
                 <div>
-                    <h4>দ্রুত লিংক</h4>
+                    <h4>Quick Links</h4>
                     <ul className="footer-list">
-                        <li><Link to="/products">সব প্রোডাক্ট</Link></li>
-                        <li><Link to="/categories">ক্যাটাগরি</Link></li>
-                        <li><Link to="/offers">অফার</Link></li>
+                        <li><Link to="/products">All Products</Link></li>
+                        <li><Link to="/categories">Categories</Link></li>
+                        <li><Link to="/offers">Offers</Link></li>
                     </ul>
                 </div>
 
                 <div>
-                    <h4>তথ্য</h4>
+                    <h4>Information</h4>
                     <ul className="footer-list">
-                        <li><Link to="/about">আমাদের সম্পর্কে</Link></li>
-                        <li><Link to="/privacy">গোপনীয়তা নীতি</Link></li>
+                        <li><Link to="/about">About Us</Link></li>
+                        <li><Link to="/privacy">Privacy Policy</Link></li>
                     </ul>
                 </div>
 
                 <div>
-                    <h4>সাহায্য</h4>
+                    <h4>Help</h4>
                     <ul className="footer-list">
-                        <li><Link to="/track">অর্ডার ট্র্যাক</Link></li>
-                        {waNumber && <li><a href={`https://wa.me/${waNumber}`} target="_blank" rel="noopener noreferrer">WhatsApp-এ জিজ্ঞাসা</a></li>}
+                        <li><Link to="/track">Track Order</Link></li>
+                        {waNumber && <li><a href={`https://wa.me/${waNumber}`} target="_blank" rel="noopener noreferrer">Ask on WhatsApp</a></li>}
                     </ul>
                 </div>
 
                 {hasContact && (
                     <div>
-                        <h4>যোগাযোগ</h4>
+                        <h4>Contact</h4>
                         <ul className="footer-list footer-contact">
                             {phone && <li>{ICONS.phone}<a href={`tel:${phone}`}><strong>{phone}</strong></a></li>}
                             {email && <li>{ICONS.mail}<a href={`mailto:${email}`}>{email}</a></li>}
@@ -96,7 +96,7 @@ export default function Footer() {
             </div>
 
             <div className="footer-bottom">
-                <span>© {new Date().getFullYear()} {name}। সর্বস্বত্ব সংরক্ষিত।</span>
+                <span>© {new Date().getFullYear()} {name}. All rights reserved.</span>
             </div>
         </footer>
     );

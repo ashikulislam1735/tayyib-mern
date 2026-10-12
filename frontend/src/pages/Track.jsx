@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { api } from '../api';
 import Invoice from '../components/Invoice';
 
-const STATUS_LABEL = { pending: 'অর্ডার সম্পন্ন হয়েছে', confirmed: 'কনফার্ম হয়েছে', delivered: 'ডেলিভারি সম্পন্ন', cancelled: 'বাতিল', returned: 'ফেরত এসেছে' };
+const STATUS_LABEL = { pending: 'Order placed', confirmed: 'Confirmed', delivered: 'Delivered', cancelled: 'Cancelled', returned: 'Returned' };
 
 export default function Track() {
     const [query, setQuery] = useState('');
@@ -24,16 +24,16 @@ export default function Track() {
 
     return (
         <div className="panel" style={{ maxWidth: 560, margin: '0 auto' }}>
-            <h2>অর্ডার ট্র্যাক করুন</h2>
+            <h2>Track Your Order</h2>
             <form onSubmit={handleSearch} style={{ display: 'flex', gap: 8 }}>
                 <input
-                    placeholder="অর্ডার আইডি বা ফোন নম্বর"
+                    placeholder="Order ID or phone number"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     style={{ flex: 1 }}
                 />
                 <button className="btn-primary" style={{ width: 'auto', padding: '0 20px' }} type="submit">
-                    খুঁজুন
+                    Search
                 </button>
             </form>
 
@@ -44,15 +44,15 @@ export default function Track() {
             {orders.map((o) => (
                 <div className="order-card" key={o._id}>
                     <div className="order-line">
-                        <strong>অর্ডার #{o._id.slice(-6).toUpperCase()}</strong>
+                        <strong>Order #{o._id.slice(-6).toUpperCase()}</strong>
                         <span className="badge">{STATUS_LABEL[o.status]}</span>
                     </div>
-                    <div style={{ fontSize: 13, color: '#888' }}>{new Date(o.createdAt).toLocaleString('bn-BD')}</div>
+                    <div style={{ fontSize: 14, color: '#888' }}>{new Date(o.createdAt).toLocaleString('en-GB', { timeZone: 'Asia/Dhaka', dateStyle: 'medium', timeStyle: 'short' })}</div>
                     {o.items.map((it, idx) => (
                         <div key={idx} style={{ fontSize: 14 }}>{it.title} ({it.variantLabel}) × {it.quantity}</div>
                     ))}
-                    <div className="order-total"><span>সর্বমোট</span><span>৳{o.total}</span></div>
-                    <button className="link-btn" onClick={() => setInvoiceOrder(o)}>🧾 ইনভয়েস দেখুন / ডাউনলোড</button>
+                    <div className="order-total"><span>Total</span><span>৳{o.total}</span></div>
+                    <button className="link-btn" onClick={() => setInvoiceOrder(o)}>🧾 View / Download Invoice</button>
                 </div>
             ))}
         </div>

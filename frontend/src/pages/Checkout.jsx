@@ -27,7 +27,7 @@ export default function Checkout() {
     const payNumber = form.paymentMethod === 'bkash' ? site.bkashNumber : form.paymentMethod === 'nagad' ? site.nagadNumber : '';
 
     if (items.length === 0) {
-        return <p className="status-msg">আপনার কার্ট খালি। <a href="/">শপে ফিরে যান</a></p>;
+        return <p className="status-msg">Your cart is empty. <a href="/">Back to shop</a></p>;
     }
 
     function handleChange(e) {
@@ -56,7 +56,7 @@ export default function Checkout() {
         try {
             const r = await api.validateCoupon({ code: couponInput, subtotal });
             setCoupon({ code: r.code, discount: r.discount });
-            setCouponMsg(`কুপন প্রয়োগ হয়েছে: ৳${r.discount} ছাড়`);
+            setCouponMsg(`Coupon applied: ৳${r.discount} off`);
         } catch (err) {
             setCoupon(null);
             setCouponMsg(err.message);
@@ -98,28 +98,28 @@ export default function Checkout() {
     return (
         <div className="two-col">
             <div className="panel">
-                <h2>চেকআউট</h2>
+                <h2>Checkout</h2>
                 {error && <p className="status-msg error">{error}</p>}
                 <form onSubmit={handleSubmit}>
-                    <label>পূর্ণ নাম</label>
+                    <label>Full Name</label>
                     <input name="customerName" value={form.customerName} onChange={handleChange} required />
 
-                    <label>মোবাইল নম্বর</label>
+                    <label>Mobile Number</label>
                     <input name="phone" value={form.phone} onChange={handleChange} onBlur={saveCartQuietly} pattern="01[0-9]{9}" required />
-                    <p style={{ fontSize: 12, color: 'var(--walnut-soft)', margin: '4px 0 0' }}>অর্ডার সম্পূর্ণ না হলে আমরা এই নম্বরে যোগাযোগ করতে পারি।</p>
+                    <p style={{ fontSize: 14, color: 'var(--walnut-soft)', margin: '4px 0 0' }}>If your order isn't completed, we may contact you on this number.</p>
 
-                    <label>ডেলিভারি এলাকা</label>
+                    <label>Delivery Area</label>
                     <select name="deliveryArea" value={form.deliveryArea} onChange={handleChange}>
-                        <option value="inside">ঢাকার ভেতরে (৳{chargeOf(site.deliveryInside, 60)})</option>
-                        <option value="outside">ঢাকার বাইরে (৳{chargeOf(site.deliveryOutside, 120)})</option>
+                        <option value="inside">Inside Dhaka (৳{chargeOf(site.deliveryInside, 60)})</option>
+                        <option value="outside">Outside Dhaka (৳{chargeOf(site.deliveryOutside, 120)})</option>
                     </select>
 
-                    <label>ডেলিভারি ঠিকানা</label>
+                    <label>Delivery Address</label>
                     <textarea name="address" value={form.address} onChange={handleChange} required />
 
-                    <label>পেমেন্ট পদ্ধতি</label>
+                    <label>Payment Method</label>
                     <select name="paymentMethod" value={form.paymentMethod} onChange={handleChange}>
-                        <option value="cod">ক্যাশ অন ডেলিভারি</option>
+                        <option value="cod">Cash on Delivery</option>
                         {site.bkashNumber && <option value="bkash">bKash</option>}
                         {site.nagadNumber && <option value="nagad">Nagad</option>}
                     </select>
@@ -127,25 +127,25 @@ export default function Checkout() {
                     {form.paymentMethod !== 'cod' && (
                         <>
                             <p style={{ fontSize: 14, margin: '10px 0 0' }}>
-                                প্রথমে <strong>৳{payable}</strong> টাকা এই {form.paymentMethod === 'bkash' ? 'bKash' : 'Nagad'} নম্বরে <strong>Send Money</strong> করুন: <strong>{payNumber}</strong>
+                                First send <strong>৳{payable}</strong> to this {form.paymentMethod === 'bkash' ? 'bKash' : 'Nagad'} number using <strong>Send Money</strong>: <strong>{payNumber}</strong>
                             </p>
-                            <label>ট্রানজেকশন আইডি (TrxID)</label>
-                            <input name="paymentTrxId" value={form.paymentTrxId} onChange={handleChange} maxLength={20} required placeholder="যেমন: 8N7A6D5EE" style={{ textTransform: 'uppercase' }} />
-                            <p style={{ fontSize: 12, color: 'var(--walnut-soft)', margin: '4px 0 0' }}>টাকা পাঠানোর পর মেসেজে যে TrxID আসে সেটা এখানে লিখুন। আমরা মিলিয়ে অর্ডার কনফার্ম করব।</p>
+                            <label>Transaction ID (TrxID)</label>
+                            <input name="paymentTrxId" value={form.paymentTrxId} onChange={handleChange} maxLength={20} required placeholder="e.g. 8N7A6D5EE" style={{ textTransform: 'uppercase' }} />
+                            <p style={{ fontSize: 14, color: 'var(--walnut-soft)', margin: '4px 0 0' }}>After sending the money, enter the TrxID from the confirmation message here. We will verify it and confirm your order.</p>
                         </>
                     )}
 
-                    <p style={{ fontSize: 12, color: 'var(--walnut-soft)', margin: '10px 0 0' }}>
-                        অর্ডার করলে আপনি আমাদের <Link to="/privacy">গোপনীয়তা নীতি</Link> মেনে নিচ্ছেন।
+                    <p style={{ fontSize: 14, color: 'var(--walnut-soft)', margin: '10px 0 0' }}>
+                        By placing an order you agree to our <Link to="/privacy">Privacy Policy</Link>.
                     </p>
 
                     <button className="btn-primary" type="submit" disabled={submitting}>
-                        {submitting ? 'অর্ডার হচ্ছে...' : 'অর্ডার নিশ্চিত করুন'}
+                        {submitting ? 'Placing order...' : 'Confirm Order'}
                     </button>
                 </form>
             </div>
             <div className="panel">
-                <h3>অর্ডার সারাংশ</h3>
+                <h3>Order Summary</h3>
                 {items.map((i) => (
                     <div className="order-line" key={i.variantId}>
                         <span>{i.title} ({i.variantLabel}) × {i.quantity}</span>
@@ -153,17 +153,17 @@ export default function Checkout() {
                     </div>
                 ))}
                 <div style={{ margin: '10px 0' }}>
-                    <label>কুপন কোড (থাকলে)</label>
+                    <label>Coupon Code (if any)</label>
                     <div style={{ display: 'flex', gap: 8 }}>
-                        <input value={couponInput} onChange={(e) => { setCouponInput(e.target.value); if (coupon) { setCoupon(null); setCouponMsg(''); } }} placeholder="যেমন: WELCOME10" maxLength={20} />
-                        <button type="button" className="btn-primary" onClick={applyCoupon} disabled={couponBusy}>{couponBusy ? '...' : 'প্রয়োগ'}</button>
+                        <input value={couponInput} onChange={(e) => { setCouponInput(e.target.value); if (coupon) { setCoupon(null); setCouponMsg(''); } }} placeholder="e.g. WELCOME10" maxLength={20} />
+                        <button type="button" className="btn-primary" onClick={applyCoupon} disabled={couponBusy}>{couponBusy ? '...' : 'Apply'}</button>
                     </div>
-                    {couponMsg && <p className={`status-msg ${coupon ? '' : 'error'}`} style={{ margin: '6px 0 0', fontSize: 13 }}>{couponMsg}</p>}
-                    {coupon && <button type="button" className="link-btn" onClick={removeCoupon}>কুপন সরান</button>}
+                    {couponMsg && <p className={`status-msg ${coupon ? '' : 'error'}`} style={{ margin: '6px 0 0', fontSize: 14 }}>{couponMsg}</p>}
+                    {coupon && <button type="button" className="link-btn" onClick={removeCoupon}>Remove coupon</button>}
                 </div>
-                {coupon && <div className="order-line"><span>কুপন ছাড় ({coupon.code})</span><span>− ৳{coupon.discount}</span></div>}
-                <div className="order-line"><span>ডেলিভারি চার্জ ({form.deliveryArea === 'outside' ? 'ঢাকার বাইরে' : 'ঢাকার ভেতরে'})</span><span>৳{deliveryCharge}</span></div>
-                <div className="order-total"><span>সর্বমোট</span><span>৳{subtotal - (coupon ? coupon.discount : 0) + deliveryCharge}</span></div>
+                {coupon && <div className="order-line"><span>Coupon discount ({coupon.code})</span><span>− ৳{coupon.discount}</span></div>}
+                <div className="order-line"><span>Delivery charge ({form.deliveryArea === 'outside' ? 'Outside Dhaka' : 'Inside Dhaka'})</span><span>৳{deliveryCharge}</span></div>
+                <div className="order-total"><span>Total</span><span>৳{subtotal - (coupon ? coupon.discount : 0) + deliveryCharge}</span></div>
             </div>
         </div>
     );
