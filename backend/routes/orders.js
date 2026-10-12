@@ -286,7 +286,7 @@ router.patch('/:id/status', requireAdmin, async (req, res) => {
             return res.status(404).json({ error: 'অর্ডার পাওয়া যায়নি' });
         }
 
-        const current = await Order.findById(req.params.id).select('status stockRestored items _id').lean();
+        const current = await Order.findById(req.params.id).select('status stockRestored items couponCode _id').lean();
         if (!current) return res.status(404).json({ error: 'অর্ডার পাওয়া যায়নি' });
 
         const by = req.admin.username;
@@ -303,6 +303,10 @@ router.patch('/:id/status', requireAdmin, async (req, res) => {
             if (claimed) {
                 const missing = await giveBackStock(current, by);
                 if (missing.length) stockNote = `এই পণ্যের স্টক ফেরত দেওয়া যায়নি (ভ্যারিয়েন্ট পাওয়া যায়নি): ${missing.join(', ')}`;
+                // কুপনের ব্যবহারও ফেরত (স্টকের চিহ্নের সাথে বাঁধা, তাই দুবার ফেরত হয় না)
+                if (current.couponCode) {
+                    try { await releaseCoupon(current.couponCode); } catch (e) { console.error('কুপন ফেরত দেওয়া যায়নি:', current.couponCode, e.message); }
+                }
             }
             update.status = status; // নিচের সাধারণ আপডেটেও একই স্ট্যাটাস থাকবে
         } else if (isClosed(current.status) && !isClosed(status)) {
@@ -320,6 +324,12 @@ router.patch('/:id/status', requireAdmin, async (req, res) => {
                     // একই সময়ে অন্য কেউ বদলে ফেলেছে — কমানো স্টক ফেরত দিয়ে থামি
                     await giveBackStock(current, by);
                     return res.status(409).json({ error: 'অর্ডারটি এইমাত্র অন্য জায়গা থেকে বদলেছে, পাতা রিফ্রেশ করে আবার চেষ্টা করুন' });
+                }
+                // বাতিলের সময় ফেরত দেওয়া কুপনের ব্যবহার আবার গোনা। সীমা শেষ হয়ে গেলেও অর্ডার চালু হবে, শুধু জানিয়ে দেওয়া হবে।
+                if (current.couponCode) {
+                    let reclaimed = false;
+                    try { reclaimed = await claimCoupon(current.couponCode); } catch (e) { console.error('কুপন আবার গোনা যায়নি:', e.message); }
+                    if (!reclaimed) stockNote = `কুপন ${current.couponCode}-এর ব্যবহার আর গোনা যায়নি (সীমা শেষ বা কুপন বন্ধ)`;
                 }
             }
         }
