@@ -19,15 +19,15 @@ export default function Offers() {
             .finally(() => setLoading(false));
     }, []);
 
-    if (loading) return <p className="status-msg">লোড হচ্ছে...</p>;
+    if (loading) return <p className="status-msg">Loading...</p>;
     if (error) return <p className="status-msg error">{error}</p>;
 
     return (
         <>
-            <h1 className="page-title">অফার</h1>
-            <p className="page-sub">যেসব প্রোডাক্টে এখন ছাড় চলছে।</p>
+            <h1 className="page-title">Offers</h1>
+            <p className="page-sub">Products that are on discount right now.</p>
             {products.length === 0
-                ? <p className="status-msg">এখন কোনো অফার নেই।</p>
+                ? <p className="status-msg">There are no offers right now.</p>
                 : <ProductGrid products={products} preferOffer />}
         </>
     );

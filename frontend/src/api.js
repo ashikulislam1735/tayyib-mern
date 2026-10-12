@@ -10,7 +10,7 @@ async function request(path, options = {}) {
         ...options,
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'কিছু একটা সমস্যা হয়েছে');
+    if (!res.ok) throw new Error(data.error || 'Something went wrong. Please try again.');
     return data;
 }
 
@@ -27,7 +27,7 @@ async function uploadFile(file) {
         body: formData,
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'আপলোড ব্যর্থ হয়েছে');
+    if (!res.ok) throw new Error(data.error || 'Upload failed');
     return data; // { url, type }
 }
 

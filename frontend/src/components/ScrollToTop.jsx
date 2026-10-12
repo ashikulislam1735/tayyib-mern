@@ -13,7 +13,7 @@ export default function ScrollToTop() {
 
     if (!show) return null;
     return (
-        <button className="scroll-top" aria-label="উপরে যান" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+        <button className="scroll-top" aria-label="Back to top" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
             ↑
         </button>
     );

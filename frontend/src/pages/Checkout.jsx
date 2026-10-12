@@ -32,7 +32,7 @@ export default function Checkout() {
     const payNumber = form.paymentMethod === 'bkash' ? site.bkashNumber : form.paymentMethod === 'nagad' ? site.nagadNumber : '';
 
     if (items.length === 0) {
-        return <p className="status-msg">Your cart is empty. <a href="/">Back to shop</a></p>;
+        return <p className="status-msg">Your cart is empty. <Link to="/">Back to shop</Link></p>;
     }
 
     function handleChange(e) {
@@ -110,7 +110,7 @@ export default function Checkout() {
                     <input name="customerName" value={form.customerName} onChange={handleChange} required />
 
                     <label>Mobile Number</label>
-                    <input name="phone" value={form.phone} onChange={handleChange} onBlur={saveCartQuietly} pattern="01[0-9]{9}" required />
+                    <input name="phone" value={form.phone} onChange={handleChange} onBlur={saveCartQuietly} pattern="01[0-9]{9}" title="Enter an 11-digit mobile number starting with 01, e.g. 01XXXXXXXXX" placeholder="01XXXXXXXXX" inputMode="numeric" required />
                     <p style={{ fontSize: 14, color: 'var(--walnut-soft)', margin: '4px 0 0' }}>If your order isn't completed, we may contact you on this number.</p>
 
                     <label>Delivery Area</label>

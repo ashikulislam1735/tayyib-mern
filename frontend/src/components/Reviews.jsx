@@ -22,7 +22,7 @@ export default function Reviews({ productId, title }) {
     async function submit(e) {
         e.preventDefault();
         setError('');
-        if (!form.rating) return setError('১ থেকে ৫ স্টার বেছে নিন');
+        if (!form.rating) return setError('Please select a rating from 1 to 5 stars');
         setSending(true);
         try {
             const r = await api.submitReview({ productId, ...form });
@@ -57,14 +57,14 @@ export default function Reviews({ productId, title }) {
                     </aside>
 
                     <div className="reviews-main">
-                        {reviews === null && <p className="report-muted">লোড হচ্ছে...</p>}
-                        {reviews && count === 0 && <p className="report-muted">এখনো কোনো রিভিউ নেই — প্রথম রিভিউ আপনিই দিন!</p>}
+                        {reviews === null && <p className="report-muted">Loading...</p>}
+                        {reviews && count === 0 && <p className="report-muted">No reviews yet — be the first to review!</p>}
 
                         {reviews && reviews.map((r) => (
                             <div className="review-item" key={r._id}>
                                 <div><Stars value={r.rating} /> <strong>{r.name}</strong> {r.verifiedBuyer && <span className="verified-badge">✅ Verified Buyer</span>}</div>
                                 <p>{r.comment}</p>
-                                <small>{new Date(r.createdAt).toLocaleDateString('bn-BD', { timeZone: 'Asia/Dhaka' })}</small>
+                                <small>{new Date(r.createdAt).toLocaleDateString('en-GB', { timeZone: 'Asia/Dhaka', dateStyle: 'medium' })}</small>
                             </div>
                         ))}
 
@@ -78,20 +78,20 @@ export default function Reviews({ productId, title }) {
                                 <input
                                     value={form.name}
                                     onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                                    placeholder="আপনার নাম"
+                                    placeholder="Your name"
                                     maxLength={40}
                                     required
                                 />
 
                                 <label className="rf-label">Your rating</label>
-                                <div className="star-pick" role="radiogroup" aria-label="রেটিং">
+                                <div className="star-pick" role="radiogroup" aria-label="Rating">
                                     {[1, 2, 3, 4, 5].map((n) => (
                                         <button
                                             type="button"
                                             key={n}
                                             className={n <= form.rating ? 'on' : ''}
                                             onClick={() => setForm((f) => ({ ...f, rating: n }))}
-                                            aria-label={`${n} স্টার`}
+                                            aria-label={`${n} star${n > 1 ? 's' : ''}`}
                                         >★</button>
                                     ))}
                                 </div>
@@ -105,13 +105,13 @@ export default function Reviews({ productId, title }) {
                                     pattern="01[0-9]{9}"
                                     maxLength={11}
                                 />
-                                <small className="report-muted" style={{ display: 'block', marginTop: -4 }}>অর্ডারের নম্বর দিলে আপনার রিভিউতে "✅ Verified Buyer" ব্যাজ বসতে পারে। নম্বরটা সাইটে দেখানো বা সংরক্ষণ করা হয় না।</small>
+                                <small className="report-muted" style={{ display: 'block', marginTop: -4 }}>If this matches a number you ordered with, your review may get a "✅ Verified Buyer" badge. The number is never shown publicly or stored.</small>
 
                                 <label className="rf-label">Your review</label>
                                 <textarea
                                     value={form.comment}
                                     onChange={(e) => setForm((f) => ({ ...f, comment: e.target.value }))}
-                                    placeholder="কী ভালো লেগেছে? স্বাদ, প্যাকেজিং, ডেলিভারির গতি..."
+                                    placeholder="What did you like? Taste, packaging, delivery speed..."
                                     maxLength={600}
                                     rows={4}
                                     required

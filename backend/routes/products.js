@@ -26,7 +26,7 @@ router.get('/', async (req, res) => {
         const products = await Product.find(filter).select('-variants.costPrice').sort({ createdAt: -1 }).limit(1000);
         res.json(products);
     } catch (err) {
-        res.status(500).json({ error: 'প্রোডাক্ট লোড করতে সমস্যা হয়েছে' });
+        res.status(500).json({ error: 'Could not load products' });
     }
 });
 
@@ -154,7 +154,7 @@ router.get('/top', async (req, res) => {
         const byId = new Map(found.map((p) => [String(p._id), p]));
         res.json(ids.map((id) => byId.get(String(id))).filter(Boolean));
     } catch (err) {
-        res.status(500).json({ error: 'সেরা বিক্রিত প্রোডাক্ট লোড করতে সমস্যা হয়েছে' });
+        res.status(500).json({ error: 'Could not load best sellers' });
     }
 });
 
@@ -165,7 +165,7 @@ router.get('/sitemap.xml', async (req, res) => {
     try {
         const base = (process.env.SITE_URL || (process.env.CORS_ORIGINS || '').split(',')[0] || '').trim().replace(/\/$/, '');
         if (!/^https?:\/\/[^\s<>"']+$/.test(base)) {
-            return res.status(503).type('text/plain').send('SITE_URL বা CORS_ORIGINS সেট করা নেই');
+            return res.status(503).type('text/plain').send('SITE_URL or CORS_ORIGINS is not set');
         }
         const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
         const [products, categories] = await Promise.all([
@@ -182,7 +182,7 @@ router.get('/sitemap.xml', async (req, res) => {
             + '\n</urlset>\n';
         res.set('Cache-Control', 'public, max-age=3600').type('application/xml').send(xml);
     } catch {
-        res.status(500).type('text/plain').send('সাইটম্যাপ বানানো যায়নি');
+        res.status(500).type('text/plain').send('Could not generate sitemap');
     }
 });
 
@@ -201,10 +201,10 @@ router.get('/admin/list', requireAdmin, async (req, res) => {
 router.get('/:id', async (req, res) => {
     try {
         const product = await Product.findById(req.params.id).select('-variants.costPrice');
-        if (!product) return res.status(404).json({ error: 'প্রোডাক্ট পাওয়া যায়নি' });
+        if (!product) return res.status(404).json({ error: 'Product not found' });
         res.json(product);
     } catch (err) {
-        res.status(400).json({ error: 'অবৈধ প্রোডাক্ট ID' });
+        res.status(400).json({ error: 'Invalid product ID' });
     }
 });
 

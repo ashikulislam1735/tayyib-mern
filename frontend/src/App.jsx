@@ -70,8 +70,8 @@ function Header({ onCartClick }) {
                         type="search"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        placeholder="মধু, ঘি, খেজুর খুঁজুন..."
-                        aria-label="প্রোডাক্ট খুঁজুন"
+                        placeholder="Search honey, ghee, dates..."
+                        aria-label="Search products"
                     />
                     <button type="submit" className="search-btn">Search</button>
                 </form>

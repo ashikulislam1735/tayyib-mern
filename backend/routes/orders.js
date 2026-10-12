@@ -21,22 +21,22 @@ router.post('/', async (req, res) => {
     // পেমেন্ট পদ্ধতি যাচাই — ফাঁকা হলে ক্যাশ অন ডেলিভারি
     const method = paymentMethod === undefined || paymentMethod === '' ? 'cod' : paymentMethod;
     if (!['cod', 'bkash', 'nagad'].includes(method)) {
-        return res.status(400).json({ error: 'পেমেন্ট পদ্ধতি সঠিক নয়' });
+        return res.status(400).json({ error: 'Invalid payment method' });
     }
     // bKash/Nagad হলে ট্রানজেকশন আইডি লাগবে (ইংরেজি অক্ষর ও সংখ্যা, ৬–২০টি)
     let paymentTrxId = '';
     if (method !== 'cod') {
         paymentTrxId = typeof req.body.paymentTrxId === 'string' ? req.body.paymentTrxId.trim().toUpperCase() : '';
         if (!/^[A-Z0-9]{6,20}$/.test(paymentTrxId)) {
-            return res.status(400).json({ error: 'ট্রানজেকশন আইডি (TrxID) লিখুন — ৬ থেকে ২০টি ইংরেজি অক্ষর বা সংখ্যা' });
+            return res.status(400).json({ error: 'Please enter your transaction ID (TrxID) — 6 to 20 letters or digits' });
         }
     }
 
     if (!customerName || !phone || !address || !Array.isArray(items) || items.length === 0) {
-        return res.status(400).json({ error: 'নাম, ফোন, ঠিকানা ও কার্ট আইটেম দরকার' });
+        return res.status(400).json({ error: 'Name, phone, address and cart items are required' });
     }
     if (items.length > 50) {
-        return res.status(400).json({ error: 'কার্টে সর্বোচ্চ ৫০টি আইটেম থাকতে পারবে' });
+        return res.status(400).json({ error: 'A cart can have at most 50 items' });
     }
 
     const reserved = []; // যেসব আইটেমের স্টক ইতোমধ্যে কমানো হয়েছে
@@ -68,7 +68,7 @@ router.post('/', async (req, res) => {
         // একই ট্রানজেকশন আইডি দিয়ে দ্বিতীয়বার অর্ডার ঠেকানো (বাতিল/ফেরত অর্ডারের আইডি আবার ব্যবহার করা যাবে)
         if (paymentTrxId) {
             const dup = await Order.findOne({ paymentTrxId, status: { $nin: ['cancelled', 'returned'] } }).select('_id').lean();
-            if (dup) return res.status(400).json({ error: 'এই ট্রানজেকশন আইডি আগেই অন্য অর্ডারে ব্যবহার হয়েছে। সঠিক TrxID দিন।' });
+            if (dup) return res.status(400).json({ error: 'This transaction ID has already been used for another order. Please enter the correct TrxID.' });
         }
 
         // ধাপ ১: স্টক না ছুঁয়ে সব আইটেম যাচাই ও দাম হিসাব
@@ -79,22 +79,22 @@ router.post('/', async (req, res) => {
 
         for (const cartItem of items) {
             if (!cartItem || !mongoose.isValidObjectId(cartItem.productId) || !mongoose.isValidObjectId(cartItem.variantId)) {
-                return res.status(400).json({ error: 'কার্টের একটি আইটেম সঠিক নয়' });
+                return res.status(400).json({ error: 'One of the cart items is invalid' });
             }
             const qty = cartItem.quantity;
             if (!Number.isInteger(qty) || qty < 1 || qty > 100) {
-                return res.status(400).json({ error: 'পরিমাণ ১ থেকে ১০০-এর মধ্যে পূর্ণ সংখ্যা হতে হবে' });
+                return res.status(400).json({ error: 'Quantity must be a whole number between 1 and 100' });
             }
 
             const pid = String(cartItem.productId);
             if (!productCache.has(pid)) productCache.set(pid, await Product.findById(pid).lean());
             const product = productCache.get(pid);
-            if (!product) return res.status(400).json({ error: 'একটা প্রোডাক্ট আর পাওয়া যাচ্ছে না' });
+            if (!product) return res.status(400).json({ error: 'One of the products is no longer available' });
 
             const variant = product.variants.find((v) => String(v._id) === String(cartItem.variantId));
-            if (!variant) return res.status(400).json({ error: 'ভ্যারিয়েন্ট পাওয়া যায়নি' });
+            if (!variant) return res.status(400).json({ error: 'Product size/variant not found' });
             if (variant.stock < qty) {
-                return res.status(400).json({ error: `${product.title} (${variant.label}) পর্যাপ্ত স্টকে নেই` });
+                return res.status(400).json({ error: `${product.title} (${variant.label}) does not have enough stock` });
             }
 
             orderItems.push({
@@ -140,7 +140,7 @@ router.post('/', async (req, res) => {
         // কুপনের ব্যবহার নিরাপদে ১ বাড়ানো — সীমা পেরিয়ে গেলে অর্ডার আটকাবে
         if (couponCode) {
             if (!(await claimCoupon(couponCode))) {
-                return res.status(400).json({ error: 'কুপনটি আর ব্যবহার করা যাচ্ছে না' });
+                return res.status(400).json({ error: 'This coupon can no longer be used' });
             }
             couponClaimed = true;
         }
@@ -153,7 +153,7 @@ router.post('/', async (req, res) => {
             );
             if (result.modifiedCount !== 1) {
                 await rollbackStock();
-                return res.status(400).json({ error: `${w.title} (${w.label}) পর্যাপ্ত স্টকে নেই` });
+                return res.status(400).json({ error: `${w.title} (${w.label}) does not have enough stock` });
             }
             reserved.push(w);
         }
@@ -192,7 +192,8 @@ router.post('/', async (req, res) => {
         res.status(201).json(publicOrder);
     } catch (err) {
         if (!orderCreated) await rollbackStock();
-        res.status(500).json({ error: 'অর্ডার তৈরি করতে সমস্যা হয়েছে: ' + err.message });
+        console.error('Order creation failed:', err);
+        res.status(500).json({ error: 'Could not place your order. Please try again.' });
     }
 });
 
@@ -237,7 +238,7 @@ router.get('/track/:query', async (req, res) => {
         : { phone: query };
 
     const orders = await Order.find(filter).select('-items.costPrice -courierCost -packagingCost').sort({ createdAt: -1 });
-    if (orders.length === 0) return res.status(404).json({ error: 'কোনো অর্ডার পাওয়া যায়নি' });
+    if (orders.length === 0) return res.status(404).json({ error: 'No orders found' });
     res.json(orders);
 });
 

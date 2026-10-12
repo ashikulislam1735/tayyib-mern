@@ -12,7 +12,7 @@ router.get('/', async (req, res) => {
         const banners = await Banner.find({ active: true }).sort(sortOrder);
         res.json(banners);
     } catch (err) {
-        res.status(500).json({ error: 'ব্যানার লোড করতে সমস্যা হয়েছে' });
+        res.status(500).json({ error: 'Could not load banners' });
     }
 });
 

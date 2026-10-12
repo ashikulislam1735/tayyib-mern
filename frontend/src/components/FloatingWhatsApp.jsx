@@ -13,7 +13,7 @@ export default function FloatingWhatsApp() {
             href={`https://wa.me/${number}`}
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="WhatsApp-এ মেসেজ করুন"
+            aria-label="Message us on WhatsApp"
         >
             💬 <span>WhatsApp</span>
         </a>

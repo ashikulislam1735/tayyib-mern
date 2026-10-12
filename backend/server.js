@@ -79,20 +79,20 @@ app.get('/', (req, res) => {
 
 // অজানা /api ঠিকানা
 app.use('/api', (req, res) => {
-    res.status(404).json({ error: 'এই ঠিকানা পাওয়া যায়নি' });
+    res.status(404).json({ error: 'Not found' });
 });
 
 // সার্বজনীন এরর হ্যান্ডলার — কোনো অপ্রত্যাশিত ভুলে সার্ভার থেমে না গিয়ে পরিষ্কার বার্তা দেয়
 app.use((err, req, res, next) => {
     if (err && err.type === 'entity.parse.failed') {
-        return res.status(400).json({ error: 'পাঠানো তথ্যের ফরম্যাট ভুল' });
+        return res.status(400).json({ error: 'Invalid request format' });
     }
     if (err && err.type === 'entity.too.large') {
-        return res.status(413).json({ error: 'পাঠানো তথ্য খুব বড়' });
+        return res.status(413).json({ error: 'Request is too large' });
     }
     console.error('Unhandled error:', err);
     if (res.headersSent) return next(err);
-    res.status(500).json({ error: 'সার্ভারে সমস্যা হয়েছে, আবার চেষ্টা করুন' });
+    res.status(500).json({ error: 'Server error. Please try again.' });
 });
 
 // অপ্রত্যাশিত async ভুলে পুরো সার্ভার বন্ধ হওয়া ঠেকাতে শুধু লগ করা হয়

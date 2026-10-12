@@ -4,89 +4,89 @@ import { Link } from 'react-router-dom';
 const SHOP_NAME = 'Tayyib';
 const PHONE = '01307224080';
 const EMAIL = '';            // ইমেইল থাকলে এখানে লিখুন, না থাকলে খালি রাখুন
-const UPDATED_AT = '১০ অক্টোবর ২০২৬';
+const UPDATED_AT = '10 October 2026';
 // ====================================================
 
 const SECTIONS = [
     {
-        title: '১. ভূমিকা',
+        title: '1. Introduction',
         paragraphs: [
-            `${SHOP_NAME}-এ কেনাকাটা করার সময় আপনি আমাদের কিছু তথ্য দেন। এই পাতায় আমরা পরিষ্কারভাবে জানাচ্ছি কোন তথ্য নিই, কেন নিই, কীভাবে রাখি এবং আপনার কী কী অধিকার আছে। সাইট ব্যবহার করলে আপনি এই নীতি মেনে নিচ্ছেন বলে ধরা হবে।`,
+            `When you shop at ${SHOP_NAME}, you share some information with us. This page explains clearly what information we collect, why we collect it, how we keep it, and what rights you have. By using the site, you are considered to have accepted this policy.`,
         ],
     },
     {
-        title: '২. আমরা কোন তথ্য সংগ্রহ করি',
-        paragraphs: ['আমরা শুধু সেই তথ্যই নিই, যা অর্ডার পৌঁছে দিতে ও আপনাকে সেবা দিতে দরকার:'],
+        title: '2. What information we collect',
+        paragraphs: ['We only collect what we need to deliver your order and serve you:'],
         list: [
-            'অর্ডারের সময়: আপনার নাম, মোবাইল নম্বর, ডেলিভারি ঠিকানা, এলাকা, পেমেন্ট পদ্ধতির পছন্দ এবং কী কী পণ্য অর্ডার করেছেন।',
-            'অসম্পূর্ণ অর্ডার: চেকআউট পেজে মোবাইল নম্বর লেখা শেষ করলে আপনার নম্বর ও কার্টের পণ্য আমাদের কাছে সংরক্ষিত হয়, এমনকি অর্ডারটি শেষ না করলেও। এর উদ্দেশ্য, কোনো সমস্যা হয়ে থাকলে আপনাকে সাহায্য করা।',
-            'অর্ডার ট্র্যাকিং: আপনি ট্র্যাক পেজে যে অর্ডার আইডি বা ফোন নম্বর দিয়ে খোঁজেন, শুধু সেই অর্ডারের অবস্থা দেখানো হয়।',
-            'আপনার ব্রাউজারে: কার্টের পণ্য আপনার নিজের ব্রাউজারে সংরক্ষিত থাকে, যাতে পেজ রিফ্রেশ করলে কার্ট হারিয়ে না যায়।',
+            'When you order: your name, mobile number, delivery address, delivery area, preferred payment method, and the products you ordered.',
+            'Incomplete orders: once you finish typing your mobile number on the checkout page, your number and the products in your cart are saved with us, even if you do not complete the order. The purpose is to help you if something went wrong.',
+            'Order tracking: on the Track page, only the status of the order you look up by order ID or phone number is shown.',
+            'In your browser: the products in your cart are kept in your own browser so that you do not lose your cart when you refresh the page.',
         ],
     },
     {
-        title: '৩. কেন এই তথ্য ব্যবহার করি',
+        title: '3. Why we use this information',
         list: [
-            'অর্ডার প্রক্রিয়া করা ও ডেলিভারি দেওয়া।',
-            'অর্ডার নিশ্চিত করা বা ডেলিভারির বিষয়ে ফোন ও WhatsApp-এ যোগাযোগ করা।',
-            'অসম্পূর্ণ অর্ডারের ক্ষেত্রে সহায়তার জন্য যোগাযোগ করা।',
-            'ভুয়া বা প্রতারণামূলক অর্ডার শনাক্ত করা। এজন্য একই ফোন নম্বরের আগের অর্ডারের ইতিহাস (যেমন বাতিল বা ফেরত হয়েছে কিনা) আমাদের অ্যাডমিন প্যানেলে দেখা হয়।',
-            'বিক্রি ও খরচের হিসাব রাখা এবং সাইট ও সেবা উন্নত করা।',
+            'To process your order and deliver it.',
+            'To contact you by phone or WhatsApp to confirm an order or about its delivery.',
+            'To contact you with help in case of an incomplete order.',
+            'To detect fake or fraudulent orders. For this, we look at the earlier order history of the same phone number (for example, whether orders were cancelled or returned) in our admin panel.',
+            'To keep sales and expense records and to improve the site and our service.',
         ],
     },
     {
-        title: '৪. কার সঙ্গে তথ্য শেয়ার করি',
-        paragraphs: ['আমরা আপনার তথ্য বিক্রি করি না। শুধু নিচের ক্ষেত্রগুলোতে প্রয়োজনমতো শেয়ার হতে পারে:'],
+        title: '4. Who we share information with',
+        paragraphs: ['We do not sell your information. It may be shared only in the following cases, as needed:'],
         list: [
-            'ডেলিভারির জন্য কুরিয়ার সেবাকে আপনার নাম, ঠিকানা ও মোবাইল নম্বর দেওয়া হয়।',
-            'সাইট চালানোর প্রযুক্তি সেবাদাতা: ওয়েবসাইট হোস্টিং (Vercel, Render), ডাটাবেজ (MongoDB Atlas) এবং ছবি রাখার সেবা (Cloudinary)। এসব সেবাদাতার সার্ভারে আপনার তথ্য নিরাপদে সংরক্ষিত থাকে।',
-            'আইনি প্রয়োজনে সরকারি কর্তৃপক্ষ আইনসম্মতভাবে চাইলে।',
+            'For delivery, your name, address and mobile number are given to the courier service.',
+            'Technology providers that run the site: website hosting (Vercel, Render), database (MongoDB Atlas) and image storage (Cloudinary). Your information is stored securely on these providers\' servers.',
+            'Where government authorities lawfully request it as required by law.',
         ],
     },
     {
-        title: '৫. কুকি ও ব্রাউজারে সংরক্ষণ',
+        title: '5. Cookies and browser storage',
         paragraphs: [
-            'বর্তমানে আমাদের সাইট আপনাকে অনুসরণ করার বা বিজ্ঞাপন দেখানোর কোনো ট্র্যাকিং কুকি ব্যবহার করে না। ভবিষ্যতে এমন কিছু যোগ করলে এই পাতায় তা জানিয়ে দেওয়া হবে।',
+            'Our site currently does not use any tracking cookies to follow you or show you ads. If we add anything like that in the future, we will say so on this page.',
         ],
     },
     {
-        title: '৬. তথ্যের নিরাপত্তা',
+        title: '6. Data security',
         paragraphs: [
-            'আপনার তথ্য শুধু পাসওয়ার্ড-সুরক্ষিত অ্যাডমিন প্যানেল থেকে আমরা দেখতে পারি, এবং সাইটের সংযোগ এনক্রিপ্টেড (HTTPS)। তবে ইন্টারনেটে কোনো ব্যবস্থাই ১০০% নিরাপদ নয়, তাই আমরা সর্বোচ্চ সতর্ক থাকলেও পূর্ণ নিশ্চয়তা দিতে পারি না।',
+            'We can view your information only through a password-protected admin panel, and the connection to the site is encrypted (HTTPS). However, no system on the internet is 100% secure, so although we take great care, we cannot give a full guarantee.',
         ],
     },
     {
-        title: '৭. তথ্য কতদিন রাখি',
+        title: '7. How long we keep information',
         paragraphs: [
-            'অর্ডারের তথ্য হিসাব ও আইনি প্রয়োজনে যতদিন দরকার ততদিন রাখা হয়। অসম্পূর্ণ অর্ডারের তথ্য কাজ শেষ হলে আমরা মুছে ফেলি।',
+            'Order information is kept for as long as needed for accounting and legal purposes. Information about incomplete orders is deleted once we are done with it.',
         ],
     },
     {
-        title: '৮. আপনার অধিকার',
-        paragraphs: ['আপনি চাইলে যেকোনো সময়:'],
+        title: '8. Your rights',
+        paragraphs: ['At any time, you may:'],
         list: [
-            'আমাদের কাছে আপনার কোন তথ্য আছে তা জানতে চাইতে পারেন।',
-            'ভুল তথ্য সংশোধন করতে বলতে পারেন।',
-            'আপনার তথ্য (যেমন অসম্পূর্ণ অর্ডারের নম্বর) মুছে ফেলার অনুরোধ করতে পারেন। আইনি বা হিসাবের প্রয়োজনে রাখা তথ্য ছাড়া বাকিটা আমরা মুছে দেব।',
-            'আমাদের পক্ষ থেকে ফোন বা মেসেজ পাওয়া বন্ধ করতে বলতে পারেন।',
+            'Ask what information we hold about you.',
+            'Ask us to correct wrong information.',
+            'Ask us to delete your information (for example, the number saved from an incomplete order). We will delete everything except what we must keep for legal or accounting reasons.',
+            'Ask us to stop calling or messaging you.',
         ],
     },
     {
-        title: '৯. শিশুদের তথ্য',
-        paragraphs: ['আমাদের সাইট ১৮ বছরের কম বয়সীদের জন্য নয়। জেনেশুনে আমরা তাদের তথ্য সংগ্রহ করি না।'],
+        title: '9. Children\'s information',
+        paragraphs: ['Our site is not meant for people under 18. We do not knowingly collect their information.'],
     },
     {
-        title: '১০. এই নীতির পরিবর্তন',
-        paragraphs: ['প্রয়োজনে আমরা এই নীতি হালনাগাদ করতে পারি। নতুন সংস্করণ এই পাতাতেই প্রকাশ হবে এবং ওপরের তারিখ বদলে যাবে।'],
+        title: '10. Changes to this policy',
+        paragraphs: ['We may update this policy when necessary. The new version will be published on this page and the date above will change.'],
     },
 ];
 
 export default function PrivacyPolicy() {
     return (
         <div className="about-page">
-            <h1 className="about-title">গোপনীয়তা নীতি</h1>
+            <h1 className="about-title">Privacy Policy</h1>
             <p style={{ color: 'var(--walnut-soft)', margin: '0 0 22px', fontSize: '0.9rem' }}>
-                সর্বশেষ হালনাগাদ: {UPDATED_AT}
+                Last updated: {UPDATED_AT}
             </p>
 
             <div className="about-body">
@@ -103,16 +103,16 @@ export default function PrivacyPolicy() {
                 ))}
 
                 <section style={{ marginBottom: 24 }}>
-                    <h2 style={{ fontSize: '1.15rem', margin: '0 0 8px' }}>১১. যোগাযোগ</h2>
-                    <p>এই নীতি বা আপনার তথ্য নিয়ে কোনো প্রশ্ন থাকলে আমাদের জানান:</p>
+                    <h2 style={{ fontSize: '1.15rem', margin: '0 0 8px' }}>11. Contact</h2>
+                    <p>If you have any questions about this policy or your information, please contact us:</p>
                     <ul style={{ margin: 0, paddingLeft: 22, lineHeight: 1.85, color: 'var(--walnut-soft)' }}>
-                        {PHONE && <li>ফোন ও WhatsApp: <a href={`tel:${PHONE}`}>{PHONE}</a></li>}
-                        {EMAIL && <li>ইমেইল: <a href={`mailto:${EMAIL}`}>{EMAIL}</a></li>}
+                        {PHONE && <li>Phone &amp; WhatsApp: <a href={`tel:${PHONE}`}>{PHONE}</a></li>}
+                        {EMAIL && <li>Email: <a href={`mailto:${EMAIL}`}>{EMAIL}</a></li>}
                     </ul>
                 </section>
             </div>
 
-            <Link to="/" className="about-cta">শপে ফিরে যান</Link>
+            <Link to="/" className="about-cta">Back to Shop</Link>
         </div>
     );
 }

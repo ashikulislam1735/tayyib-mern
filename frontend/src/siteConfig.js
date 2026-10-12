@@ -4,7 +4,7 @@
 
 export const siteConfig = {
     name: 'Tayyib',
-    tagline: 'খাঁটি খাবারের অনলাইন শপ',
+    tagline: 'Pure food, delivered online',
     logo: '',               // অ্যাডমিন সেটিংস থেকে আপলোড করা লোগোর লিংক
     deliveryInside: 60,     // ঢাকার ভেতরে ডেলিভারি চার্জ (৳) — অ্যাডমিন সেটিংস থেকে বদলানো যায়
     deliveryOutside: 120,   // ঢাকার বাইরে ডেলিভারি চার্জ (৳)
@@ -25,16 +25,16 @@ export const siteConfig = {
     },
 
     about: {
-        title: 'আমাদের সম্পর্কে',
+        title: 'About Us',
         paragraphs: [
-            'Tayyib একটি অনলাইন শপ, যেখানে আপনি মধু, খেজুর ও ঘির মতো খাঁটি খাবার সহজে অর্ডার করতে পারবেন।',
-            'আমরা চাই প্রতিটি প্রোডাক্টের দাম, পরিমাণ আর স্টক আপনি অর্ডারের আগেই পরিষ্কার দেখতে পান, যাতে কেনাকাটায় কোনো অস্পষ্টতা না থাকে।',
-            'অর্ডার দেওয়ার পর মোবাইল নম্বর দিয়ে যেকোনো সময় অর্ডারের অবস্থা দেখে নিতে পারবেন।',
+            'Tayyib is an online shop where you can easily order pure foods such as honey, dates and ghee.',
+            'We want you to see every product\'s price, size and stock clearly before you order, so there are no surprises.',
+            'After placing an order, you can check its status at any time using your mobile number.',
         ],
         highlights: [
-            { title: 'পরিষ্কার দাম', text: 'প্রতিটি সাইজের আলাদা দাম ও ছাড় সরাসরি দেখা যায়।' },
-            { title: 'সহজ অর্ডার', text: 'কার্টে যোগ করে এক পেজেই চেকআউট শেষ।' },
-            { title: 'অর্ডার ট্র্যাকিং', text: 'মোবাইল নম্বর দিয়ে অর্ডারের বর্তমান অবস্থা জানুন।' },
+            { title: 'Clear pricing', text: 'Each size shows its own price and any discount upfront.' },
+            { title: 'Easy ordering', text: 'Add to cart and finish checkout on a single page.' },
+            { title: 'Order tracking', text: 'Check the current status of your order with your mobile number.' },
         ],
     },
 };

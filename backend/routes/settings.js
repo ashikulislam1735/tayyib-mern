@@ -64,7 +64,7 @@ function clean(body = {}) {
         openHours: str(body.openHours, 100),
         social: { facebook, instagram, youtube, whatsapp: digits(social.whatsapp, 15) },
         about: {
-            title: str(about.title, 80) || 'আমাদের সম্পর্কে',
+            title: str(about.title, 80) || 'About Us',
             paragraphs: (Array.isArray(about.paragraphs) ? about.paragraphs : [])
                 .map((p) => str(p, 1500)).filter(Boolean).slice(0, 10),
             highlights: (Array.isArray(about.highlights) ? about.highlights : [])
@@ -80,7 +80,7 @@ router.get('/', async (req, res) => {
         const doc = await Setting.findOne({ key: 'site' });
         res.json(doc ? doc.data : {});
     } catch (err) {
-        res.status(500).json({ error: 'সেটিংস লোড করতে সমস্যা হয়েছে' });
+        res.status(500).json({ error: 'Could not load settings' });
     }
 });
 

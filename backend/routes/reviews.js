@@ -42,7 +42,7 @@ async function recalc(productId) {
 // GET /api/reviews/product/:id — শুধু অনুমোদিত রিভিউ
 router.get('/product/:id', async (req, res) => {
     try {
-        if (!mongoose.isValidObjectId(req.params.id)) return res.status(400).json({ error: 'অবৈধ প্রোডাক্ট ID' });
+        if (!mongoose.isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid product ID' });
         const reviews = await Review.find({ product: req.params.id, status: 'approved' })
             .select('name rating comment verifiedBuyer createdAt')
             .sort({ createdAt: -1 })
@@ -50,40 +50,40 @@ router.get('/product/:id', async (req, res) => {
             .lean();
         res.json(reviews);
     } catch {
-        res.status(500).json({ error: 'রিভিউ লোড করতে সমস্যা হয়েছে' });
+        res.status(500).json({ error: 'Could not load reviews' });
     }
 });
 
 // POST /api/reviews  { productId, name, rating, comment } — অনুমোদনের অপেক্ষায় জমা হয়
 router.post('/', async (req, res) => {
-    if (limited(req.ip)) return res.status(429).json({ error: 'অনেকগুলো রিভিউ জমা হয়েছে। কিছুক্ষণ পরে চেষ্টা করুন।' });
+    if (limited(req.ip)) return res.status(429).json({ error: 'Too many reviews submitted. Please try again in a little while.' });
     try {
         const b = req.body || {};
         const name = typeof b.name === 'string' ? b.name.trim().slice(0, 40) : '';
         const comment = typeof b.comment === 'string' ? b.comment.trim().slice(0, 600) : '';
         const rating = Number(b.rating);
 
-        if (!mongoose.isValidObjectId(b.productId)) return res.status(400).json({ error: 'অবৈধ প্রোডাক্ট' });
-        if (name.length < 2) return res.status(400).json({ error: 'আপনার নাম লিখুন' });
-        if (!Number.isInteger(rating) || rating < 1 || rating > 5) return res.status(400).json({ error: '১ থেকে ৫ স্টার বেছে নিন' });
-        if (comment.length < 5) return res.status(400).json({ error: 'মন্তব্য কমপক্ষে ৫ অক্ষরের লিখুন' });
+        if (!mongoose.isValidObjectId(b.productId)) return res.status(400).json({ error: 'Invalid product' });
+        if (name.length < 2) return res.status(400).json({ error: 'Please enter your name' });
+        if (!Number.isInteger(rating) || rating < 1 || rating > 5) return res.status(400).json({ error: 'Please select a rating from 1 to 5 stars' });
+        if (comment.length < 5) return res.status(400).json({ error: 'Please write a review of at least 5 characters' });
 
         const exists = await Product.exists({ _id: b.productId });
-        if (!exists) return res.status(404).json({ error: 'প্রোডাক্ট পাওয়া যায়নি' });
+        if (!exists) return res.status(404).json({ error: 'Product not found' });
 
         // ঐচ্ছিক ফোন নম্বর: শুধু "✅ ক্রেতা" ব্যাজ যাচাইয়ের জন্য। নম্বরটা সেভ করা হয় না, উত্তরেও কিছু বলা হয় না
         // (যাতে কেউ রিভিউ ফর্ম দিয়ে "এই নম্বর কিনেছে কিনা" জানতে না পারে)
         let verifiedBuyer = false;
         const rawPhone = typeof b.phone === 'string' ? b.phone.replace(/\s+/g, '') : '';
         if (rawPhone) {
-            if (!/^01[0-9]{9}$/.test(rawPhone)) return res.status(400).json({ error: 'মোবাইল নম্বর ১১ ডিজিটের (01XXXXXXXXX) হতে হবে' });
+            if (!/^01[0-9]{9}$/.test(rawPhone)) return res.status(400).json({ error: 'Mobile number must be 11 digits (01XXXXXXXXX)' });
             verifiedBuyer = Boolean(await Order.exists({ phone: rawPhone, status: 'delivered', 'items.productId': b.productId }));
         }
 
         await Review.create({ product: b.productId, name, rating, comment, verifiedBuyer, status: 'pending' });
-        res.status(201).json({ message: 'ধন্যবাদ! আপনার রিভিউ অনুমোদনের পর সাইটে দেখা যাবে।' });
+        res.status(201).json({ message: 'Thank you! Your review will appear on the site after approval.' });
     } catch {
-        res.status(500).json({ error: 'রিভিউ জমা দেওয়া যায়নি' });
+        res.status(500).json({ error: 'Could not submit your review' });
     }
 });
 

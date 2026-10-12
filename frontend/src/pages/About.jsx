@@ -23,7 +23,7 @@ export default function About() {
                 ))}
             </div>
 
-            <Link to="/" className="about-cta">প্রোডাক্ট দেখুন</Link>
+            <Link to="/" className="about-cta">Browse Products</Link>
         </div>
     );
 }

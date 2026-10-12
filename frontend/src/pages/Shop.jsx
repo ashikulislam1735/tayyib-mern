@@ -54,9 +54,9 @@ export default function Shop() {
         setParams(next);
     }
 
-    if (loading) return <p className="status-msg">লোড হচ্ছে...</p>;
-    if (error) return <p className="status-msg error">{error} — ব্যাকএন্ড সার্ভার চালু আছে কিনা এবং MongoDB কানেক্টেড কিনা চেক করুন।</p>;
-    if (products.length === 0) return <p className="status-msg">কোনো প্রোডাক্ট নেই। প্রথমে ব্যাকএন্ডে <code>npm run seed</code> চালান।</p>;
+    if (loading) return <p className="status-msg">Loading...</p>;
+    if (error) return <p className="status-msg error">{error || 'Something went wrong.'} Please try again in a moment.</p>;
+    if (products.length === 0) return <p className="status-msg">No products available yet. Please check back soon.</p>;
 
     if (isHome) {
         return (
@@ -66,8 +66,8 @@ export default function Shop() {
                 {topProducts.length > 0 && (
                     <section className="home-section">
                         <div className="section-head section-center">
-                            <span className="section-eyebrow">সেরা বিক্রিত প্রোডাক্ট</span>
-                            <h2 className="section-title">গ্রাহকদের সবচেয়ে পছন্দের</h2>
+                            <span className="section-eyebrow">Best Sellers</span>
+                            <h2 className="section-title">Customers' favourites</h2>
                         </div>
                         <ProductGrid products={topProducts} layout="row" />
                     </section>
@@ -76,8 +76,8 @@ export default function Shop() {
                 {featured.length > 0 && (
                     <section className="home-section">
                         <div className="section-head">
-                            <span className="section-eyebrow">ফিচার্ড প্রোডাক্ট</span>
-                            <h2 className="section-title">স্বাস্থ্যসচেতন পরিবারের জন্য বাছাই</h2>
+                            <span className="section-eyebrow">Featured Products</span>
+                            <h2 className="section-title">Handpicked for health-conscious families</h2>
                         </div>
                         <ProductGrid products={featured} layout="compact" />
                     </section>
@@ -85,8 +85,8 @@ export default function Shop() {
 
                 <section className="home-section">
                     <div className="section-head">
-                        <span className="section-eyebrow">আমাদের কালেকশন</span>
-                        <h2 className="section-title">সব প্রোডাক্ট</h2>
+                        <span className="section-eyebrow">Our Collection</span>
+                        <h2 className="section-title">All Products</h2>
                     </div>
                     <ProductGrid products={products.slice(0, 8)} />
                     {products.length > 8 && (
@@ -110,13 +110,13 @@ export default function Shop() {
 
             {(q || category || sub) && (
                 <p className="result-note">
-                    {q ? `“${q}” এর ফলাফল: ` : ''}{filtered.length}টি প্রোডাক্ট{' '}
+                    {q ? `Results for “${q}”: ` : ''}{filtered.length} {filtered.length === 1 ? 'product' : 'products'}{' '}
                     <button className="link-btn" onClick={() => setParams({})}>View All</button>
                 </p>
             )}
 
             {filtered.length === 0
-                ? <p className="status-msg">কোনো প্রোডাক্ট পাওয়া যায়নি। অন্য কিছু লিখে খুঁজে দেখুন।</p>
+                ? <p className="status-msg">No products found. Try searching for something else.</p>
                 : <ProductGrid products={filtered} />}
         </>
     );

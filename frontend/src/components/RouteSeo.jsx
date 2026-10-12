@@ -8,12 +8,12 @@ import { useSite } from '../context/SiteContext';
 // তাই সেখানে index.html-এর সাধারণ ট্যাগই দেখায়।
 
 const PAGE_TITLES = {
-    '/offers': 'অফার',
-    '/about': 'আমাদের সম্পর্কে',
-    '/privacy': 'গোপনীয়তা নীতি',
-    '/categories': 'ক্যাটাগরি',
-    '/track': 'অর্ডার ট্র্যাক',
-    '/checkout': 'চেকআউট',
+    '/offers': 'Offers',
+    '/about': 'About Us',
+    '/privacy': 'Privacy Policy',
+    '/categories': 'Categories',
+    '/track': 'Track Order',
+    '/checkout': 'Checkout',
 };
 // এই পেজগুলো গুগলে আসার দরকার নেই
 const NOINDEX = ['/admin', '/checkout', '/order-confirmed', '/track'];
@@ -71,7 +71,7 @@ export default function RouteSeo() {
             const params = new URLSearchParams(search);
             const q = (params.get('q') || '').trim();
             const category = params.get('category') || (pathname.startsWith('/category/') ? decodeURIComponent(pathname.slice('/category/'.length)) : '');
-            const defaultDesc = `${siteName}${site.tagline ? ` — ${site.tagline}` : ''}। ঘরে বসে অর্ডার করুন, ঢাকার ভেতরে ও বাইরে ডেলিভারি।`;
+            const defaultDesc = `${siteName}${site.tagline ? ` — ${site.tagline}` : ''}. Order from home — delivery inside and outside Dhaka.`;
 
             let title = site.tagline ? `${siteName} — ${site.tagline}` : siteName;
             let description = defaultDesc;
@@ -111,10 +111,10 @@ export default function RouteSeo() {
                 // প্রোডাক্ট এখনো লোড হচ্ছে — টাইটেল আপাতত সাইটের নামই থাকুক
                 title = siteName;
             } else if (q) {
-                title = `"${q}" — সার্চ — ${siteName}`;
+                title = `Search: "${q}" — ${siteName}`;
             } else if (category) {
                 title = `${category} — ${siteName}`;
-                description = `${category} — ${siteName} থেকে অর্ডার করুন।`;
+                description = `Order ${category} from ${siteName}.`;
             } else if (PAGE_TITLES[pathname]) {
                 title = `${PAGE_TITLES[pathname]} — ${siteName}`;
             }

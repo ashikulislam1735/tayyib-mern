@@ -50,7 +50,7 @@ export default function ProductDetail() {
     }, [added]);
 
     if (error) return <p className="status-msg error">{error}</p>;
-    if (!product) return <p className="status-msg">লোড হচ্ছে...</p>;
+    if (!product) return <p className="status-msg">Loading...</p>;
 
     const variant = product.variants[vIdx] || product.variants[0];
     const hasDiscount = variant.originalPrice && variant.originalPrice > variant.price;
@@ -91,13 +91,13 @@ export default function ProductDetail() {
 
     const waNumber = String((site.social && site.social.whatsapp) || '').replace(/\D/g, '');
     const waText = [
-        'আসসালামু আলাইকুম, আমি এই প্রোডাক্টটি অর্ডার করতে চাই:',
+        'Assalamu Alaikum, I would like to order this product:',
         '',
-        `প্রোডাক্ট: ${product.title}`,
-        `সাইজ: ${variant.label}`,
-        `পরিমাণ: ${qty}`,
-        `মোট: ৳${variant.price * qty} (ডেলিভারি চার্জ ছাড়া)`,
-        `লিংক: ${window.location.href}`,
+        `Product: ${product.title}`,
+        `Size: ${variant.label}`,
+        `Quantity: ${qty}`,
+        `Total: ৳${variant.price * qty} (excluding delivery)`,
+        `Link: ${window.location.href}`,
     ].join('\n');
     const phone = String(site.phone || '').trim();
 
@@ -125,7 +125,7 @@ export default function ProductDetail() {
                     {video && (
                         <div className="video-embed">
                             {video.type === 'youtube'
-                                ? <iframe src={video.src} title="প্রোডাক্ট ভিডিও" allowFullScreen />
+                                ? <iframe src={video.src} title="Product video" allowFullScreen />
                                 : <video src={video.src} controls />}
                         </div>
                     )}
@@ -168,9 +168,9 @@ export default function ProductDetail() {
 
                     <div className="pd-label">Quantity</div>
                     <div className="qty-box">
-                        <button type="button" onClick={() => setQty((q) => Math.max(1, q - 1))} disabled={soldOut || qty <= 1} aria-label="কমান">−</button>
+                        <button type="button" onClick={() => setQty((q) => Math.max(1, q - 1))} disabled={soldOut || qty <= 1} aria-label="Decrease quantity">−</button>
                         <span>{soldOut ? 0 : qty}</span>
-                        <button type="button" onClick={() => setQty((q) => Math.min(maxQty, q + 1))} disabled={soldOut || qty >= maxQty} aria-label="বাড়ান">+</button>
+                        <button type="button" onClick={() => setQty((q) => Math.min(maxQty, q + 1))} disabled={soldOut || qty >= maxQty} aria-label="Increase quantity">+</button>
                     </div>
                     {!soldOut && qty > 1 && <p className="pd-total">Total: <strong>৳{variant.price * qty}</strong> (excluding delivery)</p>}
 

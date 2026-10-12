@@ -48,17 +48,17 @@ function Slider({ slides }) {
             <div className="hb-track" style={{ transform: `translateX(-${idx * 100}%)` }}>
                 {slides.map((b) => (
                     <BannerLink key={b._id} banner={b} className="hb-slide">
-                        <img src={b.image} alt={b.title || 'ব্যানার'} loading="lazy" draggable="false" />
+                        <img src={b.image} alt={b.title || 'Banner'} loading="lazy" draggable="false" />
                     </BannerLink>
                 ))}
             </div>
             {count > 1 && (
                 <>
-                    <button className="hb-arrow prev" onClick={() => go(idx - 1)} aria-label="আগেরটা">‹</button>
-                    <button className="hb-arrow next" onClick={() => go(idx + 1)} aria-label="পরেরটা">›</button>
+                    <button className="hb-arrow prev" onClick={() => go(idx - 1)} aria-label="Previous">‹</button>
+                    <button className="hb-arrow next" onClick={() => go(idx + 1)} aria-label="Next">›</button>
                     <div className="hb-dots">
                         {slides.map((b, i) => (
-                            <button key={b._id} className={i === idx ? 'active' : ''} onClick={() => go(i)} aria-label={`ব্যানার ${i + 1}`} />
+                            <button key={b._id} className={i === idx ? 'active' : ''} onClick={() => go(i)} aria-label={`Banner ${i + 1}`} />
                         ))}
                     </div>
                 </>
@@ -84,7 +84,7 @@ export default function HomeBanners() {
             {slides.length > 0 && <Slider slides={slides} />}
             {side && (
                 <BannerLink banner={side} className="hb-side">
-                    <img src={side.image} alt={side.title || 'ব্যানার'} loading="lazy" />
+                    <img src={side.image} alt={side.title || 'Banner'} loading="lazy" />
                 </BannerLink>
             )}
         </div>

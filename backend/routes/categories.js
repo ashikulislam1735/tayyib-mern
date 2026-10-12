@@ -10,7 +10,7 @@ router.get('/', async (req, res) => {
         const list = await Category.find({}, 'name image -_id');
         res.json(list);
     } catch (err) {
-        res.status(500).json({ error: 'ক্যাটাগরির ছবি লোড করতে সমস্যা হয়েছে' });
+        res.status(500).json({ error: 'Could not load categories' });
     }
 });
 

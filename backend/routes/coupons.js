@@ -27,17 +27,17 @@ function limited(ip) {
 // POST /api/coupons/validate  { code, subtotal }
 // এটা শুধু প্রিভিউ; আসল ছাড় অর্ডার তৈরির সময় সার্ভার নতুন করে হিসাব করে।
 router.post('/validate', async (req, res) => {
-    if (limited(req.ip)) return res.status(429).json({ error: 'অনেকগুলো অনুরোধ হয়েছে। কিছুক্ষণ পরে চেষ্টা করুন।' });
+    if (limited(req.ip)) return res.status(429).json({ error: 'Too many requests. Please try again in a little while.' });
     try {
         const subtotal = Number(req.body && req.body.subtotal);
         if (!Number.isFinite(subtotal) || subtotal <= 0 || subtotal > 100000000) {
-            return res.status(400).json({ error: 'কার্টের মোট দাম সঠিক নয়' });
+            return res.status(400).json({ error: 'Invalid cart total' });
         }
         const r = await checkCoupon(req.body.code, subtotal);
         if (!r.ok) return res.status(400).json({ error: r.error });
         res.json({ code: r.coupon.code, discount: r.discount });
     } catch {
-        res.status(500).json({ error: 'কুপন যাচাই করা যায়নি' });
+        res.status(500).json({ error: 'Could not verify the coupon' });
     }
 });
 

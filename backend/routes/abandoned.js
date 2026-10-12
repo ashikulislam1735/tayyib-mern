@@ -38,18 +38,18 @@ function rateLimited(ip) {
 // দাম/নাম ক্লায়েন্ট থেকে নেওয়া হয় না — সব ডাটাবেজ থেকে আসে
 router.post('/', async (req, res) => {
     if (rateLimited(req.ip)) {
-        return res.status(429).json({ error: 'অনেকগুলো অনুরোধ হয়েছে। কিছুক্ষণ পরে চেষ্টা করুন।' });
+        return res.status(429).json({ error: 'Too many requests. Please try again in a little while.' });
     }
 
     try {
         const body = req.body || {};
         const phone = typeof body.phone === 'string' ? body.phone.trim() : '';
-        if (!PHONE_RE.test(phone)) return res.status(400).json({ error: 'মোবাইল নম্বর সঠিক নয়' });
+        if (!PHONE_RE.test(phone)) return res.status(400).json({ error: 'Invalid mobile number' });
 
         const customerName = typeof body.customerName === 'string' ? body.customerName.trim().slice(0, 60) : '';
 
         if (!Array.isArray(body.items) || body.items.length === 0 || body.items.length > 30) {
-            return res.status(400).json({ error: 'কার্টে ১ থেকে ৩০টি আইটেম থাকতে হবে' });
+            return res.status(400).json({ error: 'A cart must have between 1 and 30 items' });
         }
 
         // একই ভ্যারিয়েন্ট বারবার থাকলে সংখ্যা যোগ করে একটা করে নেওয়া
@@ -89,7 +89,7 @@ router.post('/', async (req, res) => {
             cartTotal += variant.price * w.quantity;
         }
 
-        if (items.length === 0) return res.status(400).json({ error: 'কার্টে বৈধ কোনো আইটেম নেই' });
+        if (items.length === 0) return res.status(400).json({ error: 'No valid items in the cart' });
 
         const set = { items, cartTotal, lastActivityAt: new Date() };
         if (customerName) set.customerName = customerName;
@@ -103,7 +103,7 @@ router.post('/', async (req, res) => {
 
         res.json({ ok: true });
     } catch {
-        res.status(500).json({ error: 'সংরক্ষণ করা যায়নি' });
+        res.status(500).json({ error: 'Could not save' });
     }
 });
 

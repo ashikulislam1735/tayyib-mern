@@ -13,16 +13,16 @@ export function computeDiscount(coupon, subtotal) {
 // কুপন বৈধ কিনা যাচাই (ব্যবহার গণনা বাড়ায় না)
 export async function checkCoupon(rawCode, subtotal) {
     const code = normalizeCode(rawCode);
-    if (!CODE_RE.test(code)) return { ok: false, error: 'কুপন কোড সঠিক নয়' };
+    if (!CODE_RE.test(code)) return { ok: false, error: 'Invalid coupon code' };
 
     const coupon = await Coupon.findOne({ code }).lean();
-    if (!coupon || !coupon.active) return { ok: false, error: 'এই কুপনটি বৈধ নয়' };
-    if (coupon.expiresAt && new Date(coupon.expiresAt) < new Date()) return { ok: false, error: 'কুপনের মেয়াদ শেষ হয়ে গেছে' };
-    if (coupon.usageLimit > 0 && coupon.usedCount >= coupon.usageLimit) return { ok: false, error: 'কুপনের ব্যবহারের সীমা শেষ' };
-    if (subtotal < coupon.minOrder) return { ok: false, error: `এই কুপনে কমপক্ষে ৳${coupon.minOrder} টাকার পণ্য কিনতে হবে` };
+    if (!coupon || !coupon.active) return { ok: false, error: 'This coupon is not valid' };
+    if (coupon.expiresAt && new Date(coupon.expiresAt) < new Date()) return { ok: false, error: 'This coupon has expired' };
+    if (coupon.usageLimit > 0 && coupon.usedCount >= coupon.usageLimit) return { ok: false, error: 'This coupon has reached its usage limit' };
+    if (subtotal < coupon.minOrder) return { ok: false, error: `This coupon requires a minimum purchase of ৳${coupon.minOrder}` };
 
     const discount = computeDiscount(coupon, subtotal);
-    if (discount <= 0) return { ok: false, error: 'এই কুপনে কোনো ছাড় পাওয়া যাচ্ছে না' };
+    if (discount <= 0) return { ok: false, error: 'This coupon gives no discount on this order' };
     return { ok: true, coupon, discount };
 }
 
