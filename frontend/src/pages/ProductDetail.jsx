@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { useCart } from '../context/CartContext';
+import { useSite } from '../context/SiteContext';
 import Stars from '../components/Stars';
 import Reviews from '../components/Reviews';
 
@@ -14,25 +15,90 @@ function getEmbedUrl(url) {
     return null;
 }
 
+// স্টকের লেখা ও ধরন: স্টকে আছে / মাত্র N টি বাকি / স্টকে নেই
+function stockInfo(stock) {
+    if (stock <= 0) return { text: 'স্টকে নেই', cls: 'out' };
+    if (stock <= 5) return { text: `মাত্র ${stock}টি বাকি`, cls: 'low' };
+    return { text: 'স্টকে আছে', cls: '' };
+}
+
 export default function ProductDetail() {
     const { id } = useParams();
+    const navigate = useNavigate();
+    const { site } = useSite();
+    const { items, addToCart, changeQty } = useCart();
     const [product, setProduct] = useState(null);
     const [error, setError] = useState('');
     const [vIdx, setVIdx] = useState(0);
     const [imgIdx, setImgIdx] = useState(0);
-    const { addToCart } = useCart();
+    const [qty, setQty] = useState(1);
+    const [added, setAdded] = useState(false);
 
     useEffect(() => {
+        setVIdx(0);
+        setImgIdx(0);
+        setQty(1);
         api.getProduct(id).then(setProduct).catch((e) => setError(e.message));
     }, [id]);
+
+    // "কার্টে যোগ হয়েছে" লেখা ২ সেকেন্ড পর মুছে যায়
+    useEffect(() => {
+        if (!added) return undefined;
+        const t = setTimeout(() => setAdded(false), 2000);
+        return () => clearTimeout(t);
+    }, [added]);
 
     if (error) return <p className="status-msg error">{error}</p>;
     if (!product) return <p className="status-msg">লোড হচ্ছে...</p>;
 
     const variant = product.variants[vIdx] || product.variants[0];
     const hasDiscount = variant.originalPrice && variant.originalPrice > variant.price;
+    const save = hasDiscount ? variant.originalPrice - variant.price : 0;
     const images = product.images || [];
     const video = getEmbedUrl(product.videoUrl);
+    const soldOut = variant.stock <= 0;
+    const stock = stockInfo(variant.stock);
+    const maxQty = Math.max(variant.stock, 1);
+
+    const existing = items.find((i) => i.productId === product._id && i.variantId === variant._id);
+
+    // কার্টে নির্বাচিত পরিমাণ যোগ করা (কার্টে আগে থাকলে তার ওপর বাড়ে)
+    function addSelected() {
+        if (!existing) {
+            addToCart(product, variant);
+            if (qty > 1) changeQty(product._id, variant._id, qty - 1);
+        } else {
+            changeQty(product._id, variant._id, qty);
+        }
+    }
+
+    function handleAddToCart() {
+        addSelected();
+        setAdded(true);
+    }
+
+    // "এখনই অর্ডার": কার্টে ঠিক নির্বাচিত পরিমাণ রেখে চেকআউটে যায়
+    function handleOrderNow() {
+        if (!existing) {
+            addToCart(product, variant);
+            if (qty > 1) changeQty(product._id, variant._id, qty - 1);
+        } else if (existing.quantity !== qty) {
+            changeQty(product._id, variant._id, qty - existing.quantity);
+        }
+        navigate('/checkout');
+    }
+
+    const waNumber = String((site.social && site.social.whatsapp) || '').replace(/\D/g, '');
+    const waText = [
+        'আসসালামু আলাইকুম, আমি এই প্রোডাক্টটি অর্ডার করতে চাই:',
+        '',
+        `প্রোডাক্ট: ${product.title}`,
+        `সাইজ: ${variant.label}`,
+        `পরিমাণ: ${qty}`,
+        `মোট: ৳${variant.price * qty} (ডেলিভারি চার্জ ছাড়া)`,
+        `লিংক: ${window.location.href}`,
+    ].join('\n');
+    const phone = String(site.phone || '').trim();
 
     return (
         <div>
@@ -65,32 +131,57 @@ export default function ProductDetail() {
                 </div>
 
                 <div>
-                    <span className="card-cat">{product.category}{product.subCategory ? ` › ${product.subCategory}` : ''}</span>
+                    <div className="pd-badges">
+                        <span className="pd-cat">{product.category}{product.subCategory ? ` › ${product.subCategory}` : ''}</span>
+                        <span className={`stock-badge ${stock.cls}`}>{stock.text}</span>
+                    </div>
                     <h1 className="detail-title">{product.title}</h1>
                     {product.ratingCount > 0 && (
                         <p className="reviews-summary"><Stars value={product.ratingAvg} /> {product.ratingAvg} ({product.ratingCount}টি রিভিউ)</p>
                     )}
                     {product.shortDescription && <p className="detail-short">{product.shortDescription}</p>}
 
-                    <div className="variant-row" style={{ marginBottom: 12 }}>
-                        {product.variants.map((v, i) => (
-                            <button key={v._id} className={`variant-chip ${i === vIdx ? 'active' : ''}`} onClick={() => setVIdx(i)}>
-                                {v.label}
-                            </button>
-                        ))}
+                    <div className="pd-label">সাইজ বেছে নিন</div>
+                    <div className="pd-variants">
+                        {product.variants.map((v, i) => {
+                            const s = stockInfo(v.stock);
+                            return (
+                                <button
+                                    key={v._id}
+                                    className={`pd-variant ${i === vIdx ? 'active' : ''}`}
+                                    onClick={() => { setVIdx(i); setQty(1); }}
+                                >
+                                    <strong>{v.label}</strong>
+                                    <span className="pd-variant-price">৳{v.price}</span>
+                                    <small className={s.cls}>{s.text}</small>
+                                </button>
+                            );
+                        })}
                     </div>
 
-                    <div className="price-wrap" style={{ marginBottom: 14 }}>
-                        <span className="price" style={{ fontSize: '1.5rem' }}>৳{variant.price}</span>
-                        {hasDiscount && <span className="price-orig">৳{variant.originalPrice}</span>}
+                    <div className="pd-priceline">
+                        {hasDiscount && <span className="pd-price-old">৳{variant.originalPrice}</span>}
+                        <span className="pd-price">৳{variant.price}</span>
+                        {hasDiscount && <span className="pd-save">সাশ্রয় ৳{save}</span>}
                     </div>
 
-                    {variant.stock <= 5 && variant.stock > 0 && <p className="stock-low">মাত্র {variant.stock}টি বাকি</p>}
-                    {variant.stock <= 0 && <p className="stock-low">স্টকে নেই</p>}
+                    <div className="pd-label">পরিমাণ</div>
+                    <div className="qty-box">
+                        <button type="button" onClick={() => setQty((q) => Math.max(1, q - 1))} disabled={soldOut || qty <= 1} aria-label="কমান">−</button>
+                        <span>{soldOut ? 0 : qty}</span>
+                        <button type="button" onClick={() => setQty((q) => Math.min(maxQty, q + 1))} disabled={soldOut || qty >= maxQty} aria-label="বাড়ান">+</button>
+                    </div>
+                    {!soldOut && qty > 1 && <p className="pd-total">মোট: <strong>৳{variant.price * qty}</strong> (ডেলিভারি চার্জ ছাড়া)</p>}
 
-                    <button className="btn-primary" disabled={variant.stock <= 0} onClick={() => addToCart(product, variant)}>
-                        কার্টে যোগ করুন
-                    </button>
+                    <div className="pd-actions">
+                        <button className="btn-pd order" disabled={soldOut} onClick={handleOrderNow}>এখনই অর্ডার</button>
+                        <button className="btn-pd cart" disabled={soldOut} onClick={handleAddToCart}>🛒 কার্টে যোগ করুন</button>
+                        {waNumber && (
+                            <a className="btn-pd wa" href={`https://wa.me/${waNumber}?text=${encodeURIComponent(waText)}`} target="_blank" rel="noopener noreferrer">💬 WhatsApp-এ অর্ডার</a>
+                        )}
+                        {phone && <a className="btn-pd call" href={`tel:${phone}`}>📞 কল করে অর্ডার</a>}
+                    </div>
+                    {added && <p className="pd-added">✓ কার্টে যোগ হয়েছে</p>}
 
                     {product.description && (
                         <div className="detail-desc">
@@ -100,7 +191,7 @@ export default function ProductDetail() {
                     )}
                 </div>
             </div>
-            <Reviews productId={product._id} />
+            <Reviews productId={product._id} title={product.title} />
         </div>
     );
 }
