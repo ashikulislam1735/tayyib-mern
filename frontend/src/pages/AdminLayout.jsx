@@ -10,6 +10,7 @@ const MENU = [
     { to: '/admin/reviews', label: 'রিভিউ', icon: '⭐' },
     { to: '/admin/coupons', label: 'কুপন', icon: '🎟️' },
     { to: '/admin/products', label: 'প্রোডাক্ট', icon: '🛍️' },
+    { to: '/admin/stock', label: 'স্টক', icon: '🗃️' },
     { to: '/admin/expenses', label: 'খরচ', icon: '💸', owner: true },
     { to: '/admin/costs', label: 'কুরিয়ার ও প্যাকেজিং খরচ', icon: '🚚', owner: true },
     { to: '/admin/categories', label: 'ক্যাটাগরির ছবি', icon: '🗂️' },

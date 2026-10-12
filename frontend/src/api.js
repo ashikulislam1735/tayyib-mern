@@ -87,6 +87,9 @@ export const api = {
     setCategoryImage: (name, image) => request('/categories', { method: 'PUT', body: JSON.stringify({ name, image }) }),
     importProducts: (rows, dryRun) => request('/products/bulk', { method: 'POST', body: JSON.stringify({ rows, dryRun }) }),
     getAllOrders: () => request('/orders'),
+    getStock: () => request('/stock'),
+    adjustStock: (data) => request('/stock/adjust', { method: 'POST', body: JSON.stringify(data) }),
+    getStockLogs: (variantId, limit = 30) => request(`/stock/logs?limit=${limit}${variantId ? `&variantId=${variantId}` : ''}`),
     getReportSummary: (from, to) => request(from && to ? `/reports/summary?from=${from}&to=${to}` : '/reports/summary'),
     getExpenses: (f = {}) => {
         const q = new URLSearchParams();

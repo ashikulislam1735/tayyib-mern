@@ -42,6 +42,7 @@ import AdminCoupons from './pages/AdminCoupons';
 import AdminCustomers from './pages/AdminCustomers';
 import AdminReviews from './pages/AdminReviews';
 import AdminPathao from './pages/AdminPathao';
+import AdminStock from './pages/AdminStock';
 
 function Header({ onCartClick }) {
     const { items } = useCart();
@@ -107,6 +108,7 @@ function AdminApp() {
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/admin/orders" element={<AdminOrders />} />
                 <Route path="/admin/products" element={<AdminProducts />} />
+                <Route path="/admin/stock" element={<AdminStock />} />
                 <Route path="/admin/expenses" element={<OwnerOnly><AdminExpenses /></OwnerOnly>} />
                 <Route path="/admin/costs" element={<OwnerOnly><AdminCosts /></OwnerOnly>} />
                 <Route path="/admin/admins" element={<OwnerOnly><AdminUsers /></OwnerOnly>} />
