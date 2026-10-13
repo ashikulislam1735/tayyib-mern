@@ -43,7 +43,6 @@ export const api = {
     getAdminProducts: () => request('/products/admin/list'),
     getTopProducts: (limit = 6) => request(`/products/top?limit=${limit}`),
     getProducts: (category) => request(category ? `/products?category=${encodeURIComponent(category)}` : '/products'),
-    getProduct: (id) => request(`/products/${id}`),
     createOrder: (payload) => request('/orders', { method: 'POST', body: JSON.stringify(payload) }),
     // অসম্পূর্ণ অর্ডার: গ্রাহকের দিক থেকে কার্ট সেভ (লগইন লাগে না)
     saveAbandonedCart: (payload) => request('/abandoned', { method: 'POST', body: JSON.stringify(payload) }),
