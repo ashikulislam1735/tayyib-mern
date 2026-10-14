@@ -27,7 +27,7 @@ export async function checkCoupon(rawCode, subtotal) {
 }
 
 // অর্ডারের সময় ব্যবহারের গণনা নিরাপদে ১ বাড়ানো — একই সময়ে অনেকে চাইলেও সীমা পেরোবে না
-export async function claimCoupon(code) {
+export async function claimCoupon(code, session = null) {
     const now = new Date();
     const r = await Coupon.updateOne(
         {
@@ -39,6 +39,7 @@ export async function claimCoupon(code) {
             ],
         },
         { $inc: { usedCount: 1 } },
+        session ? { session } : {},
     );
     return r.modifiedCount === 1;
 }

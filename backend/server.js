@@ -1,6 +1,8 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
+import mongoose from 'mongoose';
 import { connectDB } from './config/db.js';
 import productRoutes from './routes/products.js';
 import orderRoutes from './routes/orders.js';
@@ -30,7 +32,22 @@ if (secret.length < 32) {
 const app = express();
 
 // Render/Vercel-এর মতো প্রক্সির পেছনে থাকলে আসল ক্লায়েন্ট IP পেতে (লগইন লিমিটারের জন্য জরুরি)
-app.set('trust proxy', 1);
+// নিজের সার্ভারে: Nginx একটাই থাকলে 1, Cloudflare + Nginx দুটো থাকলে 2 (.env-এ TRUST_PROXY)
+const trustProxy = Number.parseInt(process.env.TRUST_PROXY ?? '1', 10);
+app.set('trust proxy', Number.isNaN(trustProxy) ? 1 : trustProxy);
+
+// নিরাপত্তার HTTP হেডার (এটা JSON API, তাই অন্য সাইট থেকে ডাকা আটকায় না)
+app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
+
+// সহজ রিকোয়েস্ট লগ: কখন কোন ঠিকানায় কী স্ট্যাটাস গেল (/health বাদ, নইলে লগ ভরে যায়)
+app.use((req, res, next) => {
+    if (req.path === '/health') return next();
+    const start = Date.now();
+    res.on('finish', () => {
+        console.log(`${new Date().toISOString()} ${req.method} ${req.originalUrl.split('?')[0]} ${res.statusCode} ${Date.now() - start}ms`);
+    });
+    next();
+});
 
 // CORS: CORS_ORIGINS-এ কমা দিয়ে অনুমোদিত ওয়েবসাইট দিন, যেমন:
 //   CORS_ORIGINS=https://tayyib.vercel.app,https://www.tayyib.com
@@ -109,7 +126,24 @@ process.on('unhandledRejection', (reason) => {
 const PORT = process.env.PORT || 5000;
 
 connectDB().then(() => {
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
         console.log(`🚀 সার্ভার চলছে: http://localhost:${PORT}`);
     });
+
+    // নিরাপদে বন্ধ হওয়া: নতুন রিকোয়েস্ট নেওয়া বন্ধ, চলতি অর্ডার শেষ হতে দেওয়া, তারপর ডাটাবেজ বন্ধ।
+    // (docker stop / systemd restart / pm2 reload-এর সময় অর্ডার মাঝপথে কাটা পড়বে না)
+    let shuttingDown = false;
+    const shutdown = (signal) => {
+        if (shuttingDown) return;
+        shuttingDown = true;
+        console.log(`${signal} পেয়েছি — নিরাপদে বন্ধ হচ্ছে…`);
+        const force = setTimeout(() => { console.error('সময় শেষ, জোর করে বন্ধ'); process.exit(1); }, 15000);
+        force.unref();
+        server.close(async () => {
+            try { await mongoose.connection.close(); } catch (e) { console.error(e.message); }
+            process.exit(0);
+        });
+    };
+    process.on('SIGTERM', () => shutdown('SIGTERM'));
+    process.on('SIGINT', () => shutdown('SIGINT'));
 });

@@ -11,6 +11,9 @@ import { requireAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
 
+// transaction-এর ভেতরে অর্ডার আটকাতে (স্টক নেই/কুপন শেষ) — এটা ছুড়লে transaction বাতিল হয়ে ক্লায়েন্টকে 400 যায়
+class OrderRejected extends Error {}
+
 // POST /api/orders — নতুন অর্ডার তৈরি
 // নিরাপত্তার জন্য দাম ক্লায়েন্ট থেকে নেওয়া হয় না — ডাটাবেজ থেকে আসল দাম ধরে সার্ভারেই মোট হিসাব করা হয়
 // স্টক কমানোর নিয়ম: আগে সব আইটেম যাচাই (স্টক না ছুঁয়ে), তারপর একটা একটা করে নিরাপদভাবে কমানো।
@@ -138,29 +141,7 @@ router.post('/', async (req, res) => {
         const courierCost = pick(deliveryArea === 'outside' ? cd.courierOutside : cd.courierInside, 0);
         const packagingCost = pick(cd.packaging, 0);
 
-        // কুপনের ব্যবহার নিরাপদে ১ বাড়ানো — সীমা পেরিয়ে গেলে অর্ডার আটকাবে
-        if (couponCode) {
-            if (!(await claimCoupon(couponCode))) {
-                return res.status(400).json({ error: 'This coupon can no longer be used' });
-            }
-            couponClaimed = true;
-        }
-
-        // ধাপ ২: স্টক কমানো — শর্তসহ একক অপারেশন (একই সময়ে অন্য অর্ডার এলেও স্টক মাইনাসে যাবে না)
-        for (const w of wanted) {
-            const result = await Product.updateOne(
-                { _id: w.productId, variants: { $elemMatch: { _id: w.variantId, stock: { $gte: w.qty } } } },
-                { $inc: { 'variants.$.stock': -w.qty } },
-            );
-            if (result.modifiedCount !== 1) {
-                await rollbackStock();
-                return res.status(400).json({ error: `${w.title} (${w.label}) does not have enough stock` });
-            }
-            reserved.push(w);
-        }
-
-        // ধাপ ৩: অর্ডার সংরক্ষণ — ব্যর্থ হলে বাইরের catch স্টক ফেরত দেবে
-        const order = await Order.create({
+        const orderData = {
             customerName, phone, address,
             paymentMethod: method,
             paymentTrxId,
@@ -172,7 +153,61 @@ router.post('/', async (req, res) => {
             couponCode,
             discount,
             total,
-        });
+        };
+        let order;
+
+        if (process.env.USE_TRANSACTIONS === 'true') {
+            // ── Transaction মোড (MongoDB replica set লাগে; Atlas ও docker-compose-এ আছে) ──
+            // কুপন গোনা + স্টক কমানো + অর্ডার সেভ — তিনটাই একসাথে হয়, নয়তো কিছুই হয় না।
+            // মাঝপথে সার্ভার মরে গেলেও স্টক বা কুপন হারায় না।
+            const session = await mongoose.startSession();
+            try {
+                await session.withTransaction(async () => {
+                    if (couponCode && !(await claimCoupon(couponCode, session))) {
+                        throw new OrderRejected('This coupon can no longer be used');
+                    }
+                    for (const w of wanted) {
+                        const result = await Product.updateOne(
+                            { _id: w.productId, variants: { $elemMatch: { _id: w.variantId, stock: { $gte: w.qty } } } },
+                            { $inc: { 'variants.$.stock': -w.qty } },
+                            { session },
+                        );
+                        if (result.modifiedCount !== 1) throw new OrderRejected(`${w.title} (${w.label}) does not have enough stock`);
+                    }
+                    [order] = await Order.create([orderData], { session });
+                });
+            } catch (e) {
+                if (e instanceof OrderRejected) return res.status(400).json({ error: e.message });
+                throw e;
+            } finally {
+                await session.endSession();
+            }
+        } else {
+            // ── সাধারণ মোড (আগের মতোই): ধাপে ধাপে, ব্যর্থ হলে নিজে rollback ──
+            // কুপনের ব্যবহার নিরাপদে ১ বাড়ানো — সীমা পেরিয়ে গেলে অর্ডার আটকাবে
+            if (couponCode) {
+                if (!(await claimCoupon(couponCode))) {
+                    return res.status(400).json({ error: 'This coupon can no longer be used' });
+                }
+                couponClaimed = true;
+            }
+
+            // ধাপ ২: স্টক কমানো — শর্তসহ একক অপারেশন (একই সময়ে অন্য অর্ডার এলেও স্টক মাইনাসে যাবে না)
+            for (const w of wanted) {
+                const result = await Product.updateOne(
+                    { _id: w.productId, variants: { $elemMatch: { _id: w.variantId, stock: { $gte: w.qty } } } },
+                    { $inc: { 'variants.$.stock': -w.qty } },
+                );
+                if (result.modifiedCount !== 1) {
+                    await rollbackStock();
+                    return res.status(400).json({ error: `${w.title} (${w.label}) does not have enough stock` });
+                }
+                reserved.push(w);
+            }
+
+            // ধাপ ৩: অর্ডার সংরক্ষণ — ব্যর্থ হলে বাইরের catch স্টক ফেরত দেবে
+            order = await Order.create(orderData);
+        }
         orderCreated = true;
 
         // অর্ডার হয়ে গেলে একই ফোনের অসম্পূর্ণ কার্ট "recovered" — এখানে সমস্যা হলেও অর্ডার আটকাবে না
@@ -198,20 +233,84 @@ router.post('/', async (req, res) => {
     }
 });
 
-// GET /api/orders — সব অর্ডার (শুধু লগইন করা অ্যাডমিনের জন্য)
+// GET /api/orders — অর্ডারের তালিকা (শুধু লগইন করা অ্যাডমিনের জন্য)
+// ?page=1&limit=50&status=pending&q=খোঁজা-শব্দ দিলে পেজ ধরে আসে: { items, total, page, pages, counts }
+// page না দিলে আগের মতোই সব অর্ডারের তালিকা (array) আসে — যাতে পুরোনো পেজ (যেমন ড্যাশবোর্ড) ভাঙে না।
+const ORDER_STATUSES = ['pending', 'confirmed', 'delivered', 'cancelled', 'returned'];
+
+// বাংলা অঙ্ককে ইংরেজি অঙ্কে বদলে ছোট হাতের করা (ফ্রন্টএন্ডের খোঁজার নিয়মের সাথে মিলিয়ে)
+const normalizeQuery = (text) => String(text || '')
+    .replace(/[০-৯]/g, (d) => '০১২৩৪৫৬৭৮৯'.indexOf(d))
+    .trim()
+    .toLowerCase();
+const escapeRegex = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+function stripCosts(orders, admin) {
+    if (admin.role !== 'owner') {
+        // স্টাফ ক্রয়মূল্য ও কুরিয়ার/প্যাকেজিং খরচ দেখে না
+        orders.forEach((o) => {
+            delete o.courierCost;
+            delete o.packagingCost;
+            (o.items || []).forEach((i) => { delete i.costPrice; });
+        });
+    }
+    return orders;
+}
+
 router.get('/', requireAdmin, async (req, res) => {
     try {
-        const orders = await Order.find().sort({ createdAt: -1 }).lean();
-        if (req.admin.role !== 'owner') {
-            // স্টাফ ক্রয়মূল্য ও কুরিয়ার/প্যাকেজিং খরচ দেখে না
-            orders.forEach((o) => {
-                delete o.courierCost;
-                delete o.packagingCost;
-                (o.items || []).forEach((i) => { delete i.costPrice; });
-            });
+        if (req.query.page === undefined) {
+            const orders = await Order.find().sort({ createdAt: -1 }).lean();
+            stripCosts(orders, req.admin);
+            return res.json(attachRisk(orders)); // প্রতিটা অর্ডারে ফোন নম্বরের ইতিহাস থেকে ঝুঁকির লেভেল
         }
-        res.json(attachRisk(orders)); // প্রতিটা অর্ডারে ফোন নম্বরের ইতিহাস থেকে ঝুঁকির লেভেল
-    } catch {
+
+        const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+        const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 50, 1), 200);
+        const filter = {};
+        if (ORDER_STATUSES.includes(req.query.status)) filter.status = req.query.status;
+
+        const term = normalizeQuery(String(req.query.q || '').slice(0, 100));
+        const textFilter = term ? (() => {
+            const rx = new RegExp(escapeRegex(term), 'i');
+            return [{ customerName: rx }, { phone: rx }, { address: rx }];
+        })() : null;
+        // অর্ডার নম্বর (আইডির অংশ) দিয়ে খোঁজা — নতুন MongoDB (৪.২+) লাগে, না পারলে নিচে এই অংশ ছাড়া আবার চেষ্টা হয়
+        const idFilter = term && /^[0-9a-f]{4,24}$/.test(term)
+            ? { $expr: { $gte: [{ $indexOfCP: [{ $toLower: { $toString: '$_id' } }, term] }, 0] } }
+            : null;
+
+        const run = (extraOr) => {
+            const f = { ...filter };
+            if (textFilter) f.$or = extraOr ? [...textFilter, extraOr] : textFilter;
+            return Promise.all([
+                Order.find(f).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit).lean(),
+                Order.countDocuments(f),
+            ]);
+        };
+        let items, total;
+        try {
+            [items, total] = await run(idFilter);
+        } catch (e) {
+            if (!idFilter) throw e;
+            [items, total] = await run(null);
+        }
+
+        // স্ট্যাটাস অনুযায়ী মোট সংখ্যা (ট্যাবের পাশের সংখ্যার জন্য) — খোঁজা/ফিল্টারের উপর নির্ভর করে না
+        const grouped = await Order.aggregate([{ $group: { _id: '$status', n: { $sum: 1 } } }]);
+        const counts = { all: 0 };
+        ORDER_STATUSES.forEach((s) => { counts[s] = 0; });
+        grouped.forEach((g) => { if (g._id in counts) counts[g._id] = g.n; counts.all += g.n; });
+
+        // ঝুঁকির হিসাব: এই পেজের ফোন নম্বরগুলোর পুরো ইতিহাস থেকে (শুধু পেজ ধরলে ইতিহাস হারাত)
+        const phones = [...new Set(items.flatMap((o) => [o.phone, String(o.phone || '').replace(/\s+/g, '')]))];
+        const history = phones.length ? await Order.find({ phone: { $in: phones } }).select('phone status').lean() : [];
+        const riskById = new Map(attachRisk(history).map((o) => [String(o._id), o.risk]));
+        const pageItems = stripCosts(items, req.admin).map((o) => ({ ...o, risk: riskById.get(String(o._id)) }));
+
+        res.json({ items: pageItems, total, page, pages: Math.max(1, Math.ceil(total / limit)), counts });
+    } catch (err) {
+        console.error('orders list failed:', err);
         res.status(500).json({ error: 'অর্ডারের তালিকা আনতে সমস্যা হয়েছে' });
     }
 });

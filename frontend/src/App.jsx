@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { Routes, Route, Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { CartProvider, useCart } from './context/CartContext';
 import { AuthProvider } from './context/AuthContext';
@@ -15,7 +15,6 @@ import Footer from './components/Footer';
 import FloatingWhatsApp from './components/FloatingWhatsApp';
 import ScrollToTop from './components/ScrollToTop';
 import RouteSeo from './components/RouteSeo';
-import ProtectedRoute from './components/ProtectedRoute';
 import Shop from './pages/Shop';
 import Offers from './pages/Offers';
 import About from './pages/About';
@@ -24,25 +23,9 @@ import Checkout from './pages/Checkout';
 import OrderConfirmed from './pages/OrderConfirmed';
 import Track from './pages/Track';
 import AdminLogin from './pages/AdminLogin';
-import AdminDashboard from './pages/AdminDashboard';
-import AdminLayout from './pages/AdminLayout';
-import AdminOrders from './pages/AdminOrders';
-import AdminProducts from './pages/AdminProducts';
-import AdminPassword from './pages/AdminPassword';
-import AdminBanners from './pages/AdminBanners';
-import AdminSettings from './pages/AdminSettings';
-import AdminCategories from './pages/AdminCategories';
-import AdminImport from './pages/AdminImport';
-import AdminExpenses from './pages/AdminExpenses';
-import AdminCosts from './pages/AdminCosts';
-import AdminUsers from './pages/AdminUsers';
-import OwnerOnly from './components/OwnerOnly';
-import AdminAbandoned from './pages/AdminAbandoned';
-import AdminCoupons from './pages/AdminCoupons';
-import AdminCustomers from './pages/AdminCustomers';
-import AdminReviews from './pages/AdminReviews';
-import AdminPathao from './pages/AdminPathao';
-import AdminStock from './pages/AdminStock';
+
+// অ্যাডমিন প্যানেল আলাদা ফাইল থেকে দরকারের সময় লোড হয় — ক্রেতার ফোনে অ্যাডমিনের কোড নামে না
+const AdminApp = lazy(() => import('./AdminApp'));
 
 function Header({ onCartClick }) {
     const { items } = useCart();
@@ -100,39 +83,16 @@ function Header({ onCartClick }) {
     );
 }
 
-// অ্যাডমিনের নিজস্ব লেআউট — দোকানের হেডার/ফুটার এখানে দেখানো হয় না
-function AdminApp() {
-    return (
-        <Routes>
-            <Route element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
-                <Route path="/admin" element={<AdminDashboard />} />
-                <Route path="/admin/orders" element={<AdminOrders />} />
-                <Route path="/admin/products" element={<AdminProducts />} />
-                <Route path="/admin/stock" element={<AdminStock />} />
-                <Route path="/admin/expenses" element={<OwnerOnly><AdminExpenses /></OwnerOnly>} />
-                <Route path="/admin/costs" element={<OwnerOnly><AdminCosts /></OwnerOnly>} />
-                <Route path="/admin/admins" element={<OwnerOnly><AdminUsers /></OwnerOnly>} />
-                <Route path="/admin/abandoned" element={<AdminAbandoned />} />
-                <Route path="/admin/coupons" element={<AdminCoupons />} />
-                <Route path="/admin/customers" element={<AdminCustomers />} />
-                <Route path="/admin/reviews" element={<AdminReviews />} />
-                <Route path="/admin/pathao" element={<OwnerOnly><AdminPathao /></OwnerOnly>} />
-                <Route path="/admin/categories" element={<AdminCategories />} />
-                <Route path="/admin/import" element={<AdminImport />} />
-                <Route path="/admin/banners" element={<AdminBanners />} />
-                <Route path="/admin/settings" element={<OwnerOnly><AdminSettings /></OwnerOnly>} />
-                <Route path="/admin/password" element={<AdminPassword />} />
-            </Route>
-        </Routes>
-    );
-}
-
 function AppShell() {
     const [cartOpen, setCartOpen] = useState(false);
     const { pathname } = useLocation();
 
     if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
-        return <AdminApp />;
+        return (
+            <Suspense fallback={<p className="status-msg">লোড হচ্ছে...</p>}>
+                <AdminApp />
+            </Suspense>
+        );
     }
 
     return (

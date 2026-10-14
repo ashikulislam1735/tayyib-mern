@@ -86,6 +86,13 @@ export const api = {
     setCategoryImage: (name, image) => request('/categories', { method: 'PUT', body: JSON.stringify({ name, image }) }),
     importProducts: (rows, dryRun) => request('/products/bulk', { method: 'POST', body: JSON.stringify({ rows, dryRun }) }),
     getAllOrders: () => request('/orders'),
+    // পেজ ধরে অর্ডার: { items, total, page, pages, counts } — অ্যাডমিন অর্ডার তালিকার জন্য
+    getOrdersPage: ({ page = 1, limit = 30, status = 'all', q = '' } = {}) => {
+        const qs = new URLSearchParams({ page: String(page), limit: String(limit) });
+        if (status && status !== 'all') qs.set('status', status);
+        if (q) qs.set('q', q);
+        return request(`/orders?${qs.toString()}`);
+    },
     getStock: () => request('/stock'),
     getStockSettings: () => request('/stock/settings'),
     saveStockSettings: (lowStockLimit) => request('/stock/settings', { method: 'PUT', body: JSON.stringify({ lowStockLimit }) }),

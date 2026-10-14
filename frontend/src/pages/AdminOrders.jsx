@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { api } from '../api';
 import Invoice from '../components/Invoice';
 import { downloadCsv, dhakaDate, dhakaDateTime } from '../utils/download';
 
+const PAGE_SIZE = 30;
 const STATUS_OPTIONS = ['pending', 'confirmed', 'delivered', 'cancelled', 'returned'];
 const STATUS_LABEL = { pending: 'Pending', confirmed: 'Confirmed', delivered: 'Delivered', cancelled: 'Cancelled', returned: 'ফেরত' };
 const RISK_LABEL = { high: '⚠️ High Risk', medium: '⚠️ Medium Risk', low: '✅ নিরাপদ', new: '🆕 নতুন/অল্প ইতিহাস' };
@@ -21,13 +22,6 @@ const SHIP_LABEL = {
 
 const PAYMENT_LABEL = { cod: 'ক্যাশ অন ডেলিভারি', bkash: 'bKash', nagad: 'Nagad' };
 
-// বাংলা অঙ্ককে ইংরেজি অঙ্কে বদলে নেয়, যাতে ফোন নম্বর দুভাবেই খোঁজা যায়
-function normalize(text) {
-    return String(text || '')
-        .replace(/[০-৯]/g, (d) => '০১২৩৪৫৬৭৮৯'.indexOf(d))
-        .toLowerCase();
-}
-
 export default function AdminOrders() {
     const [invoiceOrder, setInvoiceOrder] = useState(null);
     const [orders, setOrders] = useState([]);
@@ -35,18 +29,39 @@ export default function AdminOrders() {
     const [loading, setLoading] = useState(true);
     const [status, setStatus] = useState('all');
     const [search, setSearch] = useState('');
+    const [term, setTerm] = useState(''); // search বক্স থেমে গেলে (০.৪ সেকেন্ড) এটা বদলায়, তখনই সার্ভারে খোঁজা হয়
+    const [page, setPage] = useState(1);
+    const [pages, setPages] = useState(1);
+    const [total, setTotal] = useState(0);
+    const [counts, setCounts] = useState({ all: 0 });
 
     useEffect(() => {
-        api.getAllOrders()
-            .then(setOrders)
+        const t = setTimeout(() => { setTerm(search.trim()); setPage(1); }, 400);
+        return () => clearTimeout(t);
+    }, [search]);
+
+    // সার্ভার থেকে শুধু এই পেজের ৩০টা অর্ডার আসে (সব অর্ডার একসাথে নয়) — ফোনেও দ্রুত
+    const load = useCallback(() => {
+        setLoading(true);
+        setError('');
+        api.getOrdersPage({ page, limit: PAGE_SIZE, status, q: term })
+            .then((d) => {
+                setOrders(d.items);
+                setPages(d.pages);
+                setTotal(d.total);
+                setCounts(d.counts);
+            })
             .catch((e) => setError(e.message))
             .finally(() => setLoading(false));
-    }, []);
+    }, [page, status, term]);
+
+    useEffect(() => { load(); }, [load]);
 
     async function handleStatusChange(id, newStatus) {
         try {
             await api.updateOrderStatus(id, newStatus);
             setOrders((prev) => prev.map((o) => (o._id === id ? { ...o, status: newStatus } : o)));
+            load(); // ট্যাবের সংখ্যা ও ফিল্টার ঠিক রাখতে তালিকা আবার আনা
         } catch (err) {
             alert(err.message);
         }
@@ -87,26 +102,21 @@ export default function AdminOrders() {
         }
     }
 
-    const counts = useMemo(() => {
-        const c = { all: orders.length };
-        STATUS_OPTIONS.forEach((s) => { c[s] = orders.filter((o) => o.status === s).length; });
-        return c;
-    }, [orders]);
+    const isFiltering = status !== 'all' || term !== '';
 
-    const filtered = useMemo(() => {
-        const term = normalize(search.trim());
-        return orders.filter((o) => {
-            if (status !== 'all' && o.status !== status) return false;
-            if (!term) return true;
-            const haystack = normalize([o.customerName, o.phone, o.address, o._id].join(' '));
-            return haystack.includes(term);
-        });
-    }, [orders, status, search]);
-
-    const isFiltering = status !== 'all' || search.trim() !== '';
-
-    // এখন যে তালিকা দেখাচ্ছে (ফিল্টারসহ) সেটা CSV হিসেবে ডাউনলোড
-    function exportOrders() {
+    // এখন যে শর্ত (ফিল্টার/খোঁজা) চলছে তার সব অর্ডার CSV হিসেবে ডাউনলোড (সব পেজ ঘুরে আনা হয়)
+    async function exportOrders() {
+        let filtered = [];
+        try {
+            for (let pg = 1, last = 1; pg <= last; pg += 1) {
+                const d = await api.getOrdersPage({ page: pg, limit: 200, status, q: term });
+                filtered = filtered.concat(d.items);
+                last = d.pages;
+            }
+        } catch (err) {
+            alert(err.message);
+            return;
+        }
         const hasCosts = filtered.some((o) => 'courierCost' in o); // স্টাফের ডেটায় খরচ থাকে না
         const head = ['অর্ডার নং', 'তারিখ', 'নাম', 'ফোন', 'ঠিকানা', 'পেমেন্ট', 'TrxID', 'স্ট্যাটাস', 'পণ্য', 'পণ্যের দাম', 'কুপন ছাড়', 'ডেলিভারি চার্জ', 'মোট'];
         if (hasCosts) head.push('ক্রয়মূল্য', 'কুরিয়ার খরচ', 'প্যাকেজিং খরচ');
@@ -135,13 +145,13 @@ export default function AdminOrders() {
                 onChange={(e) => setSearch(e.target.value)}
             />
 
-            <button className="link-btn" onClick={exportOrders} disabled={filtered.length === 0}>📥 এই তালিকা ডাউনলোড (CSV)</button>
+            <button className="link-btn" onClick={exportOrders} disabled={total === 0}>📥 এই তালিকা ডাউনলোড (CSV)</button>
             <div className="chip-row">
-                <button className={`cat-chip ${status === 'all' ? 'active' : ''}`} onClick={() => setStatus('all')}>
+                <button className={`cat-chip ${status === 'all' ? 'active' : ''}`} onClick={() => { setStatus('all'); setPage(1); }}>
                     সব ({counts.all})
                 </button>
                 {STATUS_OPTIONS.map((s) => (
-                    <button key={s} className={`cat-chip ${status === s ? 'active' : ''}`} onClick={() => setStatus(s)}>
+                    <button key={s} className={`cat-chip ${status === s ? 'active' : ''}`} onClick={() => { setStatus(s); setPage(1); }}>
                         {STATUS_LABEL[s]} ({counts[s]})
                     </button>
                 ))}
@@ -149,21 +159,21 @@ export default function AdminOrders() {
 
             {error && <p className="status-msg error">{error}</p>}
             {loading && <p className="status-msg">লোড হচ্ছে...</p>}
-            {!loading && !error && orders.length === 0 && <p className="status-msg">এখনো কোনো অর্ডার নেই।</p>}
+            {!loading && !error && counts.all === 0 && <p className="status-msg">এখনো কোনো অর্ডার নেই।</p>}
 
-            {!loading && isFiltering && orders.length > 0 && (
+            {!loading && isFiltering && counts.all > 0 && (
                 <p className="result-note">
-                    {filtered.length}টি অর্ডার পাওয়া গেছে{' '}
-                    <button className="link-btn" onClick={() => { setStatus('all'); setSearch(''); }}>সব দেখুন</button>
+                    {total}টি অর্ডার পাওয়া গেছে{' '}
+                    <button className="link-btn" onClick={() => { setStatus('all'); setSearch(''); setTerm(''); setPage(1); }}>সব দেখুন</button>
                 </p>
             )}
-            {!loading && isFiltering && orders.length > 0 && filtered.length === 0 && (
+            {!loading && isFiltering && counts.all > 0 && total === 0 && (
                 <p className="status-msg">এই শর্তে কোনো অর্ডার মেলেনি।</p>
             )}
 
             {invoiceOrder && <Invoice order={invoiceOrder} onClose={() => setInvoiceOrder(null)} />}
 
-            {filtered.map((o) => (
+            {orders.map((o) => (
                 <div className="order-card" key={o._id}>
                     <div className="order-line">
                         <strong>{o.customerName} — {o.phone}</strong>
@@ -222,6 +232,14 @@ export default function AdminOrders() {
                     </div>
                 </div>
             ))}
+
+            {pages > 1 && (
+                <div className="chip-row" style={{ justifyContent: 'center', alignItems: 'center', margin: '16px 0' }}>
+                    <button className="cat-chip" disabled={page <= 1 || loading} onClick={() => { setPage((p) => p - 1); window.scrollTo(0, 0); }}>← আগের</button>
+                    <span style={{ fontSize: 14 }}>পেজ {page} / {pages}</span>
+                    <button className="cat-chip" disabled={page >= pages || loading} onClick={() => { setPage((p) => p + 1); window.scrollTo(0, 0); }}>পরের →</button>
+                </div>
+            )}
         </div>
     );
 }

@@ -1,0 +1,48 @@
+# চালানো:  cp .env.docker.example .env.docker  (মান বসান)  →  docker compose --env-file .env.docker up -d --build
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    # replica set চালু — অর্ডারে transaction ব্যবহার করতে হলে লাগবে
+    command: ["--replSet", "rs0", "--bind_ip_all"]
+    volumes:
+      - mongo_data:/data/db
+    # ⚠️ কোনো ports: নেই — MongoDB ইন্টারনেটে খোলা থাকবে না, শুধু ভেতরের নেটওয়ার্কে
+    healthcheck:
+      test: >
+        mongosh --quiet --eval
+        "try { rs.status().ok } catch (e) { rs.initiate({_id:'rs0',members:[{_id:0,host:'mongo:27017'}]}).ok }"
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 15s
+
+  api:
+    build: ./backend
+    restart: unless-stopped
+    depends_on:
+      mongo:
+        condition: service_healthy
+    env_file: .env.docker
+    environment:
+      PORT: "5000"
+      MONGO_URI: mongodb://mongo:27017/tayyib_shop?replicaSet=rs0
+      TRUST_PROXY: "${TRUST_PROXY:-1}"
+      # অর্ডারে transaction চালু (উপরের MongoDB replica set হওয়ায় এটা নিরাপদ)
+      USE_TRANSACTIONS: "true"
+    expose:
+      - "5000"
+
+  web:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: /api
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "80:80"
+
+volumes:
+  mongo_data:
