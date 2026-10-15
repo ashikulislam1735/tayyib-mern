@@ -7,6 +7,7 @@ const CatalogContext = createContext({ categories: [], reloadImages: async () =>
 
 export function CatalogProvider({ children }) {
     const [products, setProducts] = useState([]);
+    const [light, setLight] = useState(null); // হালকা ক্যাটাগরি তালিকা (নতুন এন্ডপয়েন্ট)
     const [images, setImages] = useState({});
 
     const reloadImages = useCallback(async () => {
@@ -19,11 +20,15 @@ export function CatalogProvider({ children }) {
     }, []);
 
     useEffect(() => {
-        api.getProducts().then(setProducts).catch(() => {});
+        // নতুন হালকা এন্ডপয়েন্ট; পুরোনো সার্ভার হলে আগের মতো সব প্রোডাক্ট থেকে বানাবে
+        api.getCatalogCategories()
+            .then((list) => { if (Array.isArray(list)) setLight(list); else throw new Error('bad'); })
+            .catch(() => api.getProducts().then(setProducts).catch(() => {}));
         reloadImages();
     }, [reloadImages]);
 
     const categories = useMemo(() => {
+        if (light) return light.map((c) => ({ ...c, image: images[c.name] || '' }));
         const map = new Map();
         products.forEach((p) => {
             if (!map.has(p.category)) {
@@ -33,7 +38,7 @@ export function CatalogProvider({ children }) {
             if (p.subCategory) map.get(p.category).subs.add(p.subCategory);
         });
         return [...map.values()].map((c) => ({ ...c, subs: [...c.subs], image: images[c.name] || '' }));
-    }, [products, images]);
+    }, [light, products, images]);
 
     return <CatalogContext.Provider value={{ categories, reloadImages }}>{children}</CatalogContext.Provider>;
 }

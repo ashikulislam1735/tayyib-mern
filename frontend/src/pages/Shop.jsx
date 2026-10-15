@@ -3,13 +3,22 @@ import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { api } from '../api';
 import ProductGrid from '../components/ProductGrid';
 import HomeBanners from '../components/HomeBanners';
+import { useCatalog } from '../context/CatalogContext';
+
+const PAGE_SIZE = 20;
 
 export default function Shop() {
-    const [products, setProducts] = useState([]);
+    const [products, setProducts] = useState([]); // হোমে: প্রথম ১০টা; তালিকায়: এ পর্যন্ত আনা সব
+    const [total, setTotal] = useState(0);
+    const [page, setPage] = useState(1);
+    const [pages, setPages] = useState(1);
+    const [featured, setFeatured] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
     const [error, setError] = useState('');
     const [params, setParams] = useSearchParams();
     const { pathname } = useLocation();
+    const { categories } = useCatalog();
 
     const q = (params.get('q') || '').trim();
     const category = params.get('category') || '';
@@ -17,12 +26,29 @@ export default function Shop() {
     const isHome = pathname === '/' && !q && !category && !sub;
     const [topProducts, setTopProducts] = useState([]);
 
+    // ফিল্টার/পেজ বদলালে প্রথম পাতা নতুন করে আনে (পুরোনো রেসপন্স এলে বাদ)
     useEffect(() => {
-        api.getProducts()
-            .then(setProducts)
-            .catch((e) => setError(e.message))
-            .finally(() => setLoading(false));
-    }, []);
+        let cancelled = false;
+        setLoading(true);
+        setError('');
+        api.getProductsPage({ page: 1, limit: isHome ? 10 : PAGE_SIZE, category, sub, q })
+            .then((r) => {
+                if (cancelled) return;
+                setProducts(r.items);
+                setTotal(r.total);
+                setPage(1);
+                setPages(r.pages);
+            })
+            .catch((e) => !cancelled && setError(e.message))
+            .finally(() => !cancelled && setLoading(false));
+        return () => { cancelled = true; };
+    }, [isHome, category, sub, q]);
+
+    // হোমের "Featured" সেকশন
+    useEffect(() => {
+        if (!isHome) return;
+        api.getProductsPage({ page: 1, limit: 10, featured: true }).then((r) => setFeatured(r.items)).catch(() => {});
+    }, [isHome]);
 
     // সেরা বিক্রিত (গত ৩০ দিনের বিক্রি থেকে) — বিক্রি না থাকলে সেকশন লুকানো থাকে
     useEffect(() => {
@@ -30,22 +56,25 @@ export default function Shop() {
         api.getTopProducts(6).then(setTopProducts).catch(() => {});
     }, [pathname]);
 
-    const featured = useMemo(() => products.filter((p) => p.featured).slice(0, 10), [products]);
+    async function loadMore() {
+        setLoadingMore(true);
+        try {
+            const r = await api.getProductsPage({ page: page + 1, limit: PAGE_SIZE, category, sub, q });
+            setProducts((prev) => {
+                const seen = new Set(prev.map((p) => p._id));
+                return [...prev, ...r.items.filter((p) => !seen.has(p._id))];
+            });
+            setPage(page + 1);
+            setPages(r.pages);
+            setTotal(r.total);
+        } catch (e) {
+            setError(e.message);
+        } finally {
+            setLoadingMore(false);
+        }
+    }
 
-    const subs = useMemo(
-        () => [...new Set(products.filter((p) => p.category === category && p.subCategory).map((p) => p.subCategory))],
-        [products, category]
-    );
-
-    const filtered = useMemo(() => {
-        const term = q.toLowerCase();
-        return products.filter((p) => {
-            if (category && p.category !== category) return false;
-            if (sub && p.subCategory !== sub) return false;
-            if (!term) return true;
-            return [p.title, p.category, p.description].join(' ').toLowerCase().includes(term);
-        });
-    }, [products, q, category, sub]);
+    const subs = useMemo(() => categories.find((c) => c.name === category)?.subs || [], [categories, category]);
 
     function setSub(value) {
         const next = new URLSearchParams(params);
@@ -55,8 +84,8 @@ export default function Shop() {
     }
 
     if (loading) return <p className="status-msg">Loading...</p>;
-    if (error) return <p className="status-msg error">{error || 'Something went wrong.'} Please try again in a moment.</p>;
-    if (products.length === 0) return <p className="status-msg">No products available yet. Please check back soon.</p>;
+    if (error && products.length === 0) return <p className="status-msg error">{error || 'Something went wrong.'} Please try again in a moment.</p>;
+    if (isHome && total === 0) return <p className="status-msg">No products available yet. Please check back soon.</p>;
 
     if (isHome) {
         return (
@@ -88,8 +117,8 @@ export default function Shop() {
                         <span className="section-eyebrow">Our Collection</span>
                         <h2 className="section-title">All Products</h2>
                     </div>
-                    <ProductGrid products={products.slice(0, 10)} />
-                    {products.length > 10 && (
+                    <ProductGrid products={products} />
+                    {total > 10 && (
                         <div className="show-all"><Link to="/products">View All Products →</Link></div>
                     )}
                 </section>
@@ -110,14 +139,23 @@ export default function Shop() {
 
             {(q || category || sub) && (
                 <p className="result-note">
-                    {q ? `Results for “${q}”: ` : ''}{filtered.length} {filtered.length === 1 ? 'product' : 'products'}{' '}
+                    {q ? `Results for “${q}”: ` : ''}{total} {total === 1 ? 'product' : 'products'}{' '}
                     <button className="link-btn" onClick={() => setParams({})}>View All</button>
                 </p>
             )}
 
-            {filtered.length === 0
+            {products.length === 0
                 ? <p className="status-msg">No products found. Try searching for something else.</p>
-                : <ProductGrid products={filtered} />}
+                : <ProductGrid products={products} />}
+
+            {page < pages && (
+                <div className="show-all">
+                    <button className="btn-primary" onClick={loadMore} disabled={loadingMore}>
+                        {loadingMore ? 'Loading...' : `আরও দেখুন (${products.length}/${total})`}
+                    </button>
+                </div>
+            )}
+            {error && products.length > 0 && <p className="status-msg error">{error}</p>}
         </>
     );
 }

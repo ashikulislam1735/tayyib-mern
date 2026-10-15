@@ -17,6 +17,14 @@ router.get('/', async (req, res) => {
         if (req.query.page !== undefined) {
             const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 20, 1), 100);
             const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+            // পেজ ধরে আনার সময় বাড়তি ফিল্টারও চলে: ?sub=সাব-ক্যাটাগরি &featured=true &q=খোঁজার-শব্দ
+            if (req.query.sub) filter.subCategory = String(req.query.sub);
+            if (req.query.featured === 'true') filter.featured = true;
+            const q = String(req.query.q || '').trim().slice(0, 100);
+            if (q) {
+                const rx = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+                filter.$or = [{ title: rx }, { category: rx }, { description: rx }];
+            }
             const [items, total] = await Promise.all([
                 Product.find(filter).select('-variants.costPrice').sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit),
                 Product.countDocuments(filter),
@@ -28,6 +36,27 @@ router.get('/', async (req, res) => {
         res.json(products);
     } catch (err) {
         res.status(500).json({ error: 'Could not load products' });
+    }
+});
+
+// GET /api/products/categories — হেডারের মেনুর জন্য হালকা তালিকা: ক্যাটাগরি, আইকন, সংখ্যা, সাব-ক্যাটাগরি
+// (আগে সাইট মেনু বানাতে সব প্রোডাক্ট টেনে আনত। এখন শুধু এই ছোট তালিকা আসে।)
+// ক্রম আর আইকন আগের মতোই: যে ক্যাটাগরির নতুন প্রোডাক্ট আগে, সেটা আগে; আইকন সেই ক্যাটাগরির সবচেয়ে নতুন প্রোডাক্টের।
+router.get('/categories', async (req, res) => {
+    try {
+        const rows = await Product.aggregate([
+            { $sort: { createdAt: -1 } },
+            { $group: { _id: '$category', icon: { $first: '$icon' }, count: { $sum: 1 }, newest: { $first: '$createdAt' }, subs: { $push: '$subCategory' } } },
+            { $sort: { newest: -1 } },
+        ]);
+        res.json(rows.map((r) => ({
+            name: r._id,
+            icon: r.icon,
+            count: r.count,
+            subs: [...new Set(r.subs.filter(Boolean))],
+        })));
+    } catch (err) {
+        res.status(500).json({ error: 'Could not load categories' });
     }
 });
 

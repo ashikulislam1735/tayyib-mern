@@ -42,6 +42,17 @@ export const api = {
     updateCosts: (data) => request('/settings/costs', { method: 'PUT', body: JSON.stringify(data) }),
     getAdminProducts: () => request('/products/admin/list'),
     getTopProducts: (limit = 6) => request(`/products/top?limit=${limit}`),
+    // পেজ ধরে প্রোডাক্ট: { items, total, page, pages } — গ্রাহকের তালিকার জন্য
+    getProductsPage: ({ page = 1, limit = 20, category = '', sub = '', q = '', featured = false } = {}) => {
+        const qs = new URLSearchParams({ page: String(page), limit: String(limit) });
+        if (category) qs.set('category', category);
+        if (sub) qs.set('sub', sub);
+        if (q) qs.set('q', q);
+        if (featured) qs.set('featured', 'true');
+        return request(`/products?${qs.toString()}`);
+    },
+    // হেডারের মেনুর জন্য হালকা ক্যাটাগরি তালিকা
+    getCatalogCategories: () => request('/products/categories'),
     getProducts: (category) => request(category ? `/products?category=${encodeURIComponent(category)}` : '/products'),
     createOrder: (payload) => request('/orders', { method: 'POST', body: JSON.stringify(payload) }),
     // অসম্পূর্ণ অর্ডার: গ্রাহকের দিক থেকে কার্ট সেভ (লগইন লাগে না)
