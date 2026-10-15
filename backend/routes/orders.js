@@ -8,6 +8,7 @@ import AbandonedCart from '../models/AbandonedCart.js';
 import { attachRisk } from '../utils/risk.js';
 import { checkCoupon, claimCoupon, releaseCoupon } from '../utils/coupon.js';
 import { requireAdmin } from '../middleware/auth.js';
+import { useTransactions } from '../utils/txn.js';
 
 const router = express.Router();
 
@@ -80,6 +81,16 @@ router.post('/', async (req, res) => {
         const orderItems = [];
         const wanted = [];
         const productCache = new Map();
+
+        // সব প্রোডাক্ট একবারেই আনা (আগে প্রতিটার জন্য আলাদা query হতো)। নিচের লুপ আগের মতোই যাচাই করে।
+        const wantedIds = [...new Set(items
+            .filter((i) => i && mongoose.isValidObjectId(i.productId) && mongoose.isValidObjectId(i.variantId))
+            .map((i) => String(i.productId)))];
+        if (wantedIds.length > 0) {
+            wantedIds.forEach((id) => productCache.set(id, null)); // না পাওয়া গেলে null → "আর নেই" বার্তা
+            const found = await Product.find({ _id: { $in: wantedIds } }).lean();
+            found.forEach((p) => productCache.set(String(p._id), p));
+        }
 
         for (const cartItem of items) {
             if (!cartItem || !mongoose.isValidObjectId(cartItem.productId) || !mongoose.isValidObjectId(cartItem.variantId)) {
@@ -156,7 +167,7 @@ router.post('/', async (req, res) => {
         };
         let order;
 
-        if (process.env.USE_TRANSACTIONS === 'true') {
+        if (useTransactions()) {
             // ── Transaction মোড (MongoDB replica set লাগে; Atlas ও docker-compose-এ আছে) ──
             // কুপন গোনা + স্টক কমানো + অর্ডার সেভ — তিনটাই একসাথে হয়, নয়তো কিছুই হয় না।
             // মাঝপথে সার্ভার মরে গেলেও স্টক বা কুপন হারায় না।

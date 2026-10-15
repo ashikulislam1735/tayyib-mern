@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import Stars from './Stars';
+import { webp } from '../utils/cloudinary';
 
 function isDiscounted(v) {
     return Boolean(v.originalPrice && v.originalPrice > v.price);
@@ -38,7 +39,7 @@ function ProductCard({ p, layout, preferOffer }) {
     return (
         <div className={`pcard ${layout === 'row' ? 'row' : ''}`}>
             <Link to={`/product/${p._id}`} className="pcard-media">
-                {p.images && p.images[0] ? <img src={p.images[0]} alt={p.title} loading="lazy" /> : p.icon}
+                {p.images && p.images[0] ? <img src={webp(p.images[0], 600)} alt={p.title} loading="lazy" decoding="async" /> : p.icon}
                 {hasDiscount && <span className="discount-badge">-{percent}%</span>}
             </Link>
 

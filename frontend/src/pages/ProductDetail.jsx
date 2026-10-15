@@ -1,3 +1,4 @@
+import { webp } from '../utils/cloudinary';
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { api } from '../api';
@@ -111,13 +112,13 @@ export default function ProductDetail() {
             <div className="product-detail">
                 <div>
                     <div className="gallery-main">
-                        {images.length > 0 ? <img src={images[imgIdx]} alt={product.title} /> : <span>{product.icon}</span>}
+                        {images.length > 0 ? <img src={webp(images[imgIdx], 1000)} alt={product.title} decoding="async" /> : <span>{product.icon}</span>}
                     </div>
                     {images.length > 1 && (
                         <div className="gallery-thumbs">
                             {images.map((url, i) => (
                                 <button key={url} className={i === imgIdx ? 'active' : ''} onClick={() => setImgIdx(i)}>
-                                    <img src={url} alt="" />
+                                    <img src={webp(url, 160)} alt="" loading="lazy" decoding="async" />
                                 </button>
                             ))}
                         </div>

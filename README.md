@@ -21,7 +21,9 @@ copy .env.example .env
 `.env` ফাইল খুলে `MONGO_URI` এ আপনার MongoDB-র ঠিকানা বসান, আর `JWT_SECRET` এ যেকোনো লম্বা এলোমেলো লেখা বসান (যেমন ৩০-৪০ অক্ষরের র‍্যান্ডম স্ট্রিং), তারপর:
 ```
 npm install
-npm run seed         (একবারই — ডেমো প্রোডাক্ট ঢুকবে)
+npm run seed         (/content/honey-products.json থেকে ১০টা মধু ও খেজুরের প্রোডাক্ট ঢুকবে। নিরাপদ: আগে থেকে থাকা প্রোডাক্ট ছোঁয়া হয় না, শুধু নতুনগুলো যোগ হয়)
+                     (মধু/খেজুর ছাড়া অন্য প্রোডাক্ট মুছতে: `node seed.js --prune` দেখাবে, `node seed.js --prune --yes` মুছবে)
+                     (Docker-এ চালাতে: `docker compose run --rm -v ./content:/content:ro -e CONTENT_FILE=/content/honey-products.json api node seed.js`)
 npm run seed:admin   (একবারই — অ্যাডমিন ইউজার তৈরি হবে: ইউজারনেম `.env`-এর SEED_ADMIN_USERNAME, পাসওয়ার্ড `.env`-এর SEED_ADMIN_PASSWORD — নিজের মজবুত পাসওয়ার্ড বসান)
 npm run dev          (সার্ভার চালু থাকবে, এই উইন্ডো খোলা রাখুন)
 ```

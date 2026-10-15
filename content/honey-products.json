@@ -1,0 +1,272 @@
+[
+  {
+    "title": "Sundarban Honey",
+    "category": "মধু",
+    "subCategory": "",
+    "icon": "🍯",
+    "featured": true,
+    "shortDescription": "সুন্দরবনের খাঁটি মধু",
+    "description": "সুন্দরবনের গহীন থেকে সংগ্রহ করা ১০০% খাঁটি মধু।",
+    "images": [],
+    "videoUrl": "",
+    "variants": [
+      {
+        "label": "৫০০ গ্রাম",
+        "price": 850,
+        "originalPrice": 950,
+        "stock": 35,
+        "costPrice": 0
+      },
+      {
+        "label": "১ কেজি",
+        "price": 1600,
+        "originalPrice": 1800,
+        "stock": 20,
+        "costPrice": 0
+      }
+    ]
+  },
+  {
+    "title": "Kalojira Honey",
+    "category": "মধু",
+    "subCategory": "",
+    "icon": "🍯",
+    "featured": true,
+    "shortDescription": "কালোজিরা ফুলের মধু",
+    "description": "কালোজিরা ফুলের মৌসুমে সংগ্রহ করা ঘন ও সুগন্ধি মধু।",
+    "images": [],
+    "videoUrl": "",
+    "variants": [
+      {
+        "label": "৫০০ গ্রাম",
+        "price": 750,
+        "originalPrice": 850,
+        "stock": 40,
+        "costPrice": 0
+      },
+      {
+        "label": "১ কেজি",
+        "price": 1450,
+        "originalPrice": 1600,
+        "stock": 25,
+        "costPrice": 0
+      }
+    ]
+  },
+  {
+    "title": "Litchi Honey",
+    "category": "মধু",
+    "subCategory": "",
+    "icon": "🍯",
+    "featured": false,
+    "shortDescription": "লিচু ফুলের মধু",
+    "description": "লিচু বাগানের ফুল থেকে সংগ্রহ করা হালকা মিষ্টি মধু।",
+    "images": [],
+    "videoUrl": "",
+    "variants": [
+      {
+        "label": "৫০০ গ্রাম",
+        "price": 700,
+        "originalPrice": 780,
+        "stock": 30,
+        "costPrice": 0
+      },
+      {
+        "label": "১ কেজি",
+        "price": 1350,
+        "originalPrice": 1500,
+        "stock": 20,
+        "costPrice": 0
+      }
+    ]
+  },
+  {
+    "title": "Mustard Honey",
+    "category": "মধু",
+    "subCategory": "",
+    "icon": "🍯",
+    "featured": false,
+    "shortDescription": "সরিষা ফুলের মধু",
+    "description": "সরিষা ক্ষেতের ফুল থেকে সংগ্রহ করা ক্রিমি স্বাদের মধু।",
+    "images": [],
+    "videoUrl": "",
+    "variants": [
+      {
+        "label": "৫০০ গ্রাম",
+        "price": 600,
+        "originalPrice": 680,
+        "stock": 45,
+        "costPrice": 0
+      },
+      {
+        "label": "১ কেজি",
+        "price": 1150,
+        "originalPrice": 1300,
+        "stock": 30,
+        "costPrice": 0
+      }
+    ]
+  },
+  {
+    "title": "Sidr Honey",
+    "category": "মধু",
+    "subCategory": "",
+    "icon": "🍯",
+    "featured": false,
+    "shortDescription": "কুলের (সিদর) মধু",
+    "description": "কুল গাছের ফুল থেকে সংগ্রহ করা প্রিমিয়াম মধু।",
+    "images": [],
+    "videoUrl": "",
+    "variants": [
+      {
+        "label": "৫০০ গ্রাম",
+        "price": 1800,
+        "originalPrice": 2000,
+        "stock": 15,
+        "costPrice": 0
+      },
+      {
+        "label": "১ কেজি",
+        "price": 3500,
+        "originalPrice": 3900,
+        "stock": 10,
+        "costPrice": 0
+      }
+    ]
+  },
+  {
+    "title": "Ajwa Dates",
+    "category": "খেজুর",
+    "subCategory": "",
+    "icon": "🌴",
+    "featured": true,
+    "shortDescription": "সৌদি আজওয়া খেজুর",
+    "description": "মদিনার বিখ্যাত আজওয়া খেজুর, প্রিমিয়াম মানের।",
+    "images": [],
+    "videoUrl": "",
+    "variants": [
+      {
+        "label": "৫০০ গ্রাম",
+        "price": 1200,
+        "originalPrice": 1350,
+        "stock": 25,
+        "costPrice": 0
+      },
+      {
+        "label": "১ কেজি",
+        "price": 2300,
+        "originalPrice": 2600,
+        "stock": 15,
+        "costPrice": 0
+      }
+    ]
+  },
+  {
+    "title": "Mariyam Dates",
+    "category": "খেজুর",
+    "subCategory": "",
+    "icon": "🌴",
+    "featured": true,
+    "shortDescription": "মরিয়ম খেজুর",
+    "description": "নরম ও মিষ্টি মরিয়ম খেজুর, প্রতিদিনের জন্য।",
+    "images": [],
+    "videoUrl": "",
+    "variants": [
+      {
+        "label": "৫০০ গ্রাম",
+        "price": 1000,
+        "originalPrice": 1100,
+        "stock": 30,
+        "costPrice": 0
+      },
+      {
+        "label": "১ কেজি",
+        "price": 1900,
+        "originalPrice": 2100,
+        "stock": 20,
+        "costPrice": 0
+      }
+    ]
+  },
+  {
+    "title": "Sukkari Dates",
+    "category": "খেজুর",
+    "subCategory": "",
+    "icon": "🌴",
+    "featured": false,
+    "shortDescription": "সুক্কারি খেজুর",
+    "description": "মিষ্টি স্বাদের নরম সুক্কারি খেজুর।",
+    "images": [],
+    "videoUrl": "",
+    "variants": [
+      {
+        "label": "৫০০ গ্রাম",
+        "price": 900,
+        "originalPrice": 1000,
+        "stock": 35,
+        "costPrice": 0
+      },
+      {
+        "label": "১ কেজি",
+        "price": 1700,
+        "originalPrice": 1900,
+        "stock": 20,
+        "costPrice": 0
+      }
+    ]
+  },
+  {
+    "title": "Medjool Dates",
+    "category": "খেজুর",
+    "subCategory": "",
+    "icon": "🌴",
+    "featured": false,
+    "shortDescription": "মেজদুল খেজুর",
+    "description": "বড় আকারের, নরম ও রসালো মেজদুল খেজুর।",
+    "images": [],
+    "videoUrl": "",
+    "variants": [
+      {
+        "label": "৫০০ গ্রাম",
+        "price": 1500,
+        "originalPrice": 1650,
+        "stock": 20,
+        "costPrice": 0
+      },
+      {
+        "label": "১ কেজি",
+        "price": 2900,
+        "originalPrice": 3200,
+        "stock": 12,
+        "costPrice": 0
+      }
+    ]
+  },
+  {
+    "title": "Safawi Dates",
+    "category": "খেজুর",
+    "subCategory": "",
+    "icon": "🌴",
+    "featured": false,
+    "shortDescription": "সাফাভি খেজুর",
+    "description": "কালচে রঙের নরম ও কম মিষ্টি সাফাভি খেজুর।",
+    "images": [],
+    "videoUrl": "",
+    "variants": [
+      {
+        "label": "৫০০ গ্রাম",
+        "price": 950,
+        "originalPrice": 1050,
+        "stock": 30,
+        "costPrice": 0
+      },
+      {
+        "label": "১ কেজি",
+        "price": 1800,
+        "originalPrice": 2000,
+        "stock": 18,
+        "costPrice": 0
+      }
+    ]
+  }
+]

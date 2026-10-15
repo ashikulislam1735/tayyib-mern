@@ -4,6 +4,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import mongoose from 'mongoose';
 import { connectDB } from './config/db.js';
+import { detectTransactions } from './utils/txn.js';
 import productRoutes from './routes/products.js';
 import orderRoutes from './routes/orders.js';
 import authRoutes from './routes/auth.js';
@@ -125,7 +126,7 @@ process.on('unhandledRejection', (reason) => {
 
 const PORT = process.env.PORT || 5000;
 
-connectDB().then(() => {
+connectDB().then(() => detectTransactions()).then(() => {
     const server = app.listen(PORT, () => {
         console.log(`🚀 সার্ভার চলছে: http://localhost:${PORT}`);
     });

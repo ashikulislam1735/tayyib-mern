@@ -193,7 +193,7 @@ export default function AdminProducts() {
                             <div className="order-line" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
                                 <strong style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                     {p.images && p.images[0]
-                                        ? <img src={p.images[0]} alt="" style={{ width: 40, height: 40, borderRadius: 6, objectFit: 'cover' }} />
+                                        ? <img src={p.images[0]} alt="" loading="lazy" style={{ width: 40, height: 40, borderRadius: 6, objectFit: 'cover' }} />
                                         : p.icon}
                                     {p.title}
                                 </strong>
@@ -252,7 +252,7 @@ export default function AdminProducts() {
                         <div className="image-gallery-preview">
                             {form.images.map((url, i) => (
                                 <div className="gallery-thumb" key={url}>
-                                    <img src={url} alt="" />
+                                    <img src={url} alt="" loading="lazy" />
                                     <button type="button" onClick={() => removeImage(i)}>✕</button>
                                 </div>
                             ))}

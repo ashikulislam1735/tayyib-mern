@@ -3,6 +3,7 @@ import multer from 'multer';
 import streamifier from 'streamifier';
 import cloudinary from '../config/cloudinary.js';
 import { requireAdmin } from '../middleware/auth.js';
+import { optimizeUpload } from '../utils/image.js';
 
 const router = express.Router();
 
@@ -31,13 +32,23 @@ router.post('/', requireAdmin, (req, res) => {
 
         const isVideo = req.file.mimetype.startsWith('video/');
 
+        // ছবি হলে WebP-তে বদলে ২০০ KB-এর নিচে আনা হয় (ভিডিও যেমন আছে তেমন)
+        let fileBuffer = req.file.buffer;
+        if (!isVideo) {
+            try {
+                fileBuffer = (await optimizeUpload(req.file.buffer, req.file.mimetype)).buffer;
+            } catch {
+                return res.status(400).json({ error: 'ছবিটা পড়া বা ছোট করা যায়নি। অন্য একটা ছবি দিন।' });
+            }
+        }
+
         try {
             const result = await new Promise((resolve, reject) => {
                 const stream = cloudinary.uploader.upload_stream(
                     { folder: 'tayyib-shop', resource_type: isVideo ? 'video' : 'image' },
                     (error, result) => (error ? reject(error) : resolve(result))
                 );
-                streamifier.createReadStream(req.file.buffer).pipe(stream);
+                streamifier.createReadStream(fileBuffer).pipe(stream);
             });
             res.json({ url: result.secure_url, type: isVideo ? 'video' : 'image' });
         } catch (e) {

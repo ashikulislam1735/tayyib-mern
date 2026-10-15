@@ -88,8 +88,8 @@ export default function Shop() {
                         <span className="section-eyebrow">Our Collection</span>
                         <h2 className="section-title">All Products</h2>
                     </div>
-                    <ProductGrid products={products.slice(0, 8)} />
-                    {products.length > 8 && (
+                    <ProductGrid products={products.slice(0, 10)} />
+                    {products.length > 10 && (
                         <div className="show-all"><Link to="/products">View All Products →</Link></div>
                     )}
                 </section>
