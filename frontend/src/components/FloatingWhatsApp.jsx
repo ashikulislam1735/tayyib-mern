@@ -1,4 +1,5 @@
 import { useSite } from '../context/SiteContext';
+import { track } from '../lib/track';
 
 // পেজের নিচের ডান কোণে ভাসমান WhatsApp বাটন।
 // সাইট সেটিংসে whatsapp নম্বর না থাকলে এটা দেখানো হয় না।
@@ -13,6 +14,7 @@ export default function FloatingWhatsApp() {
             href={`https://wa.me/${number}`}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => track('Contact', { content_name: 'whatsapp' })}
             aria-label="Message us on WhatsApp"
         >
             💬 <span>WhatsApp</span>

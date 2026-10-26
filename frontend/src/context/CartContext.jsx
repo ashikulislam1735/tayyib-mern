@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react';
+import { track } from '../lib/track';
 
 const CartContext = createContext(null);
 
@@ -26,6 +27,8 @@ export function CartProvider({ children }) {
     }, [items]);
 
     function addToCart(product, variant) {
+        // Pixel/GA4: কার্টে যোগ (setItems এর বাইরে, নইলে StrictMode এ দুবার যেত)
+        track('AddToCart', { content_ids: [product._id], content_name: product.title, content_type: 'product', value: variant.price, currency: 'BDT' });
         setItems((prev) => {
             const existing = prev.find(
                 (i) => i.productId === product._id && i.variantId === variant._id

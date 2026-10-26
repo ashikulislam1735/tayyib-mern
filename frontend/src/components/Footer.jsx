@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { track } from '../lib/track';
 import { useSite } from '../context/SiteContext';
 
 function socialHref(key, value) {
@@ -35,8 +36,8 @@ export default function Footer() {
                             <p>Orders, products or delivery — talk to us directly</p>
                         </div>
                         <div className="footer-cta-btns">
-                            {phone && <a className="fcta-solid" href={`tel:${phone}`}>{ICONS.phone} {phone}</a>}
-                            {waNumber && <a className="fcta-line" href={`https://wa.me/${waNumber}`} target="_blank" rel="noopener noreferrer">{ICONS.whatsapp} WhatsApp</a>}
+                            {phone && <a className="fcta-solid" href={`tel:${phone}`} onClick={() => track('Contact', { content_name: 'phone' })}>{ICONS.phone} {phone}</a>}
+                            {waNumber && <a className="fcta-line" href={`https://wa.me/${waNumber}`} onClick={() => track('Contact', { content_name: 'whatsapp' })} target="_blank" rel="noopener noreferrer">{ICONS.whatsapp} WhatsApp</a>}
                         </div>
                     </div>
                 </div>
@@ -78,7 +79,7 @@ export default function Footer() {
                     <h4>Help</h4>
                     <ul className="footer-list">
                         <li><Link to="/track">Track Order</Link></li>
-                        {waNumber && <li><a href={`https://wa.me/${waNumber}`} target="_blank" rel="noopener noreferrer">Ask on WhatsApp</a></li>}
+                        {waNumber && <li><a href={`https://wa.me/${waNumber}`} onClick={() => track('Contact', { content_name: 'whatsapp' })} target="_blank" rel="noopener noreferrer">Ask on WhatsApp</a></li>}
                     </ul>
                 </div>
 
@@ -86,7 +87,7 @@ export default function Footer() {
                     <div>
                         <h4>Contact</h4>
                         <ul className="footer-list footer-contact">
-                            {phone && <li>{ICONS.phone}<a href={`tel:${phone}`}><strong>{phone}</strong></a></li>}
+                            {phone && <li>{ICONS.phone}<a href={`tel:${phone}`} onClick={() => track('Contact', { content_name: 'phone' })}><strong>{phone}</strong></a></li>}
                             {email && <li>{ICONS.mail}<a href={`mailto:${email}`}>{email}</a></li>}
                             {address && <li>{ICONS.pin}<span>{address}</span></li>}
                             {openHours && <li>{ICONS.clock}<span>{openHours}</span></li>}

@@ -9,8 +9,13 @@ import { attachRisk } from '../utils/risk.js';
 import { checkCoupon, claimCoupon, releaseCoupon } from '../utils/coupon.js';
 import { requireAdmin } from '../middleware/auth.js';
 import { useTransactions } from '../utils/txn.js';
+import { sendPurchase } from '../utils/capi.js';
+import { sendPurchase as sendGa4Purchase } from '../utils/ga4.js';
 
 const router = express.Router();
+
+// ট্র্যাকিংয়ের জন্য ব্রাউজার থেকে আসা মান: শুধু স্ট্রিং, সীমা মেনে (অন্য কিছু এলে বাদ)
+const trackStr = (v, max) => (typeof v === 'string' && v.length <= max ? v : undefined);
 
 // transaction-এর ভেতরে অর্ডার আটকাতে (স্টক নেই/কুপন শেষ) — এটা ছুড়লে transaction বাতিল হয়ে ক্লায়েন্টকে 400 যায়
 class OrderRejected extends Error {}
@@ -230,6 +235,15 @@ router.post('/', async (req, res) => {
         } catch (e) {
             console.error('অসম্পূর্ণ কার্ট আপডেট করা যায়নি:', e.message);
         }
+
+        // ব্যাকগ্রাউন্ডে Facebook (CAPI) ও GA4 তে Purchase। কাস্টমারকে অপেক্ষা করানো হয় না, ব্যর্থ হলেও অর্ডার আটকায় না।
+        sendPurchase({
+            order, ip: req.ip, ua: req.headers['user-agent'],
+            fbp: trackStr(req.body.fbp, 200), fbc: trackStr(req.body.fbc, 300), sourceUrl: trackStr(req.body.sourceUrl, 500),
+        }).catch((e) => console.error('CAPI Purchase ব্যর্থ:', e.message));
+        sendGa4Purchase({
+            order, gaClientId: trackStr(req.body.gaClientId, 100), gaSessionId: trackStr(req.body.gaSessionId, 30),
+        }).catch((e) => console.error('GA4 purchase ব্যর্থ:', e.message));
 
         // ক্রয়মূল্য কাস্টমারকে পাঠানো হয় না
         const publicOrder = order.toObject();

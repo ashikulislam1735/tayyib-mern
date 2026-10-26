@@ -6,6 +6,7 @@ import { useCart } from '../context/CartContext';
 import { useSite } from '../context/SiteContext';
 import Stars from '../components/Stars';
 import Reviews from '../components/Reviews';
+import { track } from '../lib/track';
 
 // YouTube লিংক (watch?v= / youtu.be / embed) থেকে এমবেডযোগ্য URL বানানো
 function getEmbedUrl(url) {
@@ -42,6 +43,19 @@ export default function ProductDetail() {
         setQty(1);
         api.getProduct(id).then(setProduct).catch((e) => setError(e.message));
     }, [id]);
+
+    // Pixel/GA4: প্রোডাক্ট দেখা (ViewContent)
+    useEffect(() => {
+        if (!product) return;
+        const prices = (product.variants || []).map((v) => v.price).filter((n) => n > 0);
+        track('ViewContent', {
+            content_name: product.title,
+            content_type: 'product',
+            content_ids: [product._id],
+            value: prices.length ? Math.min(...prices) : 0,
+            currency: 'BDT',
+        });
+    }, [product?._id]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // "কার্টে যোগ হয়েছে" লেখা ২ সেকেন্ড পর মুছে যায়
     useEffect(() => {
@@ -187,9 +201,9 @@ export default function ProductDetail() {
                         <button className="btn-pd order" disabled={soldOut} onClick={handleOrderNow}>Order Now</button>
                         <button className="btn-pd cart" disabled={soldOut} onClick={handleAddToCart}>🛒 Add to Cart</button>
                         {waNumber && (
-                            <a className="btn-pd wa" href={`https://wa.me/${waNumber}?text=${encodeURIComponent(waText)}`} target="_blank" rel="noopener noreferrer">💬 Order on WhatsApp</a>
+                            <a className="btn-pd wa" href={`https://wa.me/${waNumber}?text=${encodeURIComponent(waText)}`} target="_blank" rel="noopener noreferrer" onClick={() => track('Contact', { content_name: 'whatsapp' })}>💬 Order on WhatsApp</a>
                         )}
-                        {phone && <a className="btn-pd call" href={`tel:${phone}`}>📞 Call for Order</a>}
+                        {phone && <a className="btn-pd call" href={`tel:${phone}`} onClick={() => track('Contact', { content_name: 'phone' })}>📞 Call for Order</a>}
                     </div>
                     {added && <p className="pd-added">✓ Added to cart</p>}
 

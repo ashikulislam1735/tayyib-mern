@@ -1,6 +1,7 @@
 import { lazy, Suspense, useState } from 'react';
 import { Routes, Route, Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { CartProvider, useCart } from './context/CartContext';
+import { track } from './lib/track';
 import { AuthProvider } from './context/AuthContext';
 import { CatalogProvider } from './context/CatalogContext';
 import { SiteProvider } from './context/SiteContext';
@@ -61,7 +62,7 @@ function Header({ onCartClick }) {
 
                 <div className="header-actions">
                     {siteConfig.phone && (
-                        <a className="hdr-btn" href={`tel:${siteConfig.phone}`}>📞 <span>Call</span></a>
+                        <a className="hdr-btn" href={`tel:${siteConfig.phone}`} onClick={() => track('Contact', { content_name: 'phone' })}>📞 <span>Call</span></a>
                     )}
                     <Link className="hdr-btn" to="/track">📦 <span>Track</span></Link>
                     <button className="cart-btn" onClick={onCartClick}>

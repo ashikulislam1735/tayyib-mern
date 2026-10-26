@@ -1,8 +1,9 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { api } from '../api';
 import { useSite } from '../context/SiteContext';
+import { cartData, gaClientId, gaSessionId, getCookie, track } from '../lib/track';
 
 export default function Checkout() {
     const { items, subtotal, clearCart } = useCart();
@@ -17,6 +18,15 @@ export default function Checkout() {
     const [couponMsg, setCouponMsg] = useState('');
     const [couponBusy, setCouponBusy] = useState(false);
     const lastSaved = useRef(''); // একই কার্ট বারবার সার্ভারে না পাঠানোর জন্য
+    const leadEvt = useRef(''); // Lead ইভেন্টের আইডি (Pixel ও সার্ভার CAPI একই আইডি ব্যবহার করে)
+    const startedCheckout = useRef(false);
+
+    // চেকআউট পেজ প্রথমবার খুললে InitiateCheckout (একবারই)
+    useEffect(() => {
+        if (startedCheckout.current || items.length === 0) return;
+        startedCheckout.current = true;
+        track('InitiateCheckout', cartData(items));
+    }, [items.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const chargeOf = (v, d) => (Number.isFinite(Number(v)) ? Number(v) : d);
     const baseCharge = form.deliveryArea === 'outside'
@@ -43,15 +53,23 @@ export default function Checkout() {
     function saveCartQuietly() {
         const phone = form.phone.trim();
         if (!/^01[0-9]{9}$/.test(phone) || items.length === 0) return;
+        if (!leadEvt.current) leadEvt.current = 'lead_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
         const payload = {
             phone,
             customerName: form.customerName.trim(),
+            evt: leadEvt.current,
+            fbp: getCookie('_fbp'),
+            fbc: getCookie('_fbc'),
+            sourceUrl: window.location.href,
             items: items.map((i) => ({ productId: i.productId, variantId: i.variantId, quantity: i.quantity })),
         };
         const signature = JSON.stringify(payload);
         if (signature === lastSaved.current) return;
         lastSaved.current = signature;
-        api.saveAbandonedCart(payload).catch(() => { lastSaved.current = ''; });
+        // নতুন লিড হলে (সার্ভার fresh জানালে) Pixel এ Lead যায়; একই evt আইডিতে সার্ভারও CAPI Lead পাঠায়
+        api.saveAbandonedCart(payload)
+            .then((r) => { if (r && r.fresh) track('Lead', cartData(items), leadEvt.current); })
+            .catch(() => { lastSaved.current = ''; });
     }
 
     async function applyCoupon() {
@@ -83,6 +101,11 @@ export default function Checkout() {
         try {
             const payload = {
                 ...form,
+                fbp: getCookie('_fbp'),
+                fbc: getCookie('_fbc'),
+                gaClientId: gaClientId(),
+                gaSessionId: gaSessionId(),
+                sourceUrl: window.location.href,
                 couponCode: coupon ? coupon.code : undefined,
                 items: items.map((i) => ({
                     productId: i.productId,
@@ -91,8 +114,9 @@ export default function Checkout() {
                 })),
             };
             const order = await api.createOrder(payload);
+            const fb = cartData(items); // কার্ট খালি করার আগেই তথ্য রেখে দিই, Purchase ইভেন্টে লাগবে
             clearCart();
-            navigate(`/order-confirmed/${order._id}`);
+            navigate(`/order-confirmed/${order._id}`, { state: { total: order.total, fb } });
         } catch (err) {
             setError(err.message);
         } finally {

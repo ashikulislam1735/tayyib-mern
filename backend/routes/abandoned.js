@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import AbandonedCart from '../models/AbandonedCart.js';
 import Product from '../models/Product.js';
 import { requireAdmin } from '../middleware/auth.js';
+import { sendLead } from '../utils/capi.js';
 
 const router = express.Router();
 
@@ -95,13 +96,33 @@ router.post('/', async (req, res) => {
         if (customerName) set.customerName = customerName;
 
         // প্রতি ফোনে একটাই open/contacted কার্ট — না থাকলে নতুন বানাবে
-        await AbandonedCart.findOneAndUpdate(
+        const r = await AbandonedCart.findOneAndUpdate(
             { phone, status: { $in: ACTIVE } },
             { $set: set, $setOnInsert: { status: 'open' } },
-            { upsert: true },
+            { upsert: true, includeResultMetadata: true },
         );
 
-        res.json({ ok: true });
+        // নতুন লিড (আগে এই নম্বরের খোলা কার্ট ছিল না) হলেই Lead ইভেন্ট। fresh জানালে ব্রাউজারও Pixel এ পাঠায়,
+        // দুই জায়গায় একই evt আইডি, তাই Facebook একবারই গোনে।
+        const fresh = !(r && r.lastErrorObject && r.lastErrorObject.updatedExisting);
+        const evt = typeof body.evt === 'string' && /^[\w-]{1,60}$/.test(body.evt) ? body.evt : '';
+        if (fresh && evt) {
+            const str = (v, max) => (typeof v === 'string' && v.length <= max ? v : undefined);
+            sendLead({
+                eventId: evt,
+                phone,
+                name: customerName,
+                contents: items.map((i) => ({ id: String(i.productId), quantity: i.quantity, item_price: i.price })),
+                value: cartTotal,
+                ip: req.ip,
+                ua: req.headers['user-agent'],
+                fbp: str(body.fbp, 200),
+                fbc: str(body.fbc, 300),
+                sourceUrl: str(body.sourceUrl, 500),
+            }).catch((e) => console.error('CAPI Lead ব্যর্থ:', e.message));
+        }
+
+        res.json({ ok: true, fresh });
     } catch {
         res.status(500).json({ error: 'Could not save' });
     }

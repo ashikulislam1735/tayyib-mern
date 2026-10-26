@@ -38,6 +38,10 @@ services:
       context: ./frontend
       args:
         VITE_API_URL: /api
+        VITE_FB_PIXEL_ID: "${VITE_FB_PIXEL_ID:-}"
+        VITE_GA4_ID: "${VITE_GA4_ID:-}"
+        VITE_CLARITY_ID: "${VITE_CLARITY_ID:-}"
+        VITE_TIKTOK_PIXEL_ID: "${VITE_TIKTOK_PIXEL_ID:-}"
     restart: unless-stopped
     depends_on:
       - api
