@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { api } from '../api';
 import ProductGrid from '../components/ProductGrid';
+import { ProductGridSkeleton } from '../components/Skeleton';
 import HomeBanners from '../components/HomeBanners';
 import { useCatalog } from '../context/CatalogContext';
 
@@ -31,6 +32,12 @@ export default function Shop() {
         let cancelled = false;
         setLoading(true);
         setError('');
+        // নতুন খোঁজ/ফিল্টারে পুরোনো তালিকা আর সংখ্যা মুছে দেওয়া — নইলে
+        // লোডিং চলাকালীন এক মুহূর্তের জন্য আগের (ভুল) সংখ্যাটা দেখায়
+        setProducts([]);
+        setTotal(0);
+        setPage(1);
+        setPages(1);
         api.getProductsPage({ page: 1, limit: isHome ? 10 : PAGE_SIZE, category, sub, q })
             .then((r) => {
                 if (cancelled) return;
@@ -51,10 +58,11 @@ export default function Shop() {
     }, [isHome]);
 
     // সেরা বিক্রিত (গত ৩০ দিনের বিক্রি থেকে) — বিক্রি না থাকলে সেকশন লুকানো থাকে
+    // শুধু হোমেই আনা হয় — খোঁজের পেজে (?q=...) এটা দেখানো হয় না, তাই কলটাও বাদ
     useEffect(() => {
-        if (pathname !== '/') return;
+        if (!isHome) return;
         api.getTopProducts(6).then(setTopProducts).catch(() => {});
-    }, [pathname]);
+    }, [isHome]);
 
     async function loadMore() {
         setLoadingMore(true);
@@ -93,7 +101,12 @@ export default function Shop() {
             <>
                 <HomeBanners />
 
-                {loading && <p className="status-msg">Loading...</p>}
+                {loading && products.length === 0 && (
+                    <>
+                        <ProductGridSkeleton count={6} />
+                        <p className="slow-note">Waking up the server — this can take a few seconds on the first visit.</p>
+                    </>
+                )}
                 {error && products.length === 0 && <p className="status-msg error">{error}</p>}
 
                 {!loading && topProducts.length > 0 && (
@@ -143,7 +156,7 @@ export default function Shop() {
                 </div>
             )}
 
-            {(q || category || sub) && (
+            {(q || category || sub) && !loading && (
                 <p className="result-note">
                     {q ? `Results for “${q}”: ` : ''}{total} {total === 1 ? 'product' : 'products'}{' '}
                     <button className="link-btn" onClick={() => setParams({})}>View All</button>
@@ -151,7 +164,12 @@ export default function Shop() {
             )}
 
             {loading
-                ? <p className="status-msg">Loading...</p>
+                ? (
+                    <>
+                        <ProductGridSkeleton count={6} />
+                        <p className="slow-note">Waking up the server — this can take a few seconds on the first visit.</p>
+                    </>
+                )
                 : products.length === 0
                     ? <p className="status-msg">No products found. Try searching for something else.</p>
                     : <ProductGrid products={products} />}

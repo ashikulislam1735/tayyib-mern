@@ -1,0 +1,22 @@
+/* Round-2: লোডিং স্কেলেটন + স্টিকি ক্যাটাগরি স্ট্রিপের নিচে কনটেন্ট ঢাকা পড়া ঠেকানো।
+   main.jsx-এ index.css-এর পরে লোড হয়, তাই এখানকার নিয়মগুলো আগেরগুলোকে ছাপিয়ে যায়। */
+
+/* ---------- লোডিং স্কেলেটন ---------- */
+.skel { position: relative; overflow: hidden; background: #ece5d3; border-radius: 8px; }
+.skel::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent); animation: skel-shimmer 1.4s infinite; transform: translateX(-100%); }
+@keyframes skel-shimmer { to { transform: translateX(100%); } }
+.skel-media { aspect-ratio: 1 / 1; }
+.skel-gallery { aspect-ratio: 1 / 1; border-radius: 12px; }
+.skel-line { height: 14px; margin: 8px 0; }
+.skel-line.short { width: 60%; }
+.skel-line.tall { height: 28px; }
+.slow-note { text-align: center; color: var(--walnut-soft); font-size: 0.9rem; margin: 12px 0 0; }
+
+/* ---------- স্টিকি ক্যাটাগরি স্ট্রিপ ---------- */
+/* স্ট্রিপটা একটু চাপা করা হলো (বৃত্ত ৫৪px → ৪৪px), যাতে স্ক্রল করার সময়
+   নিচের প্রোডাক্টের দাম কম ঢাকা পড়ে। */
+.cat-strip-inner { padding: 8px 20px; gap: 14px; }
+.cat-circle { width: 44px; height: 44px; font-size: 1.35rem; }
+/* অ্যাঙ্কর/স্ক্রলে কনটেন্ট স্ট্রিপের নিচে থামে, তার আড়ালে নয়। */
+html { scroll-padding-top: 110px; }
+.pcard, .product-detail, .home-section, .page-title, .chip-row { scroll-margin-top: 110px; }

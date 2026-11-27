@@ -1,4 +1,4 @@
-import { webp } from '../utils/cloudinary';
+import { productImages, webp } from '../utils/cloudinary';
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { api } from '../api';
@@ -6,6 +6,7 @@ import { useCart } from '../context/CartContext';
 import { useSite } from '../context/SiteContext';
 import Stars from '../components/Stars';
 import Reviews from '../components/Reviews';
+import { ProductDetailSkeleton } from '../components/Skeleton';
 import { track } from '../lib/track';
 
 // YouTube লিংক (watch?v= / youtu.be / embed) থেকে এমবেডযোগ্য URL বানানো
@@ -24,6 +25,17 @@ function stockInfo(stock) {
     return { text: 'In Stock', cls: '' };
 }
 
+// গ্যালারির ছোট ছবি (থাম্ব): কোনোটা ভাঙা হলে সেটা শুধু লুকিয়ে যায়, পুরো গ্যালারি ভাঙে না
+function GalleryThumb({ url, active, onClick }) {
+    const [failed, setFailed] = useState(false);
+    if (failed) return null;
+    return (
+        <button className={active ? 'active' : ''} onClick={onClick}>
+            <img src={webp(url, 160)} alt="" loading="lazy" decoding="async" onError={() => setFailed(true)} />
+        </button>
+    );
+}
+
 export default function ProductDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -34,12 +46,14 @@ export default function ProductDetail() {
     const [error, setError] = useState('');
     const [vIdx, setVIdx] = useState(0);
     const [imgIdx, setImgIdx] = useState(0);
+    const [imgFailed, setImgFailed] = useState(false);
     const [qty, setQty] = useState(1);
     const [added, setAdded] = useState(false);
 
     useEffect(() => {
         setVIdx(0);
         setImgIdx(0);
+        setImgFailed(false);
         setQty(1);
         api.getProduct(id).then(setProduct).catch((e) => setError(e.message));
     }, [id]);
@@ -65,12 +79,15 @@ export default function ProductDetail() {
     }, [added]);
 
     if (error) return <p className="status-msg error">{error}</p>;
-    if (!product) return <p className="status-msg">Loading...</p>;
+    if (!product) return <ProductDetailSkeleton />;
 
     const variant = product.variants[vIdx] || product.variants[0];
     const hasDiscount = variant.originalPrice && variant.originalPrice > variant.price;
     const save = hasDiscount ? variant.originalPrice - variant.price : 0;
-    const images = product.images || [];
+    // আসল ছবি থাকলে সেটাই দেখায়; খালি/স্ট্রিং/অবৈধ মান থাকলে পরিষ্কার অ্যারে হয়,
+    // আর ছবি না থাকলে বা লোড না হলে ইমোজি ফলব্যাক দেখায় — কোনো ভুয়া ছবি নয়
+    const images = productImages(product);
+    const safeImgIdx = images.length > 0 ? Math.min(imgIdx, images.length - 1) : 0;
     const video = getEmbedUrl(product.videoUrl);
     const soldOut = variant.stock <= 0;
     const stock = stockInfo(variant.stock);
@@ -126,14 +143,12 @@ export default function ProductDetail() {
             <div className="product-detail">
                 <div>
                     <div className="gallery-main">
-                        {images.length > 0 ? <img src={webp(images[imgIdx], 1000)} alt={product.title} decoding="async" /> : <span>{product.icon}</span>}
+                        {images.length > 0 && !imgFailed ? <img src={webp(images[safeImgIdx], 1000)} alt={product.title} decoding="async" onError={() => setImgFailed(true)} /> : <span>{product.icon}</span>}
                     </div>
                     {images.length > 1 && (
                         <div className="gallery-thumbs">
                             {images.map((url, i) => (
-                                <button key={url} className={i === imgIdx ? 'active' : ''} onClick={() => setImgIdx(i)}>
-                                    <img src={webp(url, 160)} alt="" loading="lazy" decoding="async" />
-                                </button>
+                                <GalleryThumb key={url} url={url} active={i === safeImgIdx} onClick={() => setImgIdx(i)} />
                             ))}
                         </div>
                     )}
