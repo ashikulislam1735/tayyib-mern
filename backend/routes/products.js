@@ -4,8 +4,18 @@ import StockLog from '../models/StockLog.js';
 import Order from '../models/Order.js';
 import Review from '../models/Review.js';
 import { requireAdmin } from '../middleware/auth.js';
+import { getCached, setCached } from '../utils/cache.js';
 
 const router = express.Router();
+
+// ক্যাটাগরির একটাই নির্দিষ্ট ক্রম — ফ্রন্টএন্ডের
+// frontend/src/utils/categoryOrder.js-এর সঙ্গে মিলিয়ে রাখা হয়েছে।
+// তালিকায় নেই এমন ক্যাটাগরি থাকলে সেটা এই চারটার পরে আসবে।
+const CATEGORY_ORDER = ['বাদাম', 'ঘি', 'খেজুর', 'মধু'];
+const categoryRank = (name) => {
+    const i = CATEGORY_ORDER.indexOf(name);
+    return i === -1 ? CATEGORY_ORDER.length : i;
+};
 
 // GET /api/products — সব প্রোডাক্ট (ঐচ্ছিক ?category= ফিল্টার সহ)
 router.get('/', async (req, res) => {
@@ -26,7 +36,7 @@ router.get('/', async (req, res) => {
                 filter.$or = [{ title: rx }, { category: rx }, { description: rx }];
             }
             const [items, total] = await Promise.all([
-                Product.find(filter).select('-variants.costPrice').sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit),
+                Product.find(filter).select('-variants.costPrice').sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit).lean(),
                 Product.countDocuments(filter),
             ]);
             return res.json({ items, total, page, pages: Math.max(1, Math.ceil(total / limit)) });
@@ -41,20 +51,29 @@ router.get('/', async (req, res) => {
 
 // GET /api/products/categories — হেডারের মেনুর জন্য হালকা তালিকা: ক্যাটাগরি, আইকন, সংখ্যা, সাব-ক্যাটাগরি
 // (আগে সাইট মেনু বানাতে সব প্রোডাক্ট টেনে আনত। এখন শুধু এই ছোট তালিকা আসে।)
-// ক্রম আর আইকন আগের মতোই: যে ক্যাটাগরির নতুন প্রোডাক্ট আগে, সেটা আগে; আইকন সেই ক্যাটাগরির সবচেয়ে নতুন প্রোডাক্টের।
+// ক্রম নির্দিষ্ট: বাদাম, ঘি, খেজুর, মধু (CATEGORY_ORDER); আইকন সেই ক্যাটাগরির সবচেয়ে নতুন প্রোডাক্টের।
+// ফলাফল ৬০ সেকেন্ড ক্যাশ করা হয়।
 router.get('/categories', async (req, res) => {
     try {
+        const cached = getCached('products:categories');
+        if (cached) {
+            res.set('Cache-Control', 'public, max-age=60');
+            return res.json(cached);
+        }
         const rows = await Product.aggregate([
             { $sort: { createdAt: -1 } },
             { $group: { _id: '$category', icon: { $first: '$icon' }, count: { $sum: 1 }, newest: { $first: '$createdAt' }, subs: { $push: '$subCategory' } } },
             { $sort: { newest: -1 } },
         ]);
-        res.json(rows.map((r) => ({
+        const result = rows.map((r) => ({
             name: r._id,
             icon: r.icon,
             count: r.count,
             subs: [...new Set(r.subs.filter(Boolean))],
-        })));
+        })).sort((a, b) => categoryRank(a.name) - categoryRank(b.name));
+        setCached('products:categories', result);
+        res.set('Cache-Control', 'public, max-age=60');
+        res.json(result);
     } catch (err) {
         res.status(500).json({ error: 'Could not load categories' });
     }
@@ -167,9 +186,16 @@ router.post('/bulk', requireAdmin, async (req, res) => {
 });
 
 // GET /api/products/top?limit=6 — গত ৩০ দিনে সবচেয়ে বেশি বিক্রি হওয়া প্রোডাক্ট (পাবলিক; শুধু প্রোডাক্ট ফেরত আসে, বিক্রির হিসাব নয়)
+// ফলাফল ৬০ সেকেন্ড ক্যাশ করা হয় — হোমপেজে প্রতিবার Order-এর ওপর ভারী aggregation চলে না।
 router.get('/top', async (req, res) => {
     try {
         const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 6, 1), 12);
+        const cacheKey = `products:top:${limit}`;
+        const cached = getCached(cacheKey);
+        if (cached) {
+            res.set('Cache-Control', 'public, max-age=60');
+            return res.json(cached);
+        }
         const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
         const rows = await Order.aggregate([
             { $match: { createdAt: { $gte: since }, status: { $nin: ['cancelled', 'returned'] } } },
@@ -180,9 +206,12 @@ router.get('/top', async (req, res) => {
             { $limit: limit },
         ]);
         const ids = rows.map((r) => r._id);
-        const found = await Product.find({ _id: { $in: ids } }).select('-variants.costPrice');
+        const found = await Product.find({ _id: { $in: ids } }).select('-variants.costPrice').lean();
         const byId = new Map(found.map((p) => [String(p._id), p]));
-        res.json(ids.map((id) => byId.get(String(id))).filter(Boolean));
+        const result = ids.map((id) => byId.get(String(id))).filter(Boolean);
+        setCached(cacheKey, result);
+        res.set('Cache-Control', 'public, max-age=60');
+        res.json(result);
     } catch (err) {
         res.status(500).json({ error: 'Could not load best sellers' });
     }

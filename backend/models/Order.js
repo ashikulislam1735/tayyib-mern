@@ -41,5 +41,7 @@ const orderSchema = new mongoose.Schema({
 orderSchema.index({ phone: 1, createdAt: -1 });
 orderSchema.index({ status: 1, createdAt: -1 });
 orderSchema.index({ createdAt: -1 });
+// সেরা বিক্রিত (GET /products/top) aggregation-এর $unwind দ্রুত করতে
+orderSchema.index({ 'items.productId': 1, createdAt: -1 });
 
 export default mongoose.model('Order', orderSchema);
