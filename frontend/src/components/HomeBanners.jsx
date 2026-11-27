@@ -47,7 +47,7 @@ function Slider({ slides }) {
         >
             <div className="hb-track" style={{ transform: `translateX(-${idx * 100}%)` }}>
                 {slides.map((b) => (
-                    <BannerLink key={b._id} banner={b} className="hb-slide">
+                    <BannerLink key={b._id || b.image} banner={b} className="hb-slide">
                         <img src={b.image} alt={b.title || 'Banner'} loading="lazy" draggable="false" />
                     </BannerLink>
                 ))}
@@ -58,7 +58,7 @@ function Slider({ slides }) {
                     <button className="hb-arrow next" onClick={() => go(idx + 1)} aria-label="Next">›</button>
                     <div className="hb-dots">
                         {slides.map((b, i) => (
-                            <button key={b._id} className={i === idx ? 'active' : ''} onClick={() => go(i)} aria-label={`Banner ${i + 1}`} />
+                            <button key={b._id || b.image || i} className={i === idx ? 'active' : ''} onClick={() => go(i)} aria-label={`Banner ${i + 1}`} />
                         ))}
                     </div>
                 </>
@@ -74,8 +74,20 @@ export default function HomeBanners() {
         api.getBanners().then(setBanners).catch(() => {});
     }, []);
 
-    const slides = banners.filter((b) => b.position === 'slider');
+    // একই ব্যানার (_id বা ছবি) দুবার থাকলে একবারই রাখা হয় — ডটের সংখ্যা
+    // ঠিক এই তালিকার সমান হয়। সাইড ব্যানারটাও স্লাইডার থেকে বাদ যায়,
+    // যাতে একই ছবি পেজে দুবার না দেখায়।
     const side = banners.filter((b) => b.position === 'side')[0];
+    const seen = new Set();
+    const slides = banners
+        .filter((b) => b.position === 'slider')
+        .filter((b) => {
+            if (side && (b._id === side._id || (b.image && b.image === side.image))) return false;
+            const key = b._id || b.image;
+            if (!key || seen.has(key)) return false;
+            seen.add(key);
+            return true;
+        });
 
     if (slides.length === 0 && !side) return null;
 

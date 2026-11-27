@@ -34,9 +34,15 @@ export default function CartDrawer({ open, onClose }) {
                 </div>
                 <div className="drawer-foot">
                     <div className="subtotal-row"><span>Subtotal</span><span>৳{subtotal}</span></div>
-                    <Link to="/checkout" className="btn-primary" onClick={onClose} style={{ textAlign: 'center', display: 'block' }}>
-                        Checkout
-                    </Link>
+                    {items.length === 0 ? (
+                        <span className="btn-primary" aria-disabled="true" style={{ textAlign: 'center', display: 'block' }}>
+                            Checkout
+                        </span>
+                    ) : (
+                        <Link to="/checkout" className="btn-primary" onClick={onClose} style={{ textAlign: 'center', display: 'block' }}>
+                            Checkout
+                        </Link>
+                    )}
                 </div>
             </aside>
         </>

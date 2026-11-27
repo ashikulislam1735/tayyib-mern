@@ -26,7 +26,7 @@ body {
 a { color: inherit; text-decoration: none; }
 button { font-family: inherit; cursor: pointer; }
 
-.site-header { position: sticky; top: 0; background: var(--cream); border-bottom: 1px solid var(--line); z-index: 30; }
+.site-header { background: var(--cream); border-bottom: 1px solid var(--line); }
 .bar { max-width: 1000px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; }
 .brand { font-weight: 700; font-size: 1.2rem; }
 .brand span { font-weight: 400; font-size: 0.875rem; color: var(--honey-dark); }
@@ -34,7 +34,7 @@ nav { display: flex; gap: 20px; }
 .cart-btn { background: var(--walnut); color: var(--cream); border: none; border-radius: 20px; padding: 8px 16px; display: flex; gap: 8px; align-items: center; }
 .cart-badge { background: var(--honey); color: var(--walnut); border-radius: 50%; min-width: 18px; text-align: center; font-size: 0.875rem; font-weight: 700; }
 
-main { max-width: 1000px; margin: 0 auto; padding: 24px 20px 60px; }
+main { max-width: 1000px; margin: 0 auto; padding: 24px 20px 120px; }
 
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 18px; }
 .card { background: var(--white); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; }
@@ -73,6 +73,7 @@ main { max-width: 1000px; margin: 0 auto; padding: 24px 20px 60px; }
 
 .btn-primary { width: 100%; background: var(--honey-dark); color: var(--white); border: none; border-radius: 6px; padding: 12px; font-weight: 700; }
 .btn-primary:disabled { background: #c9bfa8; }
+.btn-primary[aria-disabled="true"] { background: #c9bfa8; cursor: not-allowed; opacity: 0.75; }
 
 .panel { background: var(--white); border: 1px solid var(--line); border-radius: 10px; padding: 22px; }
 .two-col { display: grid; grid-template-columns: 1.2fr 1fr; gap: 24px; align-items: start; }
@@ -121,7 +122,7 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid 
 .discount-badge { position: absolute; top: 10px; left: 10px; background: var(--danger); color: var(--white); font-size: 0.875rem; font-weight: 700; padding: 3px 9px; border-radius: 12px; }
 
 /* ---------- ভাসমান WhatsApp ---------- */
-.wa-float { position: fixed; right: 16px; bottom: 16px; z-index: 20; background: #1f9d55; color: #fff; border-radius: 26px; padding: 11px 18px; font-weight: 700; font-size: 0.9rem; display: inline-flex; gap: 6px; align-items: center; box-shadow: 0 4px 14px rgba(0,0,0,0.25); }
+.wa-float { position: fixed; right: 16px; bottom: 16px; z-index: 20; background: #1f9d55; color: #fff; border-radius: 26px; padding: 11px 18px; font-weight: 700; font-size: 0.9rem; display: inline-flex; gap: 6px; align-items: center; box-shadow: 0 4px 14px rgba(0,0,0,0.25); white-space: nowrap; }
 .wa-float:hover { background: #17824a; }
 
 /* ---------- About ---------- */
@@ -179,7 +180,9 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid 
 .main-nav .dd-panel a:hover { color: var(--honey-dark); }
 .dd-empty { font-size: 0.875rem; color: var(--walnut-soft); }
 
-.cat-strip { border-top: 1px solid var(--cream-2); }
+/* ক্যাটাগরি স্ট্রিপ এখন <main>-এর ভেতরে sticky হয়: শক্ত ব্যাকগ্রাউন্ড,
+   main শেষ হলে (ফুটারের আগে) থেমে যায়, আর কনটেন্ট ঢাকে না */
+.cat-strip { position: sticky; top: 0; z-index: 30; background: var(--cream); border-top: none; border-bottom: 1px solid var(--line); margin: -24px -20px 16px; }
 .cat-strip-inner { max-width: 1000px; margin: 0 auto; padding: 10px 20px; display: flex; gap: 18px; overflow-x: auto; }
 .cat-item { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 62px; color: var(--walnut-soft); }
 .cat-circle { width: 54px; height: 54px; border-radius: 50%; background: var(--cream-2); border: 2px solid transparent; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; }
@@ -387,7 +390,7 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid 
 .footer-cta strong { font-size: 1.15rem; color: #fff; }
 .footer-cta p { margin: 4px 0 0; font-size: 0.9rem; opacity: 0.85; }
 .footer-cta-btns { display: flex; gap: 12px; flex-wrap: wrap; }
-.fcta-solid, .fcta-line { display: inline-flex; align-items: center; gap: 8px; border-radius: 8px; padding: 10px 18px; font-weight: 700; border: 2px solid var(--gold-btn); }
+.fcta-solid, .fcta-line { display: inline-flex; align-items: center; gap: 8px; border-radius: 8px; padding: 10px 18px; font-weight: 700; border: 2px solid var(--gold-btn); white-space: nowrap; }
 .fcta-solid { background: var(--gold-btn); color: #1b2a21; }
 .fcta-line { color: var(--gold-btn); }
 .fcta-solid:hover { background: #dba93f; }
@@ -404,7 +407,7 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid 
 .social-icon { width: 38px; height: 38px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.3); display: inline-flex; align-items: center; justify-content: center; color: #fff; }
 .social-icon:hover { background: var(--gold-btn); border-color: var(--gold-btn); color: #1b2a21; }
 @media (max-width: 900px) { .footer-grid { grid-template-columns: 1fr 1fr; } .footer-about { grid-column: 1 / -1; } }
-@media (max-width: 560px) { .footer-grid { grid-template-columns: 1fr 1fr; gap: 20px; } .footer-cta-btns { width: 100%; } .fcta-solid, .fcta-line { flex: 1; justify-content: center; } }
+@media (max-width: 560px) { .footer-grid { grid-template-columns: 1fr 1fr; gap: 20px; } .footer-cta-btns { width: 100%; } .fcta-solid, .fcta-line { flex: 1 1 100%; justify-content: center; } }
 
 /* ইনভয়েস (স্ক্রিনে পপআপ, প্রিন্টে শুধু ইনভয়েস) */
 .invoice-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.55); z-index: 2000; overflow: auto; padding: 16px; }

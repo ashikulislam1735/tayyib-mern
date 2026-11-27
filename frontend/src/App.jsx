@@ -1,5 +1,5 @@
-import { lazy, Suspense, useState } from 'react';
-import { Routes, Route, Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { lazy, Suspense, useEffect, useState } from 'react';
+import { Routes, Route, Link, NavLink, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { CartProvider, useCart } from './context/CartContext';
 import { track } from './lib/track';
 import { AuthProvider } from './context/AuthContext';
@@ -34,6 +34,11 @@ function Header({ onCartClick }) {
     const [search, setSearch] = useState('');
     const navigate = useNavigate();
     const { site: siteConfig } = useSite();
+    // সার্চ বক্স সবসময় URL-এর ?q=-এর সঙ্গে মিলে থাকে — "View All"-এ URL থেকে
+    // q মুছে গেলে বক্সটাও খালি হয়ে যায়
+    const [urlParams] = useSearchParams();
+    const qParam = urlParams.get('q') || '';
+    useEffect(() => { setSearch(qParam); }, [qParam]);
 
     function handleSearch(e) {
         e.preventDefault();
@@ -79,7 +84,6 @@ function Header({ onCartClick }) {
                     <NavLink to="/offers">Offers</NavLink>
                 </div>
             </nav>
-            <CategoryStrip />
         </header>
     );
 }
@@ -100,6 +104,9 @@ function AppShell() {
         <div className="app-layout">
             <Header onCartClick={() => setCartOpen(true)} />
             <main>
+                {/* ক্যাটাগরি স্ট্রিপ এখন <main>-এর ভেতরে — এটাই sticky হয়, আর
+                    <main> শেষ হলে (ফুটারের আগে) থেমে যায়, কনটেন্ট ঢাকে না */}
+                <CategoryStrip />
                 <Routes>
                     <Route path="/" element={<Shop />} />
                     <Route path="/products" element={<Shop />} />
