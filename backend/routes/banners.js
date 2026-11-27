@@ -1,15 +1,24 @@
 import express from 'express';
 import Banner from '../models/Banner.js';
 import { requireAdmin } from '../middleware/auth.js';
+import { getCached, setCached } from '../utils/cache.js';
 
 const router = express.Router();
 
 const sortOrder = { order: 1, createdAt: -1 };
 
 // GET /api/banners — সবার জন্য, শুধু চালু ব্যানার
+// ফলাফল ৬০ সেকেন্ড ক্যাশ করা হয় — হোমপেজে প্রতিবার ডাটাবেজে যাওয়া লাগে না।
 router.get('/', async (req, res) => {
     try {
-        const banners = await Banner.find({ active: true }).sort(sortOrder);
+        const cached = getCached('banners:active');
+        if (cached) {
+            res.set('Cache-Control', 'public, max-age=60');
+            return res.json(cached);
+        }
+        const banners = await Banner.find({ active: true }).sort(sortOrder).lean();
+        setCached('banners:active', banners);
+        res.set('Cache-Control', 'public, max-age=60');
         res.json(banners);
     } catch (err) {
         res.status(500).json({ error: 'Could not load banners' });

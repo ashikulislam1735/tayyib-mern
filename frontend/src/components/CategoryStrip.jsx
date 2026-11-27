@@ -13,7 +13,14 @@ export default function CategoryStrip() {
         <div className="cat-strip">
             <div className="cat-strip-inner">
                 <Link to="/products" className="cat-item">
-                    <span className="cat-circle">🛒</span>
+                    <span className="cat-circle">
+                        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                            <rect x="3" y="3" width="7" height="7" rx="1.5" />
+                            <rect x="14" y="3" width="7" height="7" rx="1.5" />
+                            <rect x="3" y="14" width="7" height="7" rx="1.5" />
+                            <rect x="14" y="14" width="7" height="7" rx="1.5" />
+                        </svg>
+                    </span>
                     <span className="cat-label">All</span>
                 </Link>
                 {categories.map((c) => (

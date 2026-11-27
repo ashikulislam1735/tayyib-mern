@@ -28,5 +28,7 @@ const productSchema = new mongoose.Schema({
 productSchema.index({ category: 1, createdAt: -1 });
 productSchema.index({ title: 1 });
 productSchema.index({ createdAt: -1 });
+// হোমের Featured সেকশন (featured + নতুন) দ্রুত আনতে
+productSchema.index({ featured: 1, createdAt: -1 });
 
 export default mongoose.model('Product', productSchema);

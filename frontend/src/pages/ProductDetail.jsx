@@ -207,7 +207,7 @@ export default function ProductDetail() {
                     </div>
                     {added && <p className="pd-added">✓ Added to cart</p>}
 
-                    {product.description && (
+                    {(product.description || '').trim() && (
                         <div className="detail-desc">
                             <h3>Description</h3>
                             {product.description}

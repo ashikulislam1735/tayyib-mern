@@ -1,16 +1,69 @@
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
+// পাবলিক GET কলের ৬০ সেকেন্ডের ক্যাশ — একই পেজে বারবার ঘুরলে ব্যাকএন্ডে আর
+// কল যায় না, রিলোড অনেক দ্রুত মনে হয়। লগইন করা (অ্যাডমিন) কলে ক্যাশ চলে না,
+// যাতে অ্যাডমিন সবসময় টাটকা ডেটা দেখে।
+const CACHE_TTL = 60 * 1000;
+const CACHEABLE_PREFIXES = ['/products', '/banners', '/categories', '/settings'];
+const memoryCache = new Map();
+
+function isCacheable(path, method, token) {
+    if (method !== 'GET' || token) return false;
+    return CACHEABLE_PREFIXES.some((p) => path === p || path.startsWith(`${p}?`) || path.startsWith(`${p}/`));
+}
+
+function readCache(path) {
+    const mem = memoryCache.get(path);
+    if (mem && Date.now() - mem.ts < CACHE_TTL) return mem.data;
+    try {
+        const raw = sessionStorage.getItem(`tayyib-api:${path}`);
+        if (raw) {
+            const entry = JSON.parse(raw);
+            if (Date.now() - entry.ts < CACHE_TTL) {
+                memoryCache.set(path, { ts: entry.ts, data: entry.data });
+                return entry.data;
+            }
+            sessionStorage.removeItem(`tayyib-api:${path}`);
+        }
+    } catch { /* sessionStorage না থাকলে শুধু মেমোরি ক্যাশই চলবে */ }
+    return undefined;
+}
+
+function writeCache(path, data) {
+    memoryCache.set(path, { ts: Date.now(), data });
+    try {
+        sessionStorage.setItem(`tayyib-api:${path}`, JSON.stringify({ ts: Date.now(), data }));
+    } catch { /* জায়গা না থাকলে ক্যাশ লেখা বাদ */ }
+}
+
 async function request(path, options = {}) {
+    const method = (options.method || 'GET').toUpperCase();
     const token = localStorage.getItem('adminToken');
-    const res = await fetch(`${API_URL}${path}`, {
-        headers: {
-            'Content-Type': 'application/json',
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        ...options,
-    });
+    const useCache = isCacheable(path, method, token);
+    if (useCache) {
+        const cached = readCache(path);
+        if (cached !== undefined) return cached;
+    }
+
+    // ঘুমন্ত ব্যাকএন্ডে কল চিরকাল ঝুলে থাকবে না — ৬০ সেকেন্ডে সময় শেষ হবে
+    const signal = typeof AbortSignal.timeout === 'function' ? AbortSignal.timeout(60000) : undefined;
+    let res;
+    try {
+        res = await fetch(`${API_URL}${path}`, {
+            headers: {
+                'Content-Type': 'application/json',
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+            ...options,
+            ...(signal ? { signal } : {}),
+        });
+    } catch (e) {
+        if (e && e.name === 'AbortError') throw new Error('সার্ভার থেকে উত্তর আসতে দেরি হচ্ছে। একটু পরে আবার চেষ্টা করুন।');
+        throw e;
+    }
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Something went wrong. Please try again.');
+    if (useCache) writeCache(path, data);
     return data;
 }
 

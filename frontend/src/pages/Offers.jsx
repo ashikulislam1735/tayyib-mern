@@ -13,8 +13,9 @@ export default function Offers() {
     const [error, setError] = useState('');
 
     useEffect(() => {
-        api.getProducts()
-            .then((all) => setProducts(all.filter(hasOffer)))
+        // পেজ ধরে আনা — আগের মতো সব প্রোডাক্ট একসাথে (সর্বোচ্চ ১০০০টি) টানা নয়
+        api.getProductsPage({ page: 1, limit: 100 })
+            .then((r) => setProducts(r.items.filter(hasOffer)))
             .catch((e) => setError(e.message))
             .finally(() => setLoading(false));
     }, []);
