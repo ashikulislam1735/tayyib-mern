@@ -83,16 +83,20 @@ export default function Shop() {
         setParams(next);
     }
 
-    if (loading) return <p className="status-msg">Loading...</p>;
-    if (error && products.length === 0) return <p className="status-msg error">{error || 'Something went wrong.'} Please try again in a moment.</p>;
-    if (isHome && total === 0) return <p className="status-msg">No products available yet. Please check back soon.</p>;
+    // লোডিং চললেও পেজের কাঠামো (ব্যানার, শিরোনাম) দেখা যায় — প্রথম পণ্যের
+    // ডেটা না আসা পর্যন্ত পুরো পেজ আর আটকে থাকে না
+    if (error && products.length === 0 && !loading) return <p className="status-msg error">{error || 'Something went wrong.'} Please try again in a moment.</p>;
+    if (isHome && total === 0 && !loading) return <p className="status-msg">No products available yet. Please check back soon.</p>;
 
     if (isHome) {
         return (
             <>
                 <HomeBanners />
 
-                {topProducts.length > 0 && (
+                {loading && <p className="status-msg">Loading...</p>}
+                {error && products.length === 0 && <p className="status-msg error">{error}</p>}
+
+                {!loading && topProducts.length > 0 && (
                     <section className="home-section">
                         <div className="section-head section-center">
                             <span className="section-eyebrow">Best Sellers</span>
@@ -112,6 +116,7 @@ export default function Shop() {
                     </section>
                 )}
 
+                {!loading && (
                 <section className="home-section">
                     <div className="section-head">
                         <span className="section-eyebrow">Our Collection</span>
@@ -122,6 +127,7 @@ export default function Shop() {
                         <div className="show-all"><Link to="/products">View All Products →</Link></div>
                     )}
                 </section>
+                )}
             </>
         );
     }
@@ -144,9 +150,11 @@ export default function Shop() {
                 </p>
             )}
 
-            {products.length === 0
-                ? <p className="status-msg">No products found. Try searching for something else.</p>
-                : <ProductGrid products={products} />}
+            {loading
+                ? <p className="status-msg">Loading...</p>
+                : products.length === 0
+                    ? <p className="status-msg">No products found. Try searching for something else.</p>
+                    : <ProductGrid products={products} />}
 
             {page < pages && (
                 <div className="show-all">

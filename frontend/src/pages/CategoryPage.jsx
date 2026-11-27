@@ -14,8 +14,9 @@ export default function CategoryPage() {
     useEffect(() => {
         setLoading(true);
         setError('');
-        api.getProducts(name)
-            .then(setProducts)
+        // পেজ ধরে আনা — আগের মতো সব প্রোডাক্ট একসাথে (সর্বোচ্চ ১০০০টি) টানা নয়
+        api.getProductsPage({ page: 1, limit: 100, category: name })
+            .then((r) => setProducts(r.items))
             .catch((e) => setError(e.message))
             .finally(() => setLoading(false));
     }, [name]);

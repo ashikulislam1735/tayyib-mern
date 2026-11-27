@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { api } from '../api';
+import { sortCategoriesByOrder } from '../utils/categoryOrder';
 
 // প্রোডাক্ট থেকে ক্যাটাগরি ও সাব-ক্যাটাগরির তালিকা নিজে নিজে বানায় (হেডারের মেনুর জন্য)
 // অ্যাডমিন থেকে আপলোড করা ক্যাটাগরির ছবিও এখানে জোড়া লাগে (না থাকলে ইমোজি আইকন)
@@ -28,7 +29,8 @@ export function CatalogProvider({ children }) {
     }, [reloadImages]);
 
     const categories = useMemo(() => {
-        if (light) return light.map((c) => ({ ...c, image: images[c.name] || '' }));
+        // সব জায়গায় একটাই ক্রম: বাদাম, ঘি, খেজুর, মধু (utils/categoryOrder.js)
+        if (light) return sortCategoriesByOrder(light.map((c) => ({ ...c, image: images[c.name] || '' })));
         const map = new Map();
         products.forEach((p) => {
             if (!map.has(p.category)) {
@@ -37,7 +39,7 @@ export function CatalogProvider({ children }) {
             map.get(p.category).count += 1;
             if (p.subCategory) map.get(p.category).subs.add(p.subCategory);
         });
-        return [...map.values()].map((c) => ({ ...c, subs: [...c.subs], image: images[c.name] || '' }));
+        return sortCategoriesByOrder([...map.values()].map((c) => ({ ...c, subs: [...c.subs], image: images[c.name] || '' })));
     }, [light, products, images]);
 
     return <CatalogContext.Provider value={{ categories, reloadImages }}>{children}</CatalogContext.Provider>;
