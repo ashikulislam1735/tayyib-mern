@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import Stars from './Stars';
-import { webp } from '../utils/cloudinary';
+import { productImages, webp } from '../utils/cloudinary';
 
 function isDiscounted(v) {
     return Boolean(v.originalPrice && v.originalPrice > v.price);
@@ -23,6 +23,11 @@ function ProductCard({ p, layout, preferOffer }) {
     const [vIdx, setVIdx] = useState(() => (preferOffer ? firstDiscountIndex(p) : 0));
     const { items, addToCart } = useCart();
     const navigate = useNavigate();
+    // ছবি ভাঙা (404/মুছে যাওয়া URL) হলে ভাঙা টাইল না দেখিয়ে ইমোজি ফলব্যাক দেখায়;
+    // আসল ছবি থাকলে সেটাই দেখায় — productImages খালি/স্ট্রিং/অবৈধ মান সামলায়
+    const [imgFailed, setImgFailed] = useState(false);
+    const images = productImages(p);
+    const imgSrc = !imgFailed && images[0] ? webp(images[0], 600) : '';
 
     const variant = p.variants[vIdx];
     const hasDiscount = isDiscounted(variant);
@@ -39,7 +44,7 @@ function ProductCard({ p, layout, preferOffer }) {
     return (
         <div className={`pcard ${layout === 'row' ? 'row' : ''}`}>
             <Link to={`/product/${p._id}`} className="pcard-media">
-                {p.images && p.images[0] ? <img src={webp(p.images[0], 600)} alt={p.title} loading="lazy" decoding="async" /> : p.icon}
+                {imgSrc ? <img src={imgSrc} alt={p.title} loading="lazy" decoding="async" onError={() => setImgFailed(true)} /> : p.icon}
                 {hasDiscount && <span className="discount-badge">-{percent}%</span>}
             </Link>
 

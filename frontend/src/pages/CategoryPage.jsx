@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { api } from '../api';
 import ProductGrid from '../components/ProductGrid';
+import { ProductGridSkeleton } from '../components/Skeleton';
 
 export default function CategoryPage() {
     const { name } = useParams();
@@ -45,7 +46,7 @@ export default function CategoryPage() {
                 </div>
             )}
 
-            {loading && <p className="status-msg">Loading...</p>}
+            {loading && <ProductGridSkeleton count={6} />}
             {error && <p className="status-msg error">{error}</p>}
             {!loading && !error && shown.length === 0 && <p className="status-msg">There are no products in this category.</p>}
             {!loading && !error && shown.length > 0 && <ProductGrid products={shown} />}

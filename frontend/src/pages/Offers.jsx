@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api';
 import ProductGrid from '../components/ProductGrid';
+import { ProductGridSkeleton } from '../components/Skeleton';
 
 // ছাড়ের দাম (price) আসল দামের (originalPrice) চেয়ে কম হলেই প্রোডাক্টটা এখানে আসে।
 function hasOffer(product) {
@@ -20,7 +21,15 @@ export default function Offers() {
             .finally(() => setLoading(false));
     }, []);
 
-    if (loading) return <p className="status-msg">Loading...</p>;
+    if (loading) {
+        return (
+            <>
+                <h1 className="page-title">Offers</h1>
+                <p className="page-sub">Products that are on discount right now.</p>
+                <ProductGridSkeleton count={4} />
+            </>
+        );
+    }
     if (error) return <p className="status-msg error">{error}</p>;
 
     return (
